@@ -1,23 +1,19 @@
-import React, {useEffect, useState} from 'react'
+import React, { useEffect, useState } from "react";
 
 function App() {
-
-  const [backendData, setBackendData] = useState([{}])
+  const [backendData, setBackendData] = useState([{}]);
 
   useEffect(() => {
-    fetch('/api')
+    fetch("/api")
       .then((response) => response.json())
       .then((data) => {
         setBackendData(data);
         console.log(data);
       })
-      .catch((error) => console.error('Error fetching data:', error));
+      .catch((error) => console.error("Error fetching data:", error));
   }, []);
 
-
-  return (
-    <div>Hello World!</div>
-  )
+  return <div>Hello World!1212121212</div>;
 }
 
-export default App
+export default App;
