@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import LandingPage from "./LandingPage/LandingPage";
 function App() {
   const [backendData, setBackendData] = useState([{}]);
 
@@ -15,14 +15,7 @@ function App() {
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
 
-  return (
-    <div
-      data-theme="luxury"
-      className="h-screen w-screen flex items-center justify-center"
-    >
-      <h1>Hello world!</h1>
-    </div>
-  );
+  return <LandingPage />;
 }
 
 export default App;
