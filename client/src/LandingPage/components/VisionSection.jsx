@@ -1,5 +1,5 @@
-import React from "react";
-
+import React from 'react';
+import lista from '../../assets/images/lista.jpg';
 const VisionSection = () => {
   return (
     <div className="hero bg-base-200 min-h-[80vh]">
@@ -17,7 +17,7 @@ const VisionSection = () => {
           </p>
           <a className="btn btn-xl w-80 bg-black">Join now</a>
         </div>
-        <img src="../images/lista.jpg" className="w-100 h-100" />
+        <img src={lista} className="w-100 h-100" />
       </div>
     </div>
   );

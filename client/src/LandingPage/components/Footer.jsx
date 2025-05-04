@@ -1,5 +1,5 @@
-import React from "react";
-
+import React from 'react';
+import logoIcon from '../../assets/images/logoIcon.png';
 const Footer = () => {
   return (
     <footer className="footer footer-horizontal footer-center bg-base-200 text-base-content rounded p-10 b">
@@ -11,7 +11,7 @@ const Footer = () => {
       </nav>
       <nav>
         <div className="grid grid-flow-col gap-4">
-          <img src="../images/logoIcon.png" alt="logo" className="w-50" />
+          <img src={logoIcon} alt="logo" className="w-50" />
         </div>
       </nav>
       <aside>

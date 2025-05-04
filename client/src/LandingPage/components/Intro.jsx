@@ -1,13 +1,10 @@
-import React from "react";
-
+import React from 'react';
+import logoIcon from '../../assets/images/logoIcon.png';
 const Intro = () => {
   return (
     <div className="hero bg-base-200 min-h-[80vh]">
       <div className="hero-content flex-col lg:flex-row-reverse">
-        <img
-          src="../images/logo.png"
-          className="max-w-sm rounded-lg shadow-2xl"
-        />
+        <img src={logoIcon} className="max-w-sm rounded-lg" />
         <div>
           <h1 className="text-5xl font-bold">What is FINKI-Ranked?</h1>
           <p className="py-6 leading-loose">

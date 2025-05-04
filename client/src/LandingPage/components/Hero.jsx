@@ -1,11 +1,11 @@
-import React from "react";
-
+import React from 'react';
+import hero from '../../assets/images/hero-bg.jpg';
 const Hero = () => {
   return (
     <div
       className="hero min-h-[80vh]"
       style={{
-        backgroundImage: "url(../images/hero-bg.jpg)",
+        backgroundImage: `url(${hero})`,
       }}
     >
       <div className="hero-overlay "></div>
