@@ -1,3 +1,0 @@
-Ako nejke da se smeni frontendot naprai u client npm run build.
-So toa se kreira(updatea) dist folderot sho go koristime vo routerot na express.
-Dist folderot e biten za express da znae ako stigne request kaj da bara/prenasoci
