@@ -3,6 +3,7 @@ import logoIcon from '../../assets/images/logoIcon.png';
 import logoText from '../../assets/images/logoText.png';
 import { useNavigate } from 'react-router-dom';
 const Navbar = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
   const navigate = useNavigate();
   const handleRegisterClick = () => {
     navigate('/register');
@@ -16,9 +17,16 @@ const Navbar = () => {
         </a>
       </div>
       <div className="navbar-end mr-10">
-        <button className="btn btn-lg" onClick={handleRegisterClick}>
-          Register
-        </button>
+        {!user && (
+          <button className="btn btn-lg" onClick={handleRegisterClick}>
+            Register
+          </button>
+        )}
+        {user && (
+          <button className="btn btn-lg" onClick={() => navigate('/dashboard')}>
+            {user.username}
+          </button>
+        )}
       </div>
     </div>
   );

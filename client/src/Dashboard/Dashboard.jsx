@@ -49,7 +49,7 @@ const Dashboard = () => {
   return (
     <div
       data-theme="luxury"
-      className="dashboard min-h-screen flex bg-base-100"
+      className="dashboard h-screen flex bg-base-100 overflow-none"
     >
       <nav className="dashboard__navbar w-64 min-h-screen bg-base-200 text-base-content">
         <div className="p-4 border-b border-base-content/10">
@@ -133,7 +133,7 @@ const Dashboard = () => {
           </ul>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-base-content/10">
+        <div className="absolute bottom-0 left-0 w-64 right-0 p-4 border-t border-base-content/10">
           <button
             className={`flex items-center gap-3  px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
               activePage === 'profile' ? 'bg-[#FFB800] text-black' : ''

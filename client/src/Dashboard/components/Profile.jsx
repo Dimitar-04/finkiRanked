@@ -1,16 +1,16 @@
 // Example for Profile.jsx
-import React from "react";
-import pp from "../../assets/images/pp.svg";
+import React from 'react';
+import pp from '../../assets/images/pp.svg';
 
 const Profile = () => {
   const handleSignOut = () => {
-    localStorage.removeItem("user");
-    window.location.href = "/login";
+    localStorage.removeItem('user');
+    window.location.href = '/';
   };
-  const user = JSON.parse(localStorage.getItem("user"));
-  console.log("User data:", user);
+  const user = JSON.parse(localStorage.getItem('user'));
+  console.log('User data:', user);
   if (!user) {
-    console.error("No user data found in localStorage.");
+    console.error('No user data found in localStorage.');
   }
   return (
     <div

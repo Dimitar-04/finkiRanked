@@ -1,7 +1,9 @@
-import React from "react";
-import hero from "../../assets/images/hero-bg.jpg";
-import { Link } from "react-router-dom";
+import React from 'react';
+import hero from '../../assets/images/hero-bg.jpg';
+import { Link, useNavigate } from 'react-router-dom';
+
 const Hero = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
   return (
     <div
       className="hero min-h-[80vh]"
@@ -16,9 +18,16 @@ const Hero = () => {
           <p className="mb-5">
             Daily coding challenges and competitions for FINKI students
           </p>
-          <Link to="/login" className="btn btn-xl">
-            Join now
-          </Link>
+          {!user && (
+            <Link to="/login" className="btn btn-xl">
+              Join now
+            </Link>
+          )}
+          {user && (
+            <Link to="/dashboard" className="btn btn-xl">
+              Join now
+            </Link>
+          )}
         </div>
       </div>
     </div>
