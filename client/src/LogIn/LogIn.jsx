@@ -1,21 +1,21 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError(''); // Clear previous errors
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
+      const response = await fetch('/api/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       });
@@ -23,14 +23,15 @@ const Login = () => {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/dashboard");
+        console.log(data);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/dashboard');
       } else {
-        setError(data.message || "Login failed");
+        setError(data.message || 'Login failed');
       }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("An error occurred during login.");
+      console.error('Login error:', err);
+      setError('An error occurred during login.');
     }
   };
 

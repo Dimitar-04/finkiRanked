@@ -112,9 +112,24 @@ const loginPOST = async (req, res) => {
       });
     }
 
+    // Fetch user from users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (userError || !userData) {
+      return res.status(404).json({
+        message: 'User not found in database',
+        success: false,
+      });
+    }
+
     res.status(200).json({
       message: 'Login successful',
       success: true,
+      user: userData,
     });
   } catch (error) {
     console.error('Login error:', error);
