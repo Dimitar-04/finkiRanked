@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
   const [error, setError] = React.useState('');
@@ -53,7 +54,7 @@ const Register = () => {
   return (
     <div
       data-theme="luxury"
-      className="flex flex-col items-center justify-center h-screen"
+      className="flex flex-col items-center justify-center"
     >
       <h1 className="text-4xl font-bold mb-6">Create an account</h1>
       <form
