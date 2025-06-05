@@ -115,13 +115,6 @@ const Register = () => {
             className="input input-lg w-full"
             placeholder="user123@students.finki.ukim.mk"
           />
-          {error ? (
-            <p className="text-red-500 text-sm mt-1">{error}</p>
-          ) : (
-            <p className="text-sm mt-1">
-              *Must register with your students address
-            </p>
-          )}
         </div>
 
         <div>
@@ -153,12 +146,20 @@ const Register = () => {
             placeholder="Confirm Password"
           />
         </div>
+
         <button
           type="submit"
           className="btn bg-black btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl"
         >
           Register
         </button>
+        {error ? (
+          <p className="text-red-500 text-sm mt-1">{error}</p>
+        ) : (
+          <p className="text-sm mt-1">
+            *Must register with your students address
+          </p>
+        )}
       </form>
 
       <Link to="/login" className="underline mt-1.5">
