@@ -1,18 +1,19 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 const Register = () => {
-  const [error, setError] = React.useState("");
+  const [error, setError] = React.useState('');
   const nav = useNavigate();
   const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
   });
   function validateEmail(email) {
-    return email.endsWith("@students.finki.ukim.mk");
+    return email.endsWith('@students.finki.ukim.mk');
   }
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -25,54 +26,55 @@ const Register = () => {
     e.preventDefault();
 
     if (!validateEmail(formData.email)) {
-      setError("Email must end with @students.finki.ukim.mk");
+      setError('Email must end with @students.finki.ukim.mk');
     }
-    if (formData.username === "") {
-      setError("Must enter username");
+    if (formData.username === '') {
+      setError('Must enter username');
     }
-    if (formData.password === "") {
-      setError("Password is required");
+    if (formData.password === '') {
+      setError('Password is required');
       return;
     }
-    if (formData.confirmPassword === "") {
-      setError("Please confirm your password");
+    if (formData.confirmPassword === '') {
+      setError('Please confirm your password');
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       return;
     }
     if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long");
+      setError('Password must be at least 8 characters long');
       return;
     }
     if (!/[A-Z]/.test(formData.password)) {
-      setError("Password must contain at least one uppercase letter");
+      setError('Password must contain at least one uppercase letter');
       return;
     }
     if (!/[0-9]/.test(formData.password)) {
-      setError("Password must contain at least one number");
+      setError('Password must contain at least one number');
       return;
     }
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
+      const response = await fetch('/api/register', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           username: formData.username,
           email: formData.email,
           password: formData.password,
+          name: formData.name,
         }),
       });
 
       const data = await response.json();
       if (data.success) {
-        nav("/dashboard");
+        nav('/dashboard');
       }
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error('Registration error:', error);
       throw error;
     }
   };
@@ -87,6 +89,21 @@ const Register = () => {
         onSubmit={handleSubmit}
         className="fieldset bg-base-200 border-base-300 rounded-box w-96 border p-8 space-y-6"
       >
+        <div>
+          <label className="label text-lg" htmlFor="name">
+            Name
+          </label>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            value={formData.name}
+            onChange={handleInputChange}
+            className="input input-lg w-full"
+            placeholder="John Doe"
+          />
+        </div>
+
         <div>
           <label className="label text-lg" htmlFor="username">
             Username

@@ -1,27 +1,55 @@
 const supabase = require('../supabaseClient');
+const User = require('../models/User');
+
+async function createUserInSupabase(userInstance) {
+  const { data, error } = await supabase.from('users').insert([
+    {
+      id: userInstance.id,
+      username: userInstance.username,
+      email: userInstance.email,
+      name: userInstance.name,
+      solved_problems: 0,
+      rank: 'Novice',
+      points: 0,
+      commentCounter: 3,
+      commentCheckCounter: 0,
+      postCounter: 3,
+      postCheckCounter: 0,
+    },
+  ]);
+  return { data, error };
+}
 
 const registerPOST = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
+    const { username, name, email, password } = req.body;
+
+    const userModel = new User({ username, email, name });
+
+    const validationErrors = userModel.validate();
+
+    if (validationErrors) {
       return res.status(400).json({
-        message: 'Missing required fields',
+        message: 'Validation failed',
+        errors: validationErrors,
         success: false,
       });
     }
-    if (!email.endsWith('@students.finki.ukim.mk')) {
+
+    if (!password) {
       return res.status(400).json({
-        message: 'Email must be a valid FINKI student email',
+        message: 'Password is required',
         success: false,
       });
     }
-    // Create user in Supabase Auth
+
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
       user_metadata: { username },
-      email_confirm: true
+      email_confirm: true,
     });
+
     if (error) {
       if (error.message.includes('already registered')) {
         return res.status(409).json({
@@ -34,18 +62,22 @@ const registerPOST = async (req, res) => {
         success: false,
       });
     }
-    // Optionally, store additional user info in a public 'users' table
-    await supabase.from('users').insert([
-      { id: data.user.id, username, email }
-    ]);
+
+    userModel.id = data.user.id;
+
+    const { error: dbError } = await createUserInSupabase(userModel);
+    if (dbError) {
+      console.error('Database insert error:', dbError);
+      return res.status(500).json({
+        message: 'Failed to save user in database',
+        success: false,
+      });
+    }
+
     res.status(200).json({
       message: 'Registration successful',
       success: true,
-      user: {
-        id: data.user.id,
-        username,
-        email,
-      },
+      user: userModel.toJSON(),
     });
   } catch (error) {
     console.error('Registration error:', error);
