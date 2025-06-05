@@ -1,14 +1,14 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
   return (
     <div
       data-theme="luxury"
-      className="flex flex-col items-center justify-center h-screen"
+      className="flex flex-col items-center justify-center"
     >
       <h1 className="text-4xl font-bold mb-6">Create an account</h1>
-      <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-96 border p-8 space-y-6">
+      <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-96 border p-8 spac`e-y-6">
         <div>
           <label className="label text-lg" htmlFor="username">
             Username
