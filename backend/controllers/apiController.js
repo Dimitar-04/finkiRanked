@@ -1,20 +1,21 @@
 const supabase = require('../supabaseClient');
-const User = require('../models/User');
+const Student = require('../models/Student');
 
-async function createUserInSupabase(userInstance) {
+async function createUserInSupabase(studentInstance) {
   const { data, error } = await supabase.from('users').insert([
     {
-      id: userInstance.id,
-      username: userInstance.username,
-      email: userInstance.email,
-      name: userInstance.name,
-      solved_problems: 0,
-      rank: 'Novice',
-      points: 0,
-      commentCounter: 3,
-      commentCheckCounter: 0,
-      postCounter: 3,
-      postCheckCounter: 0,
+      id: studentInstance.id,
+      username: studentInstance.username,
+      email: studentInstance.email,
+      name: studentInstance.name,
+      solved_problems: studentInstance.solvedProblems,
+      rank: studentInstance.rank,
+      points: studentInstance.points,
+      commentCounter: studentInstance.commentCounter,
+      commentCheckCounter: studentInstance.commentCheckCounter,
+      postCounter: studentInstance.postCounter,
+      postCheckCounter: studentInstance.postCheckCounter,
+      isModerator: studentInstance.isModerator,
     },
   ]);
   return { data, error };
@@ -24,9 +25,9 @@ const registerPOST = async (req, res) => {
   try {
     const { username, name, email, password } = req.body;
 
-    const userModel = new User({ username, email, name });
+    const studentModel = new Student({ username, email, name });
 
-    const validationErrors = userModel.validate();
+    const validationErrors = studentModel.validate();
 
     if (validationErrors) {
       return res.status(400).json({
@@ -63,9 +64,9 @@ const registerPOST = async (req, res) => {
       });
     }
 
-    userModel.id = data.user.id;
+    studentModel.id = data.user.id;
 
-    const { error: dbError } = await createUserInSupabase(userModel);
+    const { error: dbError } = await createUserInSupabase(studentModel);
     if (dbError) {
       console.error('Database insert error:', dbError);
       return res.status(500).json({
@@ -77,7 +78,7 @@ const registerPOST = async (req, res) => {
     res.status(200).json({
       message: 'Registration successful',
       success: true,
-      user: userModel.toJSON(),
+      user: studentModel.toJSON(),
     });
   } catch (error) {
     console.error('Registration error:', error);
