@@ -12,6 +12,23 @@ class Student extends User {
     this.postCheckCounter = data.postCheckCounter || 0;
     this.isModerator = false;
   }
+  toJSON() {
+    return {
+      id: this.id,
+      username: this.username,
+      email: this.email,
+      // Add other fields you want to include:
+      name: this.name,
+      solvedProblems: this.solvedProblems,
+      rank: this.rank,
+      points: this.points,
+      commentCounter: this.commentCounter,
+      commentCheckCounter: this.commentCheckCounter,
+      postCounter: this.postCounter,
+      postCheckCounter: this.postCheckCounter,
+      isModerator: this.isModerator,
+    };
+  }
 }
 
 module.exports = Student;

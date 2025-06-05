@@ -18,7 +18,7 @@ async function createUserInSupabase(studentInstance) {
       isModerator: studentInstance.isModerator,
     },
   ]);
-  return { data, error };
+  return { studentInstance, error };
 }
 
 const registerPOST = async (req, res) => {

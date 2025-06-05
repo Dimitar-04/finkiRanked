@@ -1,23 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import logoIcon from "../assets/images/logoIcon.png";
-import logoText from "../assets/images/logoText.png";
-import pp from "../assets/images/pp.svg";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import logoIcon from '../assets/images/logoIcon.png';
+import logoText from '../assets/images/logoText.png';
+import pp from '../assets/images/pp.svg';
 
-import Task from "./components/Task";
-import LeaderBoardEx from "@/LandingPage/components/LeaderBoardEx";
-import Forum from "./components/Forum";
-import Profile from "./components/Profile";
+import Task from './components/Task';
+import LeaderBoardEx from '@/LandingPage/components/LeaderBoardEx';
+import Forum from './components/Forum';
+import Profile from './components/Profile';
 
 const Dashboard = () => {
-  const [activePage, setActivePage] = useState("home");
+  const [activePage, setActivePage] = useState('home');
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem('user');
     if (!storedUser) {
-      navigate("/login");
+      navigate('/login');
     } else {
       setUser(JSON.parse(storedUser));
     }
@@ -25,13 +25,13 @@ const Dashboard = () => {
 
   const renderPage = () => {
     switch (activePage) {
-      case "home":
+      case 'home':
         return <Task />;
-      case "competitions":
+      case 'competitions':
         return <Forum />;
-      case "leaderboard":
+      case 'leaderboard':
         return <LeaderBoardEx />;
-      case "profile":
+      case 'profile':
         return <Profile />;
       default:
         return (
@@ -64,11 +64,11 @@ const Dashboard = () => {
             <li>
               <button
                 className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
-                  activePage === "home"
-                    ? "bg-[#FFB800] text-black font-medium"
-                    : ""
+                  activePage === 'home'
+                    ? 'bg-[#FFB800] text-black font-medium'
+                    : ''
                 }`}
-                onClick={() => setActivePage("home")}
+                onClick={() => setActivePage('home')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -86,11 +86,11 @@ const Dashboard = () => {
             <li>
               <button
                 className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
-                  activePage === "leaderboard"
-                    ? "bg-[#FFB800] text-black font-medium"
-                    : ""
+                  activePage === 'leaderboard'
+                    ? 'bg-[#FFB800] text-black font-medium'
+                    : ''
                 }`}
-                onClick={() => setActivePage("leaderboard")}
+                onClick={() => setActivePage('leaderboard')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -108,11 +108,11 @@ const Dashboard = () => {
             <li>
               <button
                 className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
-                  activePage === "competitions"
-                    ? "bg-[#FFB800] text-black font-medium"
-                    : ""
+                  activePage === 'competitions'
+                    ? 'bg-[#FFB800] text-black font-medium'
+                    : ''
                 }`}
-                onClick={() => setActivePage("competitions")}
+                onClick={() => setActivePage('competitions')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -136,9 +136,9 @@ const Dashboard = () => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-base-content/10">
           <button
             className={`flex items-center gap-3  px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
-              activePage === "profile" ? "bg-[#FFB800] text-black" : ""
+              activePage === 'profile' ? 'bg-[#FFB800] text-black' : ''
             }`}
-            onClick={() => setActivePage("profile")}
+            onClick={() => setActivePage('profile')}
           >
             <img
               src={pp}
@@ -146,8 +146,8 @@ const Dashboard = () => {
               className="w-10 h-10 rounded-full border-2 border-base-content/10"
             />
             <div className="flex flex-col items-start">
-              <span className="font-medium">John Doe</span>
-              <span className="text-sm text-base-content/70">Student</span>
+              <span className="font-medium">{user.name}</span>
+              <span className="text-sm text-base-content/70">{user.rank}</span>
             </div>
           </button>
         </div>
