@@ -1,7 +1,17 @@
+// Example for Profile.jsx
 import React from "react";
 import pp from "../../assets/images/pp.svg";
 
 const Profile = () => {
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  };
+  const user = JSON.parse(localStorage.getItem("user"));
+  console.log("User data:", user);
+  if (!user) {
+    console.error("No user data found in localStorage.");
+  }
   return (
     <div
       data-theme="luxury"
@@ -14,18 +24,18 @@ const Profile = () => {
               <img src={pp} alt="Profile" />
             </div>
           </div>
-          <h2 className="card-title mt-4">John Doe</h2>
-          <p className="text-gray-500">johndoe@students.finki.ukim.mk</p>
+          <h2 className="card-title mt-4">{user.name}</h2>
+          <p className="text-gray-500">{user.email}</p>
           <div className="mt-4">
             <p className="text-lg">
-              <span className="font-bold">Rank:</span> Gold
+              <span className="font-bold">Rank:</span> {user.rank}
             </p>
             <p className="text-lg">
-              <span className="font-bold">Points:</span> 1200
+              <span className="font-bold">Points:</span> {user.points}
             </p>
           </div>
           <div className="mt-6">
-            <a href="/" className="btn btn-action btn-sm mx-2">
+            <a onClick={handleSignOut} className="btn btn-action btn-sm mx-2">
               Sign Out
             </a>
             <a href="/register" className="btn btn-action btn-sm mx-2">

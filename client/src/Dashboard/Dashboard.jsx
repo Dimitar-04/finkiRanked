@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import logoIcon from "../assets/images/logoIcon.png";
 import logoText from "../assets/images/logoText.png";
 import pp from "../assets/images/pp.svg";
@@ -10,6 +11,17 @@ import Profile from "./components/Profile";
 
 const Dashboard = () => {
   const [activePage, setActivePage] = useState("home");
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser) {
+      navigate("/login");
+    } else {
+      setUser(JSON.parse(storedUser));
+    }
+  }, [navigate]);
 
   const renderPage = () => {
     switch (activePage) {
@@ -29,6 +41,10 @@ const Dashboard = () => {
         );
     }
   };
+
+  if (!user) {
+    return <div>Loading...</div>; // or a loading spinner
+  }
 
   return (
     <div
