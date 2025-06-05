@@ -31,54 +31,112 @@ const Dashboard = () => {
   };
 
   return (
-    <div data-theme="luxury" className="dashboard min-h-screen flex">
-      <nav className="dashboard__navbar w-70 p-2 flex flex-col items-center border-r">
-        <div className="flex space-x-4 mb-10 mt-2.5">
-          <a href="/" className="flex items-center space-x-4">
-            <img src={logoIcon} alt="Logo 1" className="w-18" />
-            <img src={logoText} alt="Logo 2" className="w-40" />
+    <div
+      data-theme="luxury"
+      className="dashboard min-h-screen flex bg-base-100"
+    >
+      <nav className="dashboard__navbar w-64 min-h-screen bg-base-200 text-base-content">
+        <div className="p-4 border-b border-base-content/10">
+          <a href="/" className="flex items-center gap-2">
+            <img src={logoIcon} alt="Logo" className="w-10 h-10" />
+            <img src={logoText} alt="Logo Text" className="w-32" />
           </a>
         </div>
-        <ul className="flex flex-col space-y-4 flex-grow">
-          <li
-            className={`cursor-pointer ${
-              activePage === "home" ? "font-bold underline" : ""
+
+        <div className="px-4 py-8">
+          <ul className="menu menu-lg gap-2">
+            <li>
+              <button
+                className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
+                  activePage === "home"
+                    ? "bg-[#FFB800] text-black font-medium"
+                    : ""
+                }`}
+                onClick={() => setActivePage("home")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                </svg>
+                Task of the Day
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
+                  activePage === "leaderboard"
+                    ? "bg-[#FFB800] text-black font-medium"
+                    : ""
+                }`}
+                onClick={() => setActivePage("leaderboard")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M18 20V10M12 20V4M6 20v-6"></path>
+                </svg>
+                Leaderboard
+              </button>
+            </li>
+            <li>
+              <button
+                className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
+                  activePage === "competitions"
+                    ? "bg-[#FFB800] text-black font-medium"
+                    : ""
+                }`}
+                onClick={() => setActivePage("competitions")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Forum
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-base-content/10">
+          <button
+            className={`flex items-center gap-3  px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
+              activePage === "profile" ? "bg-[#FFB800] text-black" : ""
             }`}
-            onClick={() => setActivePage("home")}
+            onClick={() => setActivePage("profile")}
           >
-            Task of the Day
-          </li>
-          <li
-            className={`cursor-pointer ${
-              activePage === "leaderboard" ? "font-bold underline" : ""
-            }`}
-            onClick={() => setActivePage("leaderboard")}
-          >
-            Leaderboard
-          </li>
-          <li
-            className={`cursor-pointer ${
-              activePage === "competitions" ? "font-bold underline" : ""
-            }`}
-            onClick={() => setActivePage("competitions")}
-          >
-            Forum
-          </li>
-        </ul>
-        <div
-          className={`cursor-pointer dashboard__profile flex flex-row gap-10 items-center mt-auto ${
-            activePage === "profile" ? "font-bold" : ""
-          }`}
-          onClick={() => setActivePage("profile")}
-        >
-          <img
-            src={pp}
-            alt="Profile"
-            className="dashboard__profile-picture w-12 h-12 rounded-full border"
-          />
-          <p className="font-medium mt-2">John Doe</p>
+            <img
+              src={pp}
+              alt="Profile"
+              className="w-10 h-10 rounded-full border-2 border-base-content/10"
+            />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">John Doe</span>
+              <span className="text-sm text-base-content/70">Student</span>
+            </div>
+          </button>
         </div>
       </nav>
+
       <main className="dashboard__content flex-1 p-6">{renderPage()}</main>
     </div>
   );

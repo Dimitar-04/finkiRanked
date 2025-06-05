@@ -1,5 +1,6 @@
-import React from 'react';
-import hero from '../../assets/images/hero-bg.jpg';
+import React from "react";
+import hero from "../../assets/images/hero-bg.jpg";
+import { Link } from "react-router-dom";
 const Hero = () => {
   return (
     <div
@@ -15,7 +16,9 @@ const Hero = () => {
           <p className="mb-5">
             Daily coding challenges and competitions for FINKI students
           </p>
-          <a className="btn btn-xl">Join now</a>
+          <Link to="/login" className="btn btn-xl">
+            Join now
+          </Link>
         </div>
       </div>
     </div>

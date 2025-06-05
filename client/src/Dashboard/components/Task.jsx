@@ -9,81 +9,149 @@ const Task = () => {
   };
 
   return (
-    <div
-      className="flex flex-col items-center justify-center p-6 rounded-lg shadow-lg"
-      data-theme="luxury"
-    >
+    <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
       {!showTask ? (
-        <>
-          <h1 className="text-4xl font-bold mb-4">The task for: {today}</h1>
-          <p className="text-center mb-6 w-80">
-            Welcome! Please make sure to follow the rules: Stay respectful, stay
-            focused, and have fun!
-            <br />
-            <br />
-            <strong>Note:</strong> The task will be available for 24 hours.
-            <br />
-            <br />
-            <strong>Rules for grading:</strong>The task will be graded based on
-            the time of submission.
-            <br />
-            <br />
-            The earlier you submit, the better your score. Also the number of
-            attempts will be taken into account.
-            <br />
-            <br />
-            The more attempts you make, the worse your score will be.
-          </p>
-          <button
-            onClick={handleStart}
-            className="btn btn-active text-5xl px-14 py-10 mt-8 border rounded"
-          >
-            Start Now
-          </button>
-        </>
+        <div className="card bg-base-200 shadow-xl">
+          <div className="card-body items-center text-center">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-8 h-8 text-primary"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
+            </div>
+            <h1 className="card-title text-4xl font-bold mb-6">
+              Task for {today}
+            </h1>
+            <div className="divider"></div>
+            <div className="space-y-6 text-lg">
+              <div className="card bg-base-300 shadow-sm">
+                <div className="card-body">
+                  <h2 className="card-title">Rules for Grading</h2>
+                  <ul className="list-disc list-inside space-y-2">
+                    <li>Earlier submissions receive better scores</li>
+                    <li>Multiple attempts will reduce your score</li>
+                    <li>Stay respectful and focused</li>
+                    <li>Have fun solving the problem!</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="alert">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  className="w-6 h-6 stroke-current"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <span>The task will be available for 24 hours</span>
+              </div>
+            </div>
+            <div className="card-actions justify-center mt-8">
+              <button
+                onClick={handleStart}
+                className="btn btn-lg border-amber-400 gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M5 3l14 9-14 9V3z" />
+                </svg>
+                Start Challenge
+              </button>
+            </div>
+          </div>
+        </div>
       ) : (
-        <>
-          <h1 className="text-4xl font-bold mb-6">Your Task</h1>
-          <p className="text-center text-2xl mb-8">
-            <strong>Solve the following problem:</strong> Reverse a string.In
-            this task, you are required to write a function that takes a string
-            as input and returns a new string that is the reverse of the
-            original. For example, if the input string is "hello", the reversed
-            version should be "olleh". Similarly, if the input is "world", the
-            output should be "dlrow". However, you are not allowed to use any
-            built-in functions or shortcuts like Python's slicing syntax
-            ([::-1]) or the reverse() method. Instead, you should manually
-            reverse the string using a loop, stack, or another approach that
-            shows your understanding of how strings can be manipulated.{" "}
-          </p>
-          <div className=" p-4 rounded-lg mb-6">
-            <p>
-              Your unique input: <strong>ANDREJ</strong>
-            </p>
-            <p className="mt-3.5">
-              Use this on your local code editor and paste the output below
-            </p>
+        <div className="card bg-base-200 shadow-xl">
+          <div className="card-body">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-6 h-6 text-primary"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <h1 className="card-title text-3xl">Challenge for {today}</h1>
+            </div>
+
+            <div className="card bg-base-300 mb-8">
+              <div className="card-body">
+                <h2 className="card-title mb-4">Problem: String Reversal</h2>
+                <p className="text-lg leading-relaxed">
+                  Write a function that takes a string as input and returns its
+                  reverse. You must implement this manually without using
+                  built-in reverse functions or shortcuts like Python's [::-1]
+                  slicing.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="card bg-primary/5">
+                <div className="card-body">
+                  <h3 className="card-title text-primary">Your Input</h3>
+                  <div className="text-2xl font-mono mt-2">"ANDREJ"</div>
+                  <p className="text-sm mt-2 text-base-content/70">
+                    Use this input in your local editor
+                  </p>
+                </div>
+              </div>
+
+              <div className="card bg-base-300">
+                <div className="card-body">
+                  <h3 className="card-title">Example</h3>
+                  <div className="space-y-2 mt-2">
+                    <p className="font-mono">
+                      Input: "hello" → Output: "olleh"
+                    </p>
+                    <p className="font-mono">
+                      Input: "world" → Output: "dlrow"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="card bg-base-300">
+              <div className="card-body">
+                <h3 className="card-title mb-4">Submit Your Solution</h3>
+                <input
+                  type="text"
+                  placeholder="Enter your output here"
+                  className="input input-bordered input-lg w-full mb-4"
+                />
+                <div className="card-actions justify-end">
+                  <button className="btn border-amber-400 btn-lg">
+                    Submit Solution
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="mb-8 border p-4 rounded-lg">
-            <h2 className="text-3xl font-semibold">Example:</h2>
-            <p className="text-xl">
-              <strong>Input:</strong> "hello"
-            </p>
-            <p className="text-xl">
-              <strong>Desired Output:</strong> "olleh"
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <input
-              type="text"
-              placeholder="Enter your solution"
-              className="border p-4 mb-6 w-96 text-xl rounded-lg"
-            />
-            <button className="btn btn-action px-10 py-6 text-2xl rounded-lg">
-              Submit
-            </button>
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

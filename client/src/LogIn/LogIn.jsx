@@ -7,7 +7,7 @@ const Login = () => {
       data-theme="luxury"
       className="flex flex-col items-center justify-center h-screen"
     >
-      <h1 className="text-4xl font-bold mb-6">Create an account</h1>
+      <h1 className="text-4xl font-bold mb-6">Log in</h1>
       <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-96 border p-8 space-y-6">
         <div>
           <label className="label text-lg" htmlFor="email">
@@ -19,9 +19,7 @@ const Login = () => {
             className="input input-lg w-full"
             placeholder="user123@students.finki.ukim.mk"
           />
-          <p className="text-sm mt-1">
-            *Must register with your students address
-          </p>
+          <p className="text-sm mt-1">*Must use your students address</p>
         </div>
 
         <div>

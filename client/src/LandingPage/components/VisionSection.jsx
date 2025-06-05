@@ -1,5 +1,5 @@
-import React from 'react';
-import lista from '../../assets/images/lista.jpg';
+import React from "react";
+import lista from "../../assets/images/listaNoBg.png";
 const VisionSection = () => {
   return (
     <div className="hero bg-base-200 min-h-[80vh]">
