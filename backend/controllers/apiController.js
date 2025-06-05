@@ -1,53 +1,61 @@
-const userService = require('../services/userService');
+const supabase = require('../supabaseClient');
 
 const registerPOST = async (req, res) => {
   try {
-    console.log('Register request received:');
-    console.log('Username:', req.body.username);
-    console.log('Email:', req.body.email);
-    console.log('Password:', req.body.password);
-    if (!req.body.username || !req.body.email || !req.body.password) {
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
       return res.status(400).json({
         message: 'Missing required fields',
         success: false,
       });
     }
-    if (!req.body.email.endsWith('@students.finki.ukim.mk')) {
+    if (!email.endsWith('@students.finki.ukim.mk')) {
       return res.status(400).json({
         message: 'Email must be a valid FINKI student email',
         success: false,
       });
     }
-    const user = await userService.createUser({
-      username: req.body.username,
-      email: req.body.email,
-      password: req.body.password,
+    // Create user in Supabase Auth
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: { username },
+      email_confirm: true
     });
-    res.status(200).json({
-      message: 'Registration successful',
-      success: true,
-      user: {
-        username: req.body.username,
-        email: req.body.email,
-      },
-    });
-  } catch (error) {
-    console.error('Registration error:', error);
-
-    // Handle specific errors
-    if (error.message.includes('already exists')) {
-      return res.status(409).json({
+    if (error) {
+      if (error.message.includes('already registered')) {
+        return res.status(409).json({
+          message: 'Email already exists',
+          success: false,
+        });
+      }
+      return res.status(500).json({
         message: error.message,
         success: false,
       });
     }
-
+    // Optionally, store additional user info in a public 'users' table
+    await supabase.from('users').insert([
+      { id: data.user.id, username, email }
+    ]);
+    res.status(200).json({
+      message: 'Registration successful',
+      success: true,
+      user: {
+        id: data.user.id,
+        username,
+        email,
+      },
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({
       message: 'An error occurred during registration',
       success: false,
     });
   }
 };
+
 module.exports = {
   registerPOST,
 };
