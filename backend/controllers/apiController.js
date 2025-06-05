@@ -56,6 +56,43 @@ const registerPOST = async (req, res) => {
   }
 };
 
+const loginPOST = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'Email and password are required',
+        success: false,
+      });
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return res.status(401).json({
+        message: error.message,
+        success: false,
+      });
+    }
+
+    res.status(200).json({
+      message: 'Login successful',
+      success: true,
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      message: 'An error occurred during login',
+      success: false,
+    });
+  }
+};
+
 module.exports = {
   registerPOST,
+  loginPOST,
 };
