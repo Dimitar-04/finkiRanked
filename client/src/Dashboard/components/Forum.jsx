@@ -1,34 +1,44 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import commentIcon from "../../assets/images/comment.svg";
 import likeIcon from "../../assets/images/like.svg";
 
 const Forum = () => {
   const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const postsPerPage = 5; // Number of posts to fetch per request
 
-  const posts = [
-    {
-      id: 1,
-      title: "How to learn React?",
-      author: "John Doe",
-      content:
-        "React is a popular JavaScript library for building user interfaces. Start by learning the basics of components, state, and props.",
-    },
-    {
-      id: 2,
-      title: "Best practices for Tailwind CSS",
-      author: "Jane Smith",
-      content:
-        "Tailwind CSS is a utility-first CSS framework. Use consistent class naming and leverage configuration files for customization.",
-    },
-    {
-      id: 3,
-      title: "Understanding JavaScript closures",
-      author: "Alice Johnson",
-      content:
-        "Closures are a fundamental concept in JavaScript. They allow functions to access variables from their outer scope even after the outer function has returned.",
-    },
-  ];
+  useEffect(() => {
+    fetchPosts();
+  }, [page]);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch(
+        `/forum/posts?page=${page}&limit=${postsPerPage}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (page === 0) {
+        setPosts(data);
+      } else {
+        setPosts((prevPosts) => [...prevPosts, ...data]);
+      }
+      if (data.length < postsPerPage) {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Error fetching forum posts:", error);
+    }
+  };
+
+  const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-6 p-6">
@@ -42,7 +52,7 @@ const Forum = () => {
               className="p-4 border rounded-lg shadow-sm hover:shadow-md transition"
             >
               <h2 className="text-lg font-semibold">{post.title}</h2>
-              <p className="text-sm text-gray-500">By {post.author}</p>
+              <p className="text-sm text-gray-500">By {post.author_name}</p>
               <p className="mt-2 text-gray-700">{post.content}</p>
               <div className="mt-4 flex gap-4">
                 <img
@@ -59,6 +69,13 @@ const Forum = () => {
             </div>
           ))}
         </div>
+        {hasMore && (
+          <div className="flex justify-center mt-6">
+            <button onClick={handleLoadMore} className="btn btn-outline">
+              Load More
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Create a Post Button */}

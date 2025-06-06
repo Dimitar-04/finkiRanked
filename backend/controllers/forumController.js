@@ -2,7 +2,8 @@ const supabase = require('../supabaseClient');
 
 // Placeholder for forum post functions
 const createForumPost = async (req, res) => {
-  const { title, content, authorId, authorName } = req.body;
+  const { title, content, authorId, authorName } = req.body
+  console.log(title,content,authorId,authorName)
 
   try {
     const { data, error } = await supabase
@@ -24,10 +25,15 @@ const createForumPost = async (req, res) => {
 
 const getForumPosts = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = page * limit;
+
     const { data, error } = await supabase
       .from('forum_posts')
       .select('*')
-      .order('dateCreated', { ascending: false });
+      .order('date_created', { ascending: false })
+      .range(offset, offset + limit - 1); // Supabase range is inclusive
 
     if (error) {
       console.error('Error fetching forum posts:', error);
@@ -120,7 +126,7 @@ const getComments = async (req, res) => {
       .from('comments')
       .select('*')
       .eq('post_id', postId)
-      .order('dateCreated', { ascending: false });
+      .order('date_created', { ascending: false });
 
     if (error) {
       console.error('Error fetching comments:', error);
