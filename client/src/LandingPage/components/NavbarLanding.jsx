@@ -1,12 +1,12 @@
-import React from 'react';
-import logoIcon from '../../assets/images/logoIcon.png';
-import logoText from '../../assets/images/logoText.png';
-import { useNavigate } from 'react-router-dom';
-const Navbar = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+import React from "react";
+import logoIcon from "../../assets/images/logoIcon.png";
+import logoText from "../../assets/images/logoText.png";
+import { useNavigate } from "react-router-dom";
+const NavbarLanding = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
   const handleRegisterClick = () => {
-    navigate('/register');
+    navigate("/register");
   };
   return (
     <div className="navbar bg-base-100 shadow-sm justify-between p-6">
@@ -23,7 +23,7 @@ const Navbar = () => {
           </button>
         )}
         {user && (
-          <button className="btn btn-lg" onClick={() => navigate('/dashboard')}>
+          <button className="btn btn-lg" onClick={() => navigate("/dashboard")}>
             {user.username}
           </button>
         )}
@@ -32,4 +32,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavbarLanding;
