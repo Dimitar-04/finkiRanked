@@ -138,7 +138,9 @@ const createComment = async (req, res) => {
   const { post_id, content, authorId, authorName } = req.body;
 
   if (!post_id || !content || !authorId || !authorName) {
-    return res.status(400).json({ error: 'post_id, content, authorId, and authorName are required' });
+    return res.status(400).json({
+      error: 'post_id, content, authorId, and authorName are required',
+    });
   }
 
   try {
@@ -176,7 +178,9 @@ const getComments = async (req, res) => {
   const postId = req.query.post_id;
 
   if (!postId) {
-    return res.status(400).json({ error: 'post_id query parameter is required' });
+    return res
+      .status(400)
+      .json({ error: 'post_id query parameter is required' });
   }
 
   try {
