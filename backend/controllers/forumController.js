@@ -2,13 +2,14 @@ const supabase = require('../supabaseClient');
 
 // Placeholder for forum post functions
 const createForumPost = async (req, res) => {
-  const { title, content, authorId, authorName } = req.body
-  console.log(title,content,authorId,authorName)
+  const { title, content, authorId, authorName } = req.body;
 
   try {
     const { data, error } = await supabase
       .from('forum_posts')
-      .insert([{ title, content, author_id: authorId, author_name: authorName }])
+      .insert([
+        { title, content, author_id: authorId, author_name: authorName },
+      ])
       .select();
 
     if (error) {
@@ -16,7 +17,9 @@ const createForumPost = async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    res.status(201).json({ message: 'Forum post created successfully', post: data[0] });
+    res
+      .status(201)
+      .json({ message: 'Forum post created successfully', post: data[0] });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -67,7 +70,9 @@ const updateForumPost = async (req, res) => {
       return res.status(404).json({ error: 'Forum post not found' });
     }
 
-    res.status(200).json({ message: 'Forum post updated successfully', post: data[0] });
+    res
+      .status(200)
+      .json({ message: 'Forum post updated successfully', post: data[0] });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -78,10 +83,7 @@ const deleteForumPost = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { error } = await supabase
-      .from('forum_posts')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('forum_posts').delete().eq('id', id);
 
     if (error) {
       console.error('Error deleting forum post:', error);
@@ -103,7 +105,14 @@ const createComment = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('comments')
-      .insert([{ post_id: postId, content, author_id: authorId, author_name: authorName }])
+      .insert([
+        {
+          post_id: postId,
+          content,
+          author_id: authorId,
+          author_name: authorName,
+        },
+      ])
       .select();
 
     if (error) {
@@ -111,7 +120,9 @@ const createComment = async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
 
-    res.status(201).json({ message: 'Comment created successfully', comment: data[0] });
+    res
+      .status(201)
+      .json({ message: 'Comment created successfully', comment: data[0] });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -160,7 +171,9 @@ const updateComment = async (req, res) => {
       return res.status(404).json({ error: 'Comment not found' });
     }
 
-    res.status(200).json({ message: 'Comment updated successfully', comment: data[0] });
+    res
+      .status(200)
+      .json({ message: 'Comment updated successfully', comment: data[0] });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
