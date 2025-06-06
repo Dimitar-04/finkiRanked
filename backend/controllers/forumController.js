@@ -174,7 +174,6 @@ const createComment = async (req, res) => {
 };
 
 const getComments = async (req, res) => {
-  // Get post_id from query string
   const postId = req.query.post_id;
 
   if (!postId) {
@@ -184,7 +183,6 @@ const getComments = async (req, res) => {
   }
 
   try {
-    // Use Prisma to fetch comments
     const dbComments = await prisma.comments.findMany({
       where: {
         post_id: postId,

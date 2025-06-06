@@ -8,7 +8,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const postsPerPage = 5; // Number of posts to fetch per request
+  const postsPerPage = 5;
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
@@ -38,6 +38,25 @@ const Forum = ({ setActivePage, onPostClick }) => {
     }
   };
 
+  const handleDeletePost = async (postId) => {
+    try {
+      const response = await fetch(`/forum/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Remove the deleted post from the state
+      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+      console.log('Post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
+  };
+
   const handleLoadMore = () => {
     setPage((prevPage) => prevPage + 1);
   };
@@ -56,7 +75,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
               {(post.authorName === user.name ||
                 post.authorName === user.username) && (
                 <button
-                  className=" absolute top-2 right-2 p-1.5 rounded-full hover:bg-gray-600 transition-colors"
+                  className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
                     // Here you would add the delete confirmation and logic
@@ -68,6 +87,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
                       // Call your delete post function here
                       console.log('Delete post:', post.id);
                     }
+                    handleDeletePost(post.id);
                   }}
                 >
                   <img src={trashIcon} alt="Delete" className="w-6 h-6" />
