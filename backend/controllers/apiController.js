@@ -6,7 +6,6 @@ const registerPOST = async (req, res) => {
   try {
     const { username, email, password, name } = req.body;
 
-    // Validate input
     if (!username || !email || !password || !name) {
       return res.status(400).json({
         message: 'Username, email, password and name are required',
@@ -15,7 +14,6 @@ const registerPOST = async (req, res) => {
     }
 
     try {
-      // Step 1: Create auth user in Supabase
       const { data: authUser, error: authError } =
         await supabase.auth.admin.createUser({
           email,
@@ -25,21 +23,17 @@ const registerPOST = async (req, res) => {
 
       if (authError) throw new Error(authError.message);
 
-      // Step 2: Create Student instance
       const student = new Student({
         id: authUser.user.id,
         username,
         email,
         name,
-        // Add other properties as needed
       });
 
-      // Step 3: Use the Student instance to create the database record
       const { studentInstance, error } = await createUserInSupabase(student);
 
       if (error) throw new Error(error.message);
 
-      // Success response
       res.status(201).json({
         message: 'Registration successful',
         success: true,
@@ -61,12 +55,11 @@ const registerPOST = async (req, res) => {
   }
 };
 
-// Replace your createUserInSupabase function
 async function createUserInSupabase(studentInstance) {
   try {
     const newUser = await prisma.users.create({
       data: {
-        id: studentInstance.id, // Use ID from Supabase Auth
+        id: studentInstance.id,
         username: studentInstance.username,
         email: studentInstance.email,
         name: studentInstance.name,
@@ -86,7 +79,6 @@ async function createUserInSupabase(studentInstance) {
   }
 }
 
-// Update your loginPOST function
 const loginPOST = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -97,7 +89,6 @@ const loginPOST = async (req, res) => {
         .json({ message: 'Email and password are required', success: false });
     }
 
-    // Still use Supabase for authentication
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -107,7 +98,6 @@ const loginPOST = async (req, res) => {
       return res.status(401).json({ message: error.message, success: false });
     }
 
-    // But use Prisma to fetch the user data
     try {
       const userData = await prisma.users.findUnique({
         where: { email: email },
@@ -135,8 +125,6 @@ const loginPOST = async (req, res) => {
       .json({ message: 'An error occurred during login', success: false });
   }
 };
-
-// The rest of your controller remains similar
 
 module.exports = {
   registerPOST,
