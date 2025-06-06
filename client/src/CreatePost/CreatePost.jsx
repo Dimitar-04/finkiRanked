@@ -1,19 +1,53 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CreatePost = ({ setActivePage }) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const navigate = useNavigate();
 
   const backToForum = () => {
-    setActivePage('forum');
-    navigate('/dashboard');
+    setActivePage("forum");
+    navigate("/dashboard");
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Post submitted:', { title, content });
-    // Add your submission logic here
+
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!user || !user.id || !user.name) {
+      alert("You must be logged in to create a post.");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("/forum/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          content,
+          authorId: user.id,
+          authorName: user.name,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Post created successfully:", data);
+      alert("Post created successfully!");
+      navigate("/dashboard"); // Navigate back to the forum or dashboard
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert(`Failed to create post: ${error.message}`);
+    }
   };
 
   return (
