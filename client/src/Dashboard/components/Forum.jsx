@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import commentIcon from '../../assets/images/comment.svg';
 import trashIcon from '../../assets/images/delete.svg'; // Add this import
-
-const Forum = ({ setActivePage, onPostClick }) => {
+import Navbar from './Navbar';
+const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
@@ -61,95 +61,108 @@ const Forum = ({ setActivePage, onPostClick }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
-      {/* Forum Posts */}
-      <div className="flex-1 ml-8">
-        <h1 className="text-3xl font-bold mb-4">Forum Posts</h1>
-        <div className="space-y-4" w-300>
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="p-4 border rounded-lg shadow-sm hover:shadow-md transition  relative"
-            >
-              {(post.authorName === user.name ||
-                post.authorName === user.username) && (
-                <button
-                  className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+    <div
+      data-theme="luxury"
+      className="dashboard h-screen flex bg-base-100 overflow-none"
+    >
+      <Navbar></Navbar>
+      <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
+        {/* Forum Posts */}
+        <div className="flex-1 ml-8">
+          <h1 className="text-3xl font-bold mb-4">Forum Posts</h1>
+          <div className="space-y-4" w-300>
+            {posts.map((post) => (
+              <div
+                key={post.id}
+                className="p-4 border rounded-lg shadow-sm hover:shadow-md transition  relative"
+              >
+                {(post.authorName === user.name ||
+                  post.authorName === user.username) && (
+                  <button
+                    className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (
+                        window.confirm(
+                          'Are you sure you want to delete this post?'
+                        )
+                      ) {
+                        handleDeletePost(post.id);
+                      }
+                    }}
+                  >
+                    <img src={trashIcon} alt="Delete" className="w-6 h-6" />
+                  </button>
+                )}
+
+                <div className="flex items-center gap-4 mt-2">
+                  <h2
+                    className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
+                    onClick={() => {
+                      console.log('Post clicked:', post);
+                      navigate(`/dashboard/forum-detail/${post.id}`, {
+                        state: { post },
+                      });
+                    }}
+                  >
+                    {post.title}
+                  </h2>
+                </div>
+
+                <p className="text-m text-gray-500">
+                  By {post.authorName},{' '}
+                  <span>{post.dateCreated.split('T')[0]}</span>
+                </p>
+                <p className="mt-2 text-gray-400 text-xl">
+                  {post.content && post.content.length > 300
+                    ? post.content.slice(0, 300) + '...'
+                    : post.content}
+                </p>
+                <div
+                  className="mt-4 flex justify-end"
                   onClick={(e) => {
-                    e.stopPropagation();
+                    // Prevent clicking the post if the delete button was clicked
                     if (
-                      window.confirm(
-                        'Are you sure you want to delete this post?'
-                      )
+                      e.target.closest('.delete-btn') ||
+                      e.target.classList.contains('delete-btn')
                     ) {
-                      handleDeletePost(post.id);
+                      e.stopPropagation();
+                      return;
                     }
+                    onPostClick && onPostClick(post);
                   }}
                 >
-                  <img src={trashIcon} alt="Delete" className="w-6 h-6" />
-                </button>
-              )}
-
-              <div className="flex items-center gap-4 mt-2">
-                <h2
-                  className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
-                  onClick={() => onPostClick(post)}
-                >
-                  {post.title}
-                </h2>
+                  <p className="mr-4">{post.comment_count}</p>
+                  <img
+                    src={commentIcon}
+                    alt="Comment"
+                    className="w-6 h-6 cursor-pointer hover:opacity-80"
+                  />
+                </div>
               </div>
-
-              <p className="text-m text-gray-500">
-                By {post.authorName},{' '}
-                <span>{post.dateCreated.split('T')[0]}</span>
-              </p>
-              <p className="mt-2 text-gray-400 text-xl">
-                {post.content && post.content.length > 300
-                  ? post.content.slice(0, 300) + '...'
-                  : post.content}
-              </p>
-              <div
-                className="mt-4 flex justify-end"
-                onClick={(e) => {
-                  // Prevent clicking the post if the delete button was clicked
-                  if (
-                    e.target.closest('.delete-btn') ||
-                    e.target.classList.contains('delete-btn')
-                  ) {
-                    e.stopPropagation();
-                    return;
-                  }
-                  onPostClick && onPostClick(post);
-                }}
-              >
-                <p className="mr-4">{post.comment_count}</p>
-                <img
-                  src={commentIcon}
-                  alt="Comment"
-                  className="w-6 h-6 cursor-pointer hover:opacity-80"
-                />
-              </div>
+            ))}
+          </div>
+          {hasMore && (
+            <div className="flex justify-center mt-6">
+              <button onClick={handleLoadMore} className="btn btn-outline">
+                Load More
+              </button>
             </div>
-          ))}
+          )}
         </div>
-        {hasMore && (
-          <div className="flex justify-center mt-6">
-            <button onClick={handleLoadMore} className="btn btn-outline">
-              Load More
+
+        {/* Create a Post Button */}
+        <div className="w-full md:w-1/4">
+          <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
+            <button
+              onClick={() => {
+                navigate('/dashboard/create-post');
+              }}
+              className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
+            >
+              Create a Post
             </button>
           </div>
-        )}
-      </div>
-
-      {/* Create a Post Button */}
-      <div className="w-full md:w-1/4">
-        <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
-          <button
-            onClick={() => setActivePage('createPost')}
-            className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
-          >
-            Create a Post
-          </button>
         </div>
       </div>
     </div>

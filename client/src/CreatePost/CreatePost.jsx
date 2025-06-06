@@ -1,32 +1,27 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CreatePost = ({ setActivePage }) => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const navigate = useNavigate();
-
-  const backToForum = () => {
-    setActivePage("forum");
-    navigate("/dashboard");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem('user'));
 
     if (!user || !user.id || !user.name) {
-      alert("You must be logged in to create a post.");
-      navigate("/login");
+      alert('You must be logged in to create a post.');
+      navigate('/login');
       return;
     }
 
     try {
-      const response = await fetch("/forum/posts", {
-        method: "POST",
+      const response = await fetch('/forum/posts', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           title,
@@ -40,9 +35,9 @@ const CreatePost = ({ setActivePage }) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      navigate("/dashboard");
+      navigate('/dashboard/forum');
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post:', error);
       alert(`Failed to create post: ${error.message}`);
     }
   };
@@ -54,7 +49,10 @@ const CreatePost = ({ setActivePage }) => {
           <h2 className="text-3xl font-bold text-base-content">
             Create a Post
           </h2>
-          <button onClick={backToForum} className="btn btn-outline gap-2">
+          <button
+            onClick={() => navigate('/dashboard/forum')}
+            className="btn btn-outline gap-2"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-5 h-5"
@@ -108,7 +106,7 @@ const CreatePost = ({ setActivePage }) => {
             <div className="card-actions justify-end mt-8">
               <button
                 type="button"
-                onClick={backToForum}
+                onClick={() => navigate('/dashboard/forum')}
                 className="btn btn-ghost btn-lg"
               >
                 Cancel
