@@ -19,6 +19,7 @@ const registerPOST = async (req, res) => {
           email,
           password,
           user_metadata: { username, name },
+          email_confirm: true,
         });
 
       if (authError) throw new Error(authError.message);
@@ -78,7 +79,16 @@ async function createUserInSupabase(studentInstance) {
     return { studentInstance, error };
   }
 }
-
+function convertBigIntToString(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(convertBigIntToString);
+  } else if (obj && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj).map(([k, v]) => [k, typeof v === 'bigint' ? v.toString() : convertBigIntToString(v)])
+    );
+  }
+  return obj;
+}
 const loginPOST = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -109,9 +119,12 @@ const loginPOST = async (req, res) => {
           .json({ message: 'User not found in database', success: false });
       }
 
+      // Convert BigInt fields to string
+      const safeUserData = convertBigIntToString(userData);
+
       res
         .status(200)
-        .json({ message: 'Login successful', success: true, user: userData });
+        .json({ message: 'Login successful', success: true, user: safeUserData });
     } catch (dbError) {
       console.error('Database error:', dbError);
       return res

@@ -1,16 +1,17 @@
 // Example for Profile.jsx
-import React from 'react';
-import pp from '../../assets/images/pp.svg';
+import React from "react";
+import pp from "../../assets/images/pp.svg";
+import Navbar from "./Navbar";
 
 const Profile = () => {
   const handleSignOut = () => {
-    localStorage.removeItem('user');
-    window.location.href = '/';
+    localStorage.removeItem("user");
+    window.location.href = "/";
   };
-  const user = JSON.parse(localStorage.getItem('user'));
-  console.log('User data:', user);
+  const user = JSON.parse(localStorage.getItem("user"));
+  console.log("User data:", user);
   if (!user) {
-    console.error('No user data found in localStorage.');
+    console.error("No user data found in localStorage.");
   }
   return (
     <div
@@ -20,7 +21,7 @@ const Profile = () => {
       <Navbar></Navbar>
       <div
         data-theme="luxury"
-        className="flex flex-col items-center p-6 bg-base-200"
+        className="w-full flex flex-col items-center p-6 bg-base-200"
       >
         <div className="card w-full max-w-md bg-base-100 shadow-xl">
           <div className="card-body items-center text-center">

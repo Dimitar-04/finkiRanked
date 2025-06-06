@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import logoIcon from '../../assets/images/logoIcon.png';
-import logoText from '../../assets/images/logoText.png';
-import pp from '../../assets/images/pp.svg';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import logoIcon from "../../assets/images/logoIcon.png";
+import logoText from "../../assets/images/logoText.png";
+import pp from "../../assets/images/pp.svg";
 
 export default function Navbar() {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
   return (
     <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content">
@@ -21,7 +21,7 @@ export default function Navbar() {
           <li>
             <button
               className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors `}
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -39,7 +39,7 @@ export default function Navbar() {
           <li>
             <button
               className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
-              onClick={() => navigate('/dashboard/leaderboard')}
+              onClick={() => navigate("/dashboard/leaderboard")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -57,7 +57,7 @@ export default function Navbar() {
           <li>
             <button
               className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
-              onClick={() => navigate('/dashboard/forum')}
+              onClick={() => navigate("/dashboard/forum")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -75,6 +75,30 @@ export default function Navbar() {
               Forum
             </button>
           </li>
+          {user.isModerator && (
+            <li>
+              <button
+                className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
+                onClick={() => navigate("/dashboard/forum")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="3" y1="9" x2="21" y2="9"></line>
+                  <line x1="3" y1="15" x2="21" y2="15"></line>
+                  <line x1="9" y1="3" x2="9" y2="21"></line>
+                  <line x1="15" y1="3" x2="15" y2="21"></line>
+                </svg>
+                Manage Posts
+              </button>
+            </li>
+          )}
         </ul>
       </div>
 
@@ -87,7 +111,10 @@ export default function Navbar() {
             alt="Profile"
             className="w-10 h-10 rounded-full border-2 border-base-content/10"
           />
-          <div className="flex flex-col items-start">
+          <div
+            className="flex flex-col items-start"
+            onClick={() => navigate("/dashboard/profile")}
+          >
             <span className="font-medium text-left">{user.name}</span>
             <span className="text-sm text-base-content/70">{user.rank}</span>
           </div>
