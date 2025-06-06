@@ -1,87 +1,59 @@
 const supabase = require('../supabaseClient');
 const Student = require('../models/Student');
-
-async function createUserInSupabase(studentInstance) {
-  const { data, error } = await supabase.from('users').insert([
-    {
-      id: studentInstance.id,
-      username: studentInstance.username,
-      email: studentInstance.email,
-      name: studentInstance.name,
-      solved_problems: studentInstance.solvedProblems,
-      rank: studentInstance.rank,
-      points: studentInstance.points,
-      commentCounter: studentInstance.commentCounter,
-      commentCheckCounter: studentInstance.commentCheckCounter,
-      postCounter: studentInstance.postCounter,
-      postCheckCounter: studentInstance.postCheckCounter,
-      isModerator: studentInstance.isModerator,
-    },
-  ]);
-  return { studentInstance, error };
-}
+const prisma = require('../lib/prisma');
 
 const registerPOST = async (req, res) => {
   try {
-    const { username, name, email, password } = req.body;
+    const { username, email, password, name } = req.body;
 
-    const studentModel = new Student({ username, email, name });
-
-    const validationErrors = studentModel.validate();
-
-    if (validationErrors) {
+    // Validate input
+    if (!username || !email || !password || !name) {
       return res.status(400).json({
-        message: 'Validation failed',
-        errors: validationErrors,
+        message: 'Username, email, password and name are required',
         success: false,
       });
     }
 
-    if (!password) {
-      return res.status(400).json({
-        message: 'Password is required',
-        success: false,
-      });
-    }
-
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      user_metadata: { username },
-      email_confirm: true,
-    });
-
-    if (error) {
-      if (error.message.includes('already registered')) {
-        return res.status(409).json({
-          message: 'Email already exists',
-          success: false,
+    try {
+      // Step 1: Create auth user in Supabase
+      const { data: authUser, error: authError } =
+        await supabase.auth.admin.createUser({
+          email,
+          password,
+          user_metadata: { username, name },
         });
-      }
-      return res.status(500).json({
+
+      if (authError) throw new Error(authError.message);
+
+      // Step 2: Create Student instance
+      const student = new Student({
+        id: authUser.user.id,
+        username,
+        email,
+        name,
+        // Add other properties as needed
+      });
+
+      // Step 3: Use the Student instance to create the database record
+      const { studentInstance, error } = await createUserInSupabase(student);
+
+      if (error) throw new Error(error.message);
+
+      // Success response
+      res.status(201).json({
+        message: 'Registration successful',
+        success: true,
+        user: studentInstance,
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(400).json({
         message: error.message,
         success: false,
       });
     }
-
-    studentModel.id = data.user.id;
-
-    const { error: dbError } = await createUserInSupabase(studentModel);
-    if (dbError) {
-      console.error('Database insert error:', dbError);
-      return res.status(500).json({
-        message: 'Failed to save user in database',
-        success: false,
-      });
-    }
-
-    res.status(200).json({
-      message: 'Registration successful',
-      success: true,
-      user: studentModel.toJSON(),
-    });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Server error:', error);
     res.status(500).json({
       message: 'An error occurred during registration',
       success: false,
@@ -89,56 +61,82 @@ const registerPOST = async (req, res) => {
   }
 };
 
+// Replace your createUserInSupabase function
+async function createUserInSupabase(studentInstance) {
+  try {
+    const newUser = await prisma.users.create({
+      data: {
+        id: studentInstance.id, // Use ID from Supabase Auth
+        username: studentInstance.username,
+        email: studentInstance.email,
+        name: studentInstance.name,
+        solved_problems: studentInstance.solvedProblems || 0,
+        rank: studentInstance.rank || 'Novice',
+        points: studentInstance.points || 0,
+        commentCounter: studentInstance.commentCounter || 3,
+        commentCheckCounter: studentInstance.commentCheckCounter || 0,
+        postCounter: studentInstance.postCounter || 3,
+        postCheckCounter: studentInstance.postCheckCounter || 0,
+        isModerator: studentInstance.isModerator || false,
+      },
+    });
+    return { studentInstance, error: null };
+  } catch (error) {
+    return { studentInstance, error };
+  }
+}
+
+// Update your loginPOST function
 const loginPOST = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        message: 'Email and password are required',
-        success: false,
-      });
+      return res
+        .status(400)
+        .json({ message: 'Email and password are required', success: false });
     }
 
+    // Still use Supabase for authentication
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      return res.status(401).json({
-        message: error.message,
-        success: false,
-      });
+      return res.status(401).json({ message: error.message, success: false });
     }
 
-    // Fetch user from users table
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (userError || !userData) {
-      return res.status(404).json({
-        message: 'User not found in database',
-        success: false,
+    // But use Prisma to fetch the user data
+    try {
+      const userData = await prisma.users.findUnique({
+        where: { email: email },
       });
-    }
 
-    res.status(200).json({
-      message: 'Login successful',
-      success: true,
-      user: userData,
-    });
+      if (!userData) {
+        return res
+          .status(404)
+          .json({ message: 'User not found in database', success: false });
+      }
+
+      res
+        .status(200)
+        .json({ message: 'Login successful', success: true, user: userData });
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      return res
+        .status(500)
+        .json({ message: 'Database error', success: false });
+    }
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      message: 'An error occurred during login',
-      success: false,
-    });
+    res
+      .status(500)
+      .json({ message: 'An error occurred during login', success: false });
   }
 };
+
+// The rest of your controller remains similar
 
 module.exports = {
   registerPOST,

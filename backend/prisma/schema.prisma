@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model comments {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dateCreated DateTime     @default(now()) @db.Timestamptz(6)
+  post_id     String?      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content     String?      @default("")
+  author_id   String?      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_name String?
+  users       users?       @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  forum_posts forum_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model forum_posts {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String     @default("")
+  content      String?    @default("")
+  author_id    String?    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_name  String?
+  date_created DateTime?  @default(now()) @db.Date
+  comments     comments[]
+  users        users?     @relation(fields: [author_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+}
+
+model users {
+  id                  String        @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  username            String        @unique
+  email               String        @unique
+  name                String?
+  solved_problems     BigInt?       @default(0)
+  rank                String?       @default("Novice")
+  points              BigInt?       @default(0)
+  commentCounter      Int?          @default(3) @db.SmallInt
+  commentCheckCounter Int?          @default(0) @db.SmallInt
+  postCounter         Int?          @default(3) @db.SmallInt
+  postCheckCounter    Int?          @default(0) @db.SmallInt
+  isModerator         Boolean       @default(false)
+  comments            comments[]
+  forum_posts         forum_posts[]
+}

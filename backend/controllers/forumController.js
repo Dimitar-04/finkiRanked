@@ -1,25 +1,36 @@
-const supabase = require('../supabaseClient');
+const prisma = require('../lib/prisma');
+const ForumPost = require('../models/ForumPost');
+const Comment = require('../models/Comment');
 
-// Placeholder for forum post functions
+// Forum Post Functions
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
   try {
-    const { data, error } = await supabase
-      .from('forum_posts')
-      .insert([
-        { title, content, author_id: authorId, author_name: authorName },
-      ])
-      .select();
+    // Create domain object first
+    const post = new ForumPost({
+      title,
+      content,
+      authorName,
+    });
 
-    if (error) {
-      console.error('Error creating forum post:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    // Store in database using Prisma
+    const savedPost = await prisma.forum_posts.create({
+      data: {
+        title: post.title,
+        content: post.content,
+        author_id: authorId,
+        author_name: post.authorName,
+      },
+    });
 
-    res
-      .status(201)
-      .json({ message: 'Forum post created successfully', post: data[0] });
+    // Update the domain object with the generated ID
+    post.id = savedPost.id;
+
+    res.status(201).json({
+      message: 'Forum post created successfully',
+      post: savedPost,
+    });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -30,20 +41,30 @@ const getForumPosts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
-    const offset = page * limit;
+    const skip = page * limit;
 
-    const { data, error } = await supabase
-      .from('forum_posts')
-      .select('*')
-      .order('date_created', { ascending: false })
-      .range(offset, offset + limit - 1); // Supabase range is inclusive
+    // Use Prisma to fetch posts with pagination
+    const posts = await prisma.forum_posts.findMany({
+      skip,
+      take: limit,
+      orderBy: {
+        date_created: 'desc',
+      },
+    });
 
-    if (error) {
-      console.error('Error fetching forum posts:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    // Convert to domain objects
+    const forumPosts = posts.map(
+      (post) =>
+        new ForumPost({
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          authorName: post.author_name,
+          dateCreated: post.date_created,
+        })
+    );
 
-    res.status(200).json(data);
+    res.status(200).json(forumPosts);
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -55,25 +76,37 @@ const updateForumPost = async (req, res) => {
   const { title, content } = req.body;
 
   try {
-    const { data, error } = await supabase
-      .from('forum_posts')
-      .update({ title, content })
-      .eq('id', id)
-      .select();
+    // Update using Prisma
+    const updatedPost = await prisma.forum_posts.update({
+      where: { id },
+      data: {
+        title,
+        content,
+      },
+    });
 
-    if (error) {
-      console.error('Error updating forum post:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    if (!data || data.length === 0) {
+    if (!updatedPost) {
       return res.status(404).json({ error: 'Forum post not found' });
     }
 
-    res
-      .status(200)
-      .json({ message: 'Forum post updated successfully', post: data[0] });
+    // Create domain object from updated data
+    const post = new ForumPost({
+      id: updatedPost.id,
+      title: updatedPost.title,
+      content: updatedPost.content,
+      authorName: updatedPost.author_name,
+      dateCreated: updatedPost.date_created,
+    });
+
+    res.status(200).json({
+      message: 'Forum post updated successfully',
+      post,
+    });
   } catch (err) {
+    // Prisma throws when record not found
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Forum post not found' });
+    }
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -83,46 +116,51 @@ const deleteForumPost = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { error } = await supabase.from('forum_posts').delete().eq('id', id);
+    // Delete using Prisma
+    await prisma.forum_posts.delete({
+      where: { id },
+    });
 
-    if (error) {
-      console.error('Error deleting forum post:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.status(204).send(); // No content to send back on successful deletion
+    res.status(204).send();
   } catch (err) {
+    // Prisma throws when record not found
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Forum post not found' });
+    }
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-// Placeholder for comment functions
+// Comment Functions
 const createComment = async (req, res) => {
   const { postId } = req.params;
   const { content, authorId, authorName } = req.body;
 
   try {
-    const { data, error } = await supabase
-      .from('comments')
-      .insert([
-        {
-          post_id: postId,
-          content,
-          author_id: authorId,
-          author_name: authorName,
-        },
-      ])
-      .select();
+    // Create domain object first
+    const comment = new Comment({
+      content,
+      authorName,
+    });
 
-    if (error) {
-      console.error('Error creating comment:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    // Store in database using Prisma
+    const savedComment = await prisma.comments.create({
+      data: {
+        post_id: postId,
+        content: comment.content,
+        author_id: authorId,
+        author_name: comment.authorName,
+      },
+    });
 
-    res
-      .status(201)
-      .json({ message: 'Comment created successfully', comment: data[0] });
+    // Update the domain object with the generated ID
+    comment.id = savedComment.id;
+
+    res.status(201).json({
+      message: 'Comment created successfully',
+      comment: savedComment,
+    });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -133,18 +171,28 @@ const getComments = async (req, res) => {
   const { postId } = req.params;
 
   try {
-    const { data, error } = await supabase
-      .from('comments')
-      .select('*')
-      .eq('post_id', postId)
-      .order('date_created', { ascending: false });
+    // Use Prisma to fetch comments
+    const dbComments = await prisma.comments.findMany({
+      where: {
+        post_id: postId,
+      },
+      orderBy: {
+        dateCreated: 'desc',
+      },
+    });
 
-    if (error) {
-      console.error('Error fetching comments:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    // Convert to domain objects
+    const comments = dbComments.map(
+      (comment) =>
+        new Comment({
+          id: comment.id,
+          content: comment.content,
+          authorName: comment.author_name,
+          dateCreated: comment.dateCreated,
+        })
+    );
 
-    res.status(200).json(data);
+    res.status(200).json(comments);
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -156,25 +204,28 @@ const updateComment = async (req, res) => {
   const { content } = req.body;
 
   try {
-    const { data, error } = await supabase
-      .from('comments')
-      .update({ content })
-      .eq('id', commentId)
-      .select();
+    // Update using Prisma
+    const updatedComment = await prisma.comments.update({
+      where: { id: commentId },
+      data: { content },
+    });
 
-    if (error) {
-      console.error('Error updating comment:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    // Create domain object from updated data
+    const comment = new Comment({
+      id: updatedComment.id,
+      content: updatedComment.content,
+      authorName: updatedComment.author_name,
+      dateCreated: updatedComment.dateCreated,
+    });
 
-    if (!data || data.length === 0) {
+    res.status(200).json({
+      message: 'Comment updated successfully',
+      comment,
+    });
+  } catch (err) {
+    if (err.code === 'P2025') {
       return res.status(404).json({ error: 'Comment not found' });
     }
-
-    res
-      .status(200)
-      .json({ message: 'Comment updated successfully', comment: data[0] });
-  } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -184,18 +235,16 @@ const deleteComment = async (req, res) => {
   const { commentId } = req.params;
 
   try {
-    const { error } = await supabase
-      .from('comments')
-      .delete()
-      .eq('id', commentId);
+    // Delete using Prisma
+    await prisma.comments.delete({
+      where: { id: commentId },
+    });
 
-    if (error) {
-      console.error('Error deleting comment:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    res.status(204).send(); // No content to send back on successful deletion
+    res.status(204).send();
   } catch (err) {
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }

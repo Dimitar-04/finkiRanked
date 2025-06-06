@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import commentIcon from "../../assets/images/comment.svg";
-import likeIcon from "../../assets/images/like.svg";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import commentIcon from '../../assets/images/comment.svg';
+import likeIcon from '../../assets/images/like.svg';
 
 const Forum = ({ setActivePage }) => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const Forum = ({ setActivePage }) => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error("Error fetching forum posts:", error);
+      console.error('Error fetching forum posts:', error);
     }
   };
 
@@ -41,7 +41,7 @@ const Forum = ({ setActivePage }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 p-6">
+    <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto">
       {/* Forum Posts */}
       <div className="flex-1">
         <h1 className="text-2xl font-bold mb-4">Forum Posts</h1>
@@ -82,7 +82,7 @@ const Forum = ({ setActivePage }) => {
       <div className="w-full md:w-1/4">
         <div className=" flex items-center justify-center">
           <button
-            onClick={() => navigate("/create-post")}
+            onClick={() => navigate('/create-post')}
             className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
           >
             Create a Post
