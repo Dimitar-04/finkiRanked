@@ -4,6 +4,7 @@ class Comment {
     this.content = data.content;
     this.authorName = data.authorName;
     this.dateCreated = new Date();
+    this.authorId = data.authorId;
   }
 }
 

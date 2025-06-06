@@ -164,7 +164,7 @@ const Dashboard = () => {
               className="w-10 h-10 rounded-full border-2 border-base-content/10"
             />
             <div className="flex flex-col items-start">
-              <span className="font-medium text-left">{user.username}</span>
+              <span className="font-medium text-left">{user.name}</span>
               <span className="text-sm text-base-content/70">{user.rank}</span>
             </div>
           </button>

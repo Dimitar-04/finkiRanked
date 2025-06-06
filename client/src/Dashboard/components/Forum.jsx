@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import commentIcon from '../../assets/images/comment.svg';
-import trashIcon from '../../assets/images/delete.svg'; // Add this import
+import trashIcon from '../../assets/images/delete.svg';
 
 const Forum = ({ setActivePage, onPostClick }) => {
   const navigate = useNavigate();
@@ -136,6 +136,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
                   onPostClick && onPostClick(post);
                 }}
               >
+                <p className="mr-4">{post.comment_count}</p>
                 <img
                   src={commentIcon}
                   alt="Comment"
@@ -158,7 +159,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
       <div className="w-full md:w-1/4">
         <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
           <button
-            onClick={() => navigate('/create-post')}
+            onClick={() => setActivePage('createPost')}
             className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
           >
             Create a Post
