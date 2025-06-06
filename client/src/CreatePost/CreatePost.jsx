@@ -1,14 +1,18 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const CreatePost = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+const CreatePost = ({ setActivePage }) => {
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const navigate = useNavigate();
 
+  const backToForum = () => {
+    setActivePage('forum');
+    navigate('/dashboard');
+  };
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Post submitted:", { title, content });
+    console.log('Post submitted:', { title, content });
     // Add your submission logic here
   };
 
@@ -19,10 +23,7 @@ const CreatePost = () => {
           <h2 className="text-3xl font-bold text-base-content">
             Create a Post
           </h2>
-          <button
-            onClick={() => navigate(-1)}
-            className="btn btn-outline gap-2"
-          >
+          <button onClick={backToForum} className="btn btn-outline gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="w-5 h-5"
@@ -76,7 +77,7 @@ const CreatePost = () => {
             <div className="card-actions justify-end mt-8">
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={backToForum}
                 className="btn btn-ghost btn-lg"
               >
                 Cancel

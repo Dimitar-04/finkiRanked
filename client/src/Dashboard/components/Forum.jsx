@@ -1,32 +1,32 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import commentIcon from "../../assets/images/comment.svg";
-import likeIcon from "../../assets/images/like.svg";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import commentIcon from '../../assets/images/comment.svg';
+import likeIcon from '../../assets/images/like.svg';
 
-const Forum = () => {
+const Forum = ({ setActivePage }) => {
   const navigate = useNavigate();
 
   const posts = [
     {
       id: 1,
-      title: "How to learn React?",
-      author: "John Doe",
+      title: 'How to learn React?',
+      author: 'John Doe',
       content:
-        "React is a popular JavaScript library for building user interfaces. Start by learning the basics of components, state, and props.",
+        'React is a popular JavaScript library for building user interfaces. Start by learning the basics of components, state, and props.',
     },
     {
       id: 2,
-      title: "Best practices for Tailwind CSS",
-      author: "Jane Smith",
+      title: 'Best practices for Tailwind CSS',
+      author: 'Jane Smith',
       content:
-        "Tailwind CSS is a utility-first CSS framework. Use consistent class naming and leverage configuration files for customization.",
+        'Tailwind CSS is a utility-first CSS framework. Use consistent class naming and leverage configuration files for customization.',
     },
     {
       id: 3,
-      title: "Understanding JavaScript closures",
-      author: "Alice Johnson",
+      title: 'Understanding JavaScript closures',
+      author: 'Alice Johnson',
       content:
-        "Closures are a fundamental concept in JavaScript. They allow functions to access variables from their outer scope even after the outer function has returned.",
+        'Closures are a fundamental concept in JavaScript. They allow functions to access variables from their outer scope even after the outer function has returned.',
     },
   ];
 
@@ -65,7 +65,7 @@ const Forum = () => {
       <div className="w-full md:w-1/4">
         <div className=" flex items-center justify-center">
           <button
-            onClick={() => navigate("/create-post")}
+            onClick={() => setActivePage('createPost')}
             className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
           >
             Create a Post

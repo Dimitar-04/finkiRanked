@@ -8,6 +8,7 @@ import Task from './components/Task';
 import LeaderBoardEx from '@/LandingPage/components/LeaderBoardEx';
 import Forum from './components/Forum';
 import Profile from './components/Profile';
+import CreatePost from '../CreatePost/CreatePost';
 
 const Dashboard = () => {
   const [activePage, setActivePage] = useState('home');
@@ -27,12 +28,14 @@ const Dashboard = () => {
     switch (activePage) {
       case 'home':
         return <Task />;
-      case 'competitions':
-        return <Forum />;
+      case 'forum':
+        return <Forum setActivePage={setActivePage} />;
       case 'leaderboard':
         return <LeaderBoardEx />;
       case 'profile':
         return <Profile />;
+      case 'createPost':
+        return <CreatePost setActivePage={setActivePage} />;
       default:
         return (
           <div className="text-center text-xl font-semibold">
@@ -108,11 +111,11 @@ const Dashboard = () => {
             <li>
               <button
                 className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors ${
-                  activePage === 'competitions'
+                  activePage === 'forum'
                     ? 'bg-[#FFB800] text-black font-medium'
                     : ''
                 }`}
-                onClick={() => setActivePage('competitions')}
+                onClick={() => setActivePage('forum')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
