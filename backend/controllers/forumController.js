@@ -1,8 +1,12 @@
 const prisma = require('../lib/prisma');
 const ForumPost = require('../models/ForumPost');
 const Comment = require('../models/Comment');
+const Filter = require('bad-words');
+const filter = new Filter();
+const mkProfanity = require('../filters/macedonianProfanity')
+filter.addWords(...mkProfanity);
+const safeWords = require('../filters/safeWords');
 
-// Forum Post Functions
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
@@ -14,7 +18,15 @@ const createForumPost = async (req, res) => {
       authorName,
     });
 
-    // Store in database using Prisma
+    if (filter.isProfane(post.content + post.title)) {
+      console.log("Profanity detected!");
+      return res.status(400).json({
+        error: 'Content contains inappropriate language',
+      });
+    } else if(!(safeWords.includes(post.content) || safeWords.includes(post.title))) {
+      console.log("Safe words check failed!");
+      // TUKA VIKAME AI
+    }
     const savedPost = await prisma.forum_posts.create({
       data: {
         title: post.title,
@@ -151,7 +163,15 @@ const createComment = async (req, res) => {
       authorName: authorName,
       authorId: authorId,
     });
-    console.log(comment);
+
+    if (filter.isProfane(comment.content + post.title) || !(safeWords.includes(comment.content) || safeWords.includes(post.title))) {
+      console.log("not safe words or profanity detected!");
+      return res.status(400).json({
+        error: 'Content contains inappropriate language or is not on topic',
+      });
+    } 
+
+
     // Store in database using Prisma
     const savedComment = await prisma.comments.create({
       data: {
