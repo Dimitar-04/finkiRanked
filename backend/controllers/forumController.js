@@ -134,8 +134,12 @@ const deleteForumPost = async (req, res) => {
 
 // Comment Functions
 const createComment = async (req, res) => {
-  const { postId } = req.params;
-  const { content, authorId, authorName } = req.body;
+  // Accept post_id, content, authorId, authorName from body
+  const { post_id, content, authorId, authorName } = req.body;
+
+  if (!post_id || !content || !authorId || !authorName) {
+    return res.status(400).json({ error: 'post_id, content, authorId, and authorName are required' });
+  }
 
   try {
     // Create domain object first
@@ -147,7 +151,7 @@ const createComment = async (req, res) => {
     // Store in database using Prisma
     const savedComment = await prisma.comments.create({
       data: {
-        post_id: postId,
+        post_id: post_id,
         content: comment.content,
         author_id: authorId,
         author_name: comment.authorName,
@@ -168,7 +172,12 @@ const createComment = async (req, res) => {
 };
 
 const getComments = async (req, res) => {
-  const { postId } = req.params;
+  // Get post_id from query string
+  const postId = req.query.post_id;
+
+  if (!postId) {
+    return res.status(400).json({ error: 'post_id query parameter is required' });
+  }
 
   try {
     // Use Prisma to fetch comments
@@ -188,7 +197,7 @@ const getComments = async (req, res) => {
           id: comment.id,
           content: comment.content,
           authorName: comment.author_name,
-          dateCreated: comment.dateCreated,
+          dateCreated: comment.date_created,
         })
     );
 

@@ -9,10 +9,12 @@ import LeaderBoardEx from "@/LandingPage/components/LeaderBoardEx";
 import Forum from "./components/Forum";
 import Profile from "./components/Profile";
 import CreatePost from "../CreatePost/CreatePost";
+import ForumPostDetail from "./components/ForumPostDetail";
 
 const Dashboard = () => {
   const [activePage, setActivePage] = useState("home");
   const [user, setUser] = useState(null);
+  const [selectedForumPost, setSelectedForumPost] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,11 +27,19 @@ const Dashboard = () => {
   }, [navigate]);
 
   const renderPage = () => {
+    if (selectedForumPost) {
+      return (
+        <ForumPostDetail
+          post={selectedForumPost}
+          onBack={() => setSelectedForumPost(null)}
+        />
+      );
+    }
     switch (activePage) {
       case "home":
         return <Task />;
       case "forum":
-        return <Forum setActivePage={setActivePage} />;
+        return <Forum setActivePage={setActivePage} onPostClick={setSelectedForumPost} />;
       case "leaderboard":
         return <LeaderBoardEx />;
       case "profile":

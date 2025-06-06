@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import commentIcon from '../../assets/images/comment.svg';
-import likeIcon from '../../assets/images/like.svg';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import commentIcon from "../../assets/images/comment.svg";
+import likeIcon from "../../assets/images/like.svg";
 
-const Forum = ({ setActivePage }) => {
+const Forum = ({ setActivePage, onPostClick }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
@@ -25,6 +25,7 @@ const Forum = ({ setActivePage }) => {
       const data = await response.json();
       if (page === 0) {
         setPosts(data);
+        console.log("Fetched posts:", data);
       } else {
         setPosts((prevPosts) => [...prevPosts, ...data]);
       }
@@ -32,7 +33,7 @@ const Forum = ({ setActivePage }) => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error fetching forum posts:', error);
+      console.error("Error fetching forum posts:", error);
     }
   };
 
@@ -41,19 +42,24 @@ const Forum = ({ setActivePage }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto">
+    <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
       {/* Forum Posts */}
       <div className="flex-1">
         <h1 className="text-2xl font-bold mb-4">Forum Posts</h1>
-        <div className="space-y-4">
+        <div className="space-y-4" w-300>
           {posts.map((post) => (
             <div
               key={post.id}
-              className="p-4 border rounded-lg shadow-sm hover:shadow-md transition"
+              className="p-4 border rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+              onClick={() => onPostClick && onPostClick(post)}
             >
               <h2 className="text-lg font-semibold">{post.title}</h2>
-              <p className="text-sm text-gray-500">By {post.author_name}</p>
-              <p className="mt-2 text-gray-700">{post.content}</p>
+              <p className="text-sm text-gray-500">By {post.authorName}</p>
+              <p className="mt-2 text-gray-700">
+                {post.content && post.content.length > 300
+                  ? post.content.slice(0, 300) + "..."
+                  : post.content}
+              </p>
               <div className="mt-4 flex gap-4">
                 <img
                   src={commentIcon}
@@ -80,9 +86,9 @@ const Forum = ({ setActivePage }) => {
 
       {/* Create a Post Button */}
       <div className="w-full md:w-1/4">
-        <div className=" flex items-center justify-center">
+        <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
           <button
-            onClick={() => navigate('/create-post')}
+            onClick={() => navigate("/create-post")}
             className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
           >
             Create a Post
