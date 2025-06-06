@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import commentIcon from '../../assets/images/comment.svg';
-import trashIcon from '../../assets/images/delete.svg'; // Add this import
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import commentIcon from "../../assets/images/comment.svg";
+import trashIcon from "../../assets/images/delete.svg"; // Add this import
 
 const Forum = ({ setActivePage, onPostClick }) => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchPosts();
@@ -26,7 +26,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
       const data = await response.json();
       if (page === 0) {
         setPosts(data);
-        console.log('Fetched posts:', data);
+        console.log("Fetched posts:", data);
       } else {
         setPosts((prevPosts) => [...prevPosts, ...data]);
       }
@@ -34,26 +34,25 @@ const Forum = ({ setActivePage, onPostClick }) => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error fetching forum posts:', error);
+      console.error("Error fetching forum posts:", error);
     }
   };
 
   const handleDeletePost = async (postId) => {
     try {
       const response = await fetch(`/forum/posts/${postId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      // Remove the deleted post from the state
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      console.log('Post deleted successfully');
+      console.log("Post deleted successfully");
     } catch (error) {
-      console.error('Error deleting post:', error);
+      console.error("Error deleting post:", error);
     }
   };
 
@@ -78,16 +77,13 @@ const Forum = ({ setActivePage, onPostClick }) => {
                   className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Here you would add the delete confirmation and logic
                     if (
                       window.confirm(
-                        'Are you sure you want to delete this post?'
+                        "Are you sure you want to delete this post?"
                       )
                     ) {
-                      // Call your delete post function here
-                      console.log('Delete post:', post.id);
+                      handleDeletePost(post.id);
                     }
-                    handleDeletePost(post.id);
                   }}
                 >
                   <img src={trashIcon} alt="Delete" className="w-6 h-6" />
@@ -97,29 +93,19 @@ const Forum = ({ setActivePage, onPostClick }) => {
               <div className="flex items-center gap-4 mt-2">
                 <h2
                   className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
-                  onClick={(e) => {
-                    // Prevent clicking the post if the delete button was clicked
-                    if (
-                      e.target.closest('.delete-btn') ||
-                      e.target.classList.contains('delete-btn')
-                    ) {
-                      e.stopPropagation();
-                      return;
-                    }
-                    onPostClick && onPostClick(post);
-                  }}
+                  onClick={() => onPostClick(post)}
                 >
                   {post.title}
                 </h2>
               </div>
 
               <p className="text-m text-gray-500">
-                By {post.authorName},{' '}
-                <span>{post.dateCreated.split('T')[0]}</span>
+                By {post.authorName},{" "}
+                <span>{post.dateCreated.split("T")[0]}</span>
               </p>
               <p className="mt-2 text-gray-400 text-xl">
                 {post.content && post.content.length > 300
-                  ? post.content.slice(0, 300) + '...'
+                  ? post.content.slice(0, 300) + "..."
                   : post.content}
               </p>
               <div
@@ -127,8 +113,8 @@ const Forum = ({ setActivePage, onPostClick }) => {
                 onClick={(e) => {
                   // Prevent clicking the post if the delete button was clicked
                   if (
-                    e.target.closest('.delete-btn') ||
-                    e.target.classList.contains('delete-btn')
+                    e.target.closest(".delete-btn") ||
+                    e.target.classList.contains("delete-btn")
                   ) {
                     e.stopPropagation();
                     return;
@@ -158,7 +144,7 @@ const Forum = ({ setActivePage, onPostClick }) => {
       <div className="w-full md:w-1/4">
         <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
           <button
-            onClick={() => navigate('/create-post')}
+            onClick={() => navigate("/create-post")}
             className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
           >
             Create a Post

@@ -9,8 +9,6 @@ router.put('/posts/:id', forumController.updateForumPost);
 router.delete('/posts/:id', forumController.deleteForumPost);
 
 // Comment Routes
-router.post('/posts/:postId/comments', forumController.createComment);
-router.get('/posts/:postId/comments', forumController.getComments);
 router.put('/comments/:commentId', forumController.updateComment);
 router.delete('/comments/:commentId', forumController.deleteComment);
 router.post('/comments', forumController.createComment);
