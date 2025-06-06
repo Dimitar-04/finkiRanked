@@ -1,10 +1,9 @@
 const prisma = require('../lib/prisma');
 const ForumPost = require('../models/ForumPost');
 const Comment = require('../models/Comment');
-const Filter = require('bad-words');
-const filter = new Filter();
+const filter = require('leo-profanity');
 const mkProfanity = require('../filters/macedonianProfanity')
-filter.addWords(...mkProfanity);
+filter.add(mkProfanity);
 const safeWords = require('../filters/safeWords');
 
 const createForumPost = async (req, res) => {
@@ -17,8 +16,9 @@ const createForumPost = async (req, res) => {
       content,
       authorName,
     });
+    const isProfane = filter.check(post.content + post.title);
 
-    if (filter.isProfane(post.content + post.title)) {
+    if (isProfane) {
       console.log("Profanity detected!");
       return res.status(400).json({
         error: 'Content contains inappropriate language',
@@ -163,8 +163,8 @@ const createComment = async (req, res) => {
       authorName: authorName,
       authorId: authorId,
     });
-
-    if (filter.isProfane(comment.content + post.title) || !(safeWords.includes(comment.content) || safeWords.includes(post.title))) {
+    const profane = filter.check(comment.content);
+    if (profane || !safeWords.includes(comment.content)) {
       console.log("not safe words or profanity detected!");
       return res.status(400).json({
         error: 'Content contains inappropriate language or is not on topic',

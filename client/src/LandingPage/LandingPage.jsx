@@ -1,18 +1,18 @@
-import React from 'react';
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import VisionSection from './components/VisionSection';
-import LeaderBoardEx from './components/LeaderBoardEx';
-import Footer from './components/Footer';
-import Intro from './components/Intro';
+import React from "react";
+import Hero from "./components/Hero";
+import VisionSection from "./components/VisionSection";
+import Footer from "./components/Footer";
+import Intro from "./components/Intro";
+import NavbarLanding from "./components/NavbarLanding";
+import LeaderLanding from "./components/LeaderLanding";
 const LandingPage = () => {
   return (
     <div data-theme="luxury">
-      <Navbar />
+      <NavbarLanding />
       <Hero />
       <Intro />
       <VisionSection />
-      <LeaderBoardEx />
+      <LeaderLanding />
       <Footer />
     </div>
   );
