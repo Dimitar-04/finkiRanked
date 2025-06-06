@@ -61,6 +61,7 @@ const getForumPosts = async (req, res) => {
           content: post.content,
           authorName: post.author_name,
           dateCreated: post.date_created,
+          commentCount: post.comment_count,
         })
     );
 
@@ -146,10 +147,11 @@ const createComment = async (req, res) => {
   try {
     // Create domain object first
     const comment = new Comment({
-      content,
-      authorName,
+      content: content,
+      authorName: authorName,
+      authorId: authorId,
     });
-
+    console.log(comment);
     // Store in database using Prisma
     const savedComment = await prisma.comments.create({
       data: {
@@ -158,6 +160,10 @@ const createComment = async (req, res) => {
         author_id: authorId,
         author_name: comment.authorName,
       },
+    });
+    await prisma.forum_posts.update({
+      where: { id: post_id },
+      data: { comment_count: { increment: 1 } },
     });
 
     // Update the domain object with the generated ID
@@ -199,7 +205,8 @@ const getComments = async (req, res) => {
           id: comment.id,
           content: comment.content,
           authorName: comment.author_name,
-          dateCreated: comment.date_created,
+          dateCreated: comment.dateCreated,
+          authorId: comment.author_id,
         })
     );
 
@@ -246,10 +253,28 @@ const deleteComment = async (req, res) => {
   const { commentId } = req.params;
 
   try {
-    // Delete using Prisma
+    // First get the comment to find its post_id
+    const comment = await prisma.comments.findUnique({
+      where: { id: commentId },
+      select: { post_id: true },
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // Delete the comment
     await prisma.comments.delete({
       where: { id: commentId },
     });
+
+    // Update comment count if post_id exists
+    if (comment.post_id) {
+      await prisma.forum_posts.update({
+        where: { id: comment.post_id },
+        data: { comment_count: { decrement: 1 } },
+      });
+    }
 
     res.status(204).send();
   } catch (err) {

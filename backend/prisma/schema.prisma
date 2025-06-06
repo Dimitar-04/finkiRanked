@@ -28,6 +28,7 @@ model forum_posts {
   author_id    String?    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   author_name  String?
   date_created DateTime?  @default(now()) @db.Date
+  comment_count Int       @default(0) 
   comments     comments[]
   users        users?     @relation(fields: [author_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
 }

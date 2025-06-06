@@ -6,6 +6,7 @@ class ForumPost {
     this.authorName = data.authorName;
     this.dateCreated = new Date();
     this.comments = [];
+    this.comment_count = data.commentCount || 0;
   }
 }
 

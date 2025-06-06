@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-
+import trashIcon from '../../assets/images/delete.svg';
 const ForumPostDetail = ({ post, onBack }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [posting, setPosting] = useState(false);
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     if (!post) return;
@@ -25,7 +26,26 @@ const ForumPostDetail = ({ post, onBack }) => {
         setLoading(false);
       });
   }, [post]);
-
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await fetch(`/forum/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      // Remove the deleted post from the state
+      setComments((prevComments) =>
+        prevComments.filter((comment) => comment.id !== commentId)
+      );
+      console.log('Post deleted successfully');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
@@ -40,8 +60,8 @@ const ForumPostDetail = ({ post, onBack }) => {
         body: JSON.stringify({
           post_id: post.id,
           content: commentText,
-          authorId: user?.id,
-          authorName: user?.username,
+          authorId: user.id,
+          authorName: user.username,
         }),
       });
       if (!response.ok) {
@@ -114,25 +134,55 @@ const ForumPostDetail = ({ post, onBack }) => {
               ) : error ? (
                 <div className="text-red-500 p-3">{error}</div>
               ) : comments.length > 0 ? (
-                comments.map((comment, idx) => (
-                  <div
-                    key={comment.id || idx}
-                    className="p-4 rounded-lg bg-base-200 border border-base-300"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-base-content">
-                        {comment.authorName}
-                      </span>
-                      <span className="text-xs text-base-content/60">
-                        {comment.dateCreated
-                          ? new Date(comment.dateCreated).toLocaleString()
-                          : ''}
-                      </span>
-                    </div>
-                    <div className="text-base-content/80 text-base break-words">
-                      {comment.content}
-                    </div>
-                  </div>
+                (console.log(comments),
+                comments.map(
+                  (comment, idx) => (
+                    console.log(comment),
+                    (
+                      <div
+                        key={comment.id || idx}
+                        className="p-4 rounded-lg bg-base-200 border border-base-300"
+                      >
+                        <div className="flex relative items-center gap-2 mb-1">
+                          {comment.authorId === user.id && (
+                            <button
+                              className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Here you would add the delete confirmation and logic
+                                if (
+                                  window.confirm(
+                                    'Are you sure you want to delete this comment?'
+                                  )
+                                ) {
+                                  // Call your delete comment function here
+                                  console.log('Delete comment:', comment.id);
+                                }
+                                handleDeleteComment(comment.id);
+                              }}
+                            >
+                              <img
+                                src={trashIcon}
+                                alt="Delete"
+                                className="w-6 h-6"
+                              />
+                            </button>
+                          )}
+                          <span className="font-semibold text-base-content">
+                            {comment.authorName}
+                          </span>
+                          <span className="text-xs text-base-content/60">
+                            {comment.dateCreated
+                              ? new Date(comment.dateCreated).toLocaleString()
+                              : ''}
+                          </span>
+                        </div>
+                        <div className="text-base-content/80 text-base break-words">
+                          {comment.content}
+                        </div>
+                      </div>
+                    )
+                  )
                 ))
               ) : (
                 <div className="text-gray-400 p-3">No comments yet.</div>

@@ -32,7 +32,7 @@ const CreatePost = ({ setActivePage }) => {
           title,
           content,
           authorId: user.id,
-          authorName: user.name,
+          authorName: user.username,
         }),
       });
 
