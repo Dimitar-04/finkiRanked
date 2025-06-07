@@ -8,7 +8,6 @@ const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
   try {
-    // Create domain object first
     const post = new ForumPost({
       title,
       content,
@@ -85,7 +84,7 @@ const deleteReviewPost = async (req, res) => {
 };
 
 const approveReviewPost = async (req, res) => {
-  await ForumController.createForumPost(req, res);
+  await ForumController.createApprovedForumPost(req, res);
   await deleteReviewPost(req, res);
 };
 

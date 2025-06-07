@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
-const CreatePost = ({ setActivePage }) => {
+const CreatePost = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirectNeeded, setRedirectNeeded] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -34,8 +36,13 @@ const CreatePost = ({ setActivePage }) => {
           authorName: user.username,
         }),
       });
-      console.log(response);
+
       if (response.status === 204) {
+        navigate('/dashboard/forum');
+        return;
+      }
+      if (response.status === 401) {
+        alert('Content is too long. Wait for moderator approval');
         navigate('/dashboard/forum');
         return;
       }
@@ -116,7 +123,7 @@ const CreatePost = ({ setActivePage }) => {
             </div>
 
             {error && (
-              <div className="text-red-500  mt-4">
+              <div className="text-red-500 text-  mt-4">
                 <span>{error}</span>
               </div>
             )}
