@@ -5,7 +5,16 @@ const prisma = require('../lib/prisma');
 const registerPOST = async (req, res) => {
   try {
     const { username, email, password, name } = req.body;
-
+    const existingUser = await prisma.users.findUnique({
+      where: { username: username },
+      select: { id: true },
+    });
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'Username already exists',
+        success: false,
+      });
+    }
     if (!username || !email || !password || !name) {
       return res.status(400).json({
         message: 'Username, email, password and name are required',
@@ -34,6 +43,7 @@ const registerPOST = async (req, res) => {
       const { studentInstance, error } = await createUserInSupabase(student);
 
       if (error) throw new Error(error.message);
+      console.log('User created in Supabase:', studentInstance);
 
       res.status(201).json({
         message: 'Registration successful',
@@ -76,15 +86,28 @@ async function createUserInSupabase(studentInstance) {
     });
     return { studentInstance, error: null };
   } catch (error) {
-    return { studentInstance, error };
+    // Check for Prisma unique constraint error
+    if (error.code === 'P2002') {
+      const field = error.meta?.target[0];
+      if (field === 'username') {
+        throw new Error('Username already in use');
+      } else if (field === 'email') {
+        throw new Error('Email address already registered');
+      }
+    }
+    throw error; // Re-throw any other errors
   }
 }
+
 function convertBigIntToString(obj) {
   if (Array.isArray(obj)) {
     return obj.map(convertBigIntToString);
   } else if (obj && typeof obj === 'object') {
     return Object.fromEntries(
-      Object.entries(obj).map(([k, v]) => [k, typeof v === 'bigint' ? v.toString() : convertBigIntToString(v)])
+      Object.entries(obj).map(([k, v]) => [
+        k,
+        typeof v === 'bigint' ? v.toString() : convertBigIntToString(v),
+      ])
     );
   }
   return obj;
@@ -122,9 +145,11 @@ const loginPOST = async (req, res) => {
       // Convert BigInt fields to string
       const safeUserData = convertBigIntToString(userData);
 
-      res
-        .status(200)
-        .json({ message: 'Login successful', success: true, user: safeUserData });
+      res.status(200).json({
+        message: 'Login successful',
+        success: true,
+        user: safeUserData,
+      });
     } catch (dbError) {
       console.error('Database error:', dbError);
       return res

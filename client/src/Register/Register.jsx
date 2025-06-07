@@ -27,9 +27,11 @@ const Register = () => {
 
     if (!validateEmail(formData.email)) {
       setError('Email must end with @students.finki.ukim.mk');
+      return;
     }
     if (formData.username === '') {
       setError('Must enter username');
+      return;
     }
     if (formData.password === '') {
       setError('Password is required');
@@ -71,9 +73,23 @@ const Register = () => {
 
       const data = await response.json();
       if (data.success) {
-        console.log('Registration successful:', data.user);
         localStorage.setItem('user', JSON.stringify(data.user));
         nav('/dashboard');
+      } else {
+        console.error('Registration failed:', data.message);
+
+        // Handle both username and email duplicate errors
+        if (data.message === 'Username already in use') {
+          setError('Username already in use');
+        } else if (
+          data.message.includes('Email address already registered') ||
+          data.message.includes('email address has already been registered')
+        ) {
+          setError('Email already exists');
+        } else {
+          // Generic error
+          setError(data.message || 'Registration failed');
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);

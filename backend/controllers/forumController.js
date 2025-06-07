@@ -2,7 +2,7 @@ const prisma = require('../lib/prisma');
 const ForumPost = require('../models/ForumPost');
 const Comment = require('../models/Comment');
 const filter = require('leo-profanity');
-const mkProfanity = require('../filters/macedonianProfanity')
+const mkProfanity = require('../filters/macedonianProfanity');
 filter.add(mkProfanity);
 const safeWords = require('../filters/safeWords');
 
@@ -16,15 +16,22 @@ const createForumPost = async (req, res) => {
       content,
       authorName,
     });
-    const isProfane = filter.check(post.content + post.title);
+    const isProfane = filter.check(post.title);
 
     if (isProfane) {
-      console.log("Profanity detected!");
+      console.log('Profanity detected!');
       return res.status(400).json({
         error: 'Content contains inappropriate language',
       });
-    } else if(!(safeWords.includes(post.content) || safeWords.includes(post.title))) {
-      console.log("Safe words check failed!");
+    } else if (filter.check(post.content)) {
+      console.log('Profanity detected in content!');
+      return res.status(400).json({
+        error: 'Content contains inappropriate language',
+      });
+    } else if (
+      !(safeWords.includes(post.content) || safeWords.includes(post.title))
+    ) {
+      console.log('Safe words check failed!');
       // TUKA VIKAME AI
     }
     const savedPost = await prisma.forum_posts.create({
@@ -51,6 +58,7 @@ const createForumPost = async (req, res) => {
 
 const getForumPosts = async (req, res) => {
   try {
+    console.log('Fetching forum posts ');
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
     const skip = page * limit;
@@ -164,13 +172,12 @@ const createComment = async (req, res) => {
       authorId: authorId,
     });
     const profane = filter.check(comment.content);
-    if (profane || !safeWords.includes(comment.content)) {
-      console.log("not safe words or profanity detected!");
+    if (profane) {
+      console.log('not safe words or profanity detected!');
       return res.status(400).json({
         error: 'Content contains inappropriate language or is not on topic',
       });
-    } 
-
+    }
 
     // Store in database using Prisma
     const savedComment = await prisma.comments.create({
@@ -201,7 +208,7 @@ const createComment = async (req, res) => {
 
 const getComments = async (req, res) => {
   const postId = req.query.post_id;
-
+  console.log('Fetching comments for post_id:', postId);
   if (!postId) {
     return res
       .status(400)

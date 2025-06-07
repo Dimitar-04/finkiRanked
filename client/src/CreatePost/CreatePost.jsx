@@ -4,15 +4,19 @@ import { useNavigate } from 'react-router-dom';
 const CreatePost = ({ setActivePage }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setError('');
+    setIsSubmitting(true);
     const user = JSON.parse(localStorage.getItem('user'));
 
     if (!user || !user.id || !user.name) {
       alert('You must be logged in to create a post.');
+      setIsSubmitting(false);
       navigate('/login');
       return;
     }
@@ -30,15 +34,17 @@ const CreatePost = ({ setActivePage }) => {
           authorName: user.username,
         }),
       });
-
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
       navigate('/dashboard/forum');
     } catch (error) {
       console.error('Error creating post:', error);
-      alert(`Failed to create post: ${error.message}`);
+      setError(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -74,7 +80,7 @@ const CreatePost = ({ setActivePage }) => {
           <div className="card-body p-6 sm:p-8">
             <div className="space-y-8">
               <div className="form-control w-full">
-                <label className="label">
+                <label className="label mb-1.5">
                   <span className="label-text text-lg font-medium">Title</span>
                 </label>
                 <input
@@ -88,7 +94,7 @@ const CreatePost = ({ setActivePage }) => {
               </div>
 
               <div className="flex flex-col form-control w-full">
-                <label className="label">
+                <label className="label mb-1.5">
                   <span className="label-text text-lg font-medium">
                     Content
                   </span>
@@ -103,16 +109,27 @@ const CreatePost = ({ setActivePage }) => {
               </div>
             </div>
 
+            {error && (
+              <div className="text-red-500  mt-4">
+                <span>{error}</span>
+              </div>
+            )}
+
             <div className="card-actions justify-end mt-8">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/forum')}
                 className="btn btn-ghost btn-lg"
+                disabled={isSubmitting}
               >
                 Cancel
               </button>
-              <button type="submit" className="btn border-amber-400 btn-lg">
-                Publish Post
+              <button
+                type="submit"
+                className="btn border-amber-400 btn-lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Publishing...' : 'Publish Post'}
               </button>
             </div>
           </div>
