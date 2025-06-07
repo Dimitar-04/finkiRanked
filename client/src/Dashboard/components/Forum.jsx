@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import commentIcon from '../../assets/images/comment.svg';
-import trashIcon from '../../assets/images/delete.svg'; // Add this import
-import Navbar from './Navbar';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import commentIcon from "../../assets/images/comment.svg";
+import trashIcon from "../../assets/images/delete.svg"; // Add this import
+import Navbar from "./Navbar";
 const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchPosts();
@@ -26,7 +26,7 @@ const Forum = () => {
       const data = await response.json();
       if (page === 0) {
         setPosts(data);
-        console.log('Fetched posts:', data);
+        console.log("Fetched posts:", data);
       } else {
         setPosts((prevPosts) => [...prevPosts, ...data]);
       }
@@ -34,25 +34,25 @@ const Forum = () => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error fetching forum posts:', error);
+      console.error("Error fetching forum posts:", error);
     }
   };
 
   const handleDeletePost = async (postId) => {
     try {
       const response = await fetch(`/forum/posts/${postId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      console.log('Post deleted successfully');
+      console.log("Post deleted successfully");
     } catch (error) {
-      console.error('Error deleting post:', error);
+      console.error("Error deleting post:", error);
     }
   };
 
@@ -69,7 +69,7 @@ const Forum = () => {
       <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
         {/* Forum Posts */}
         <div className="flex-1 ml-8">
-          <h1 className="text-3xl font-bold mb-4">Forum Posts</h1>
+          <h1 className="text-4xl font-bold mb-10">Forum Posts</h1>
           <div className="space-y-4" w-300>
             {posts.map((post) => (
               <div
@@ -85,7 +85,7 @@ const Forum = () => {
                       e.stopPropagation();
                       if (
                         window.confirm(
-                          'Are you sure you want to delete this post?'
+                          "Are you sure you want to delete this post?"
                         )
                       ) {
                         handleDeletePost(post.id);
@@ -100,7 +100,7 @@ const Forum = () => {
                   <h2
                     className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
                     onClick={() => {
-                      console.log('Post clicked:', post);
+                      console.log("Post clicked:", post);
                       navigate(`/dashboard/forum-detail/${post.id}`, {
                         state: { post },
                       });
@@ -111,12 +111,12 @@ const Forum = () => {
                 </div>
 
                 <p className="text-m text-gray-500">
-                  By {post.authorName},{' '}
-                  <span>{post.dateCreated.split('T')[0]}</span>
+                  By {post.authorName},{" "}
+                  <span>{post.dateCreated.split("T")[0]}</span>
                 </p>
                 <p className="mt-2 text-gray-400 text-xl">
                   {post.content && post.content.length > 300
-                    ? post.content.slice(0, 300) + '...'
+                    ? post.content.slice(0, 300) + "..."
                     : post.content}
                 </p>
                 <div
@@ -152,7 +152,7 @@ const Forum = () => {
           <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
             <button
               onClick={() => {
-                navigate('/dashboard/create-post');
+                navigate("/dashboard/create-post");
               }}
               className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
             >

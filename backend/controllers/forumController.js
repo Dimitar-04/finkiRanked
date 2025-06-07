@@ -47,17 +47,12 @@ const createForumPost = async (req, res) => {
       ) {
         try {
           const aiResponse = await analyzePostContent(post.title, post.content);
-          console.log(aiResponse);
-          if (aiResponse.aiResponse === 'APPROPRIATE') {
-            console.log('AI analysis passed');
-          } else if (aiResponse.aiResponse === 'INAPPROPRIATE') {
-            console.log('AI analysis failed:', aiResponse.reason);
+          if (aiResponse.aiResponse === 'INAPPROPRIATE') {
+            console.log('AI analysis says INAPPROPRIATE:', aiResponse.reason);
             return res.status(400).json({
               error: 'Content is not appropriate for the forum',
             });
-          } else {
-            console.log('AI analysis inconclusive:', aiResponse.reason);
-          }
+          } 
         } catch (error) {
           console.error('AI analysis error:', error);
           return res.status(500).json({

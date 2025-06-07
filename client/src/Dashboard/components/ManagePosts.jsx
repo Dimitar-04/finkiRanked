@@ -99,7 +99,7 @@ const ManagePosts = () => {
       <Navbar></Navbar>
       <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
         <div className="flex-1 ml-8">
-          <h1 className="text-3xl font-bold mb-4">Posts that need approval</h1>
+          <h1 className="text-4xl font-bold mb-10">Posts that need approval</h1>
           <div className="space-y-4" w-300>
             {posts.map((post) => (
               <div
