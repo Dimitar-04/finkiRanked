@@ -6,6 +6,8 @@ const mkProfanity = require('../filters/macedonianProfanity');
 filter.add(mkProfanity);
 const safeWords = require('../filters/safeWords');
 const { analyzePostContent } = require('../ai/processRequestAi');
+const { createReviewPost } = require('./reviewController');
+
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
@@ -21,6 +23,7 @@ const createForumPost = async (req, res) => {
         content,
         authorName,
       });
+
       const isProfane = filter.check(post.title);
 
       if (isProfane) {
@@ -33,10 +36,14 @@ const createForumPost = async (req, res) => {
         return res.status(400).json({
           error: 'Content contains inappropriate language',
         });
+      } else if (post.content.length > 200) {
+        createReviewPost(req, res);
+        return res.status(400).json({
+          error: 'Content is too long. Wait for moderator approval',
+        });
       } else if (
         !(safeWords.includes(post.content) || safeWords.includes(post.title))
       ) {
-        console.log('Safe words check failed!');
         try {
           const aiResponse = await analyzePostContent(post.title, post.content);
           console.log(aiResponse);
@@ -104,7 +111,6 @@ async function decrementPostCounter(userId) {
 
 const getForumPosts = async (req, res) => {
   try {
-    console.log('Fetching forum posts ');
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
     const skip = page * limit;

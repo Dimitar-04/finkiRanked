@@ -34,6 +34,7 @@ const CreatePost = ({ setActivePage }) => {
           authorName: user.username,
         }),
       });
+      console.log(response);
       if (response.status === 204) {
         navigate('/dashboard/forum');
         return;
