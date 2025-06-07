@@ -39,7 +39,7 @@ const createForumPost = async (req, res) => {
         });
       } else if (post.content.length > 200) {
         createReviewPost(req, res);
-        return res.status(400).json({
+        return res.status(401).json({
           error: 'Content is too long. Wait for moderator approval',
         });
       } else if (
@@ -104,6 +104,41 @@ async function decrementPostCounter(userId) {
     // We don't throw here to prevent blocking the main operation
   }
 }
+const createApprovedForumPost = async (req, res) => {
+  const { title, content, authorId, authorName } = req.body;
+
+  try {
+    const user = await prisma.users.findUnique({
+      where: { id: authorId },
+    });
+
+    const post = new ForumPost({
+      title,
+      content,
+      authorName,
+    });
+
+    const savedPost = await prisma.forum_posts.create({
+      data: {
+        title: post.title,
+        content: post.content,
+        author_id: authorId,
+        author_name: post.authorName,
+      },
+    });
+
+    post.id = savedPost.id;
+    await decrementPostCounter(authorId);
+
+    res.status(201).json({
+      message: 'Approved post published successfully',
+      post: savedPost,
+    });
+  } catch (err) {
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 const getForumPosts = async (req, res) => {
   try {
@@ -370,4 +405,5 @@ module.exports = {
   getComments,
   updateComment,
   deleteComment,
+  createApprovedForumPost,
 };
