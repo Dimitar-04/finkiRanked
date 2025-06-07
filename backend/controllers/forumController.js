@@ -7,6 +7,7 @@ filter.add(mkProfanity);
 const safeWords = require('../filters/safeWords');
 const { analyzePostContent } = require('../ai/processRequestAi');
 const createForumPost = async (req, res) => {
+  console.log('Creating forum post', req.body, res.body);
   const { title, content, authorId, authorName } = req.body;
 
   try {
