@@ -5,6 +5,7 @@ const path = require('path');
 const apiRouter = require('./routers/apiRouter');
 
 const forumRouter = require('./routers/forumRouter');
+const reviewRouter = require('./routers/reviewRouter');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -16,6 +17,7 @@ app.use(
 app.use('/api', apiRouter);
 
 app.use('/forum', forumRouter);
+app.use('/review', reviewRouter);
 app.get('/', indexRouter);
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.accepts('html')) {
