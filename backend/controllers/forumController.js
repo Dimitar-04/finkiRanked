@@ -5,56 +5,102 @@ const filter = require('leo-profanity');
 const mkProfanity = require('../filters/macedonianProfanity');
 filter.add(mkProfanity);
 const safeWords = require('../filters/safeWords');
-
+const { analyzePostContent } = require('../ai/processRequestAi');
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
   try {
-    // Create domain object first
-    const post = new ForumPost({
-      title,
-      content,
-      authorName,
+    const user = await prisma.users.findUnique({
+      where: { id: authorId },
     });
-    const isProfane = filter.check(post.title);
+    const postCounter = user.postCounter;
 
-    if (isProfane) {
-      console.log('Profanity detected!');
-      return res.status(400).json({
-        error: 'Content contains inappropriate language',
+    if (postCounter > 0) {
+      const post = new ForumPost({
+        title,
+        content,
+        authorName,
       });
-    } else if (filter.check(post.content)) {
-      console.log('Profanity detected in content!');
-      return res.status(400).json({
-        error: 'Content contains inappropriate language',
+      const isProfane = filter.check(post.title);
+
+      if (isProfane) {
+        console.log('Profanity detected!');
+        return res.status(400).json({
+          error: 'Content contains inappropriate language',
+        });
+      } else if (filter.check(post.content)) {
+        console.log('Profanity detected in content!');
+        return res.status(400).json({
+          error: 'Content contains inappropriate language',
+        });
+      } else if (
+        !(safeWords.includes(post.content) || safeWords.includes(post.title))
+      ) {
+        console.log('Safe words check failed!');
+        try {
+          const aiResponse = await analyzePostContent(post.title, post.content);
+          console.log(aiResponse);
+          if (aiResponse.aiResponse === 'APPROPRIATE') {
+            console.log('AI analysis passed');
+          } else if (aiResponse.aiResponse === 'INAPPROPRIATE') {
+            console.log('AI analysis failed:', aiResponse.reason);
+            return res.status(400).json({
+              error: 'Content is not appropriate for the forum',
+            });
+          } else {
+            console.log('AI analysis inconclusive:', aiResponse.reason);
+          }
+        } catch (error) {
+          console.error('AI analysis error:', error);
+          return res.status(500).json({
+            error: 'AI analysis failed, please try again later',
+          });
+        }
+      }
+      const savedPost = await prisma.forum_posts.create({
+        data: {
+          title: post.title,
+          content: post.content,
+          author_id: authorId,
+          author_name: post.authorName,
+        },
       });
-    } else if (
-      !(safeWords.includes(post.content) || safeWords.includes(post.title))
-    ) {
-      console.log('Safe words check failed!');
-      // TUKA VIKAME AI
+
+      // Update the domain object with the generated ID
+      post.id = savedPost.id;
+      await decrementPostCounter(authorId);
+
+      res.status(201).json({
+        message: 'Forum post created successfully',
+        post: savedPost,
+      });
+    } else {
+      return res.status(403).json({
+        error: 'You have reached your post limit for today',
+      });
     }
-    const savedPost = await prisma.forum_posts.create({
-      data: {
-        title: post.title,
-        content: post.content,
-        author_id: authorId,
-        author_name: post.authorName,
-      },
-    });
-
-    // Update the domain object with the generated ID
-    post.id = savedPost.id;
-
-    res.status(201).json({
-      message: 'Forum post created successfully',
-      post: savedPost,
-    });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+async function decrementPostCounter(userId) {
+  try {
+    await prisma.users.update({
+      where: { id: userId },
+      data: {
+        postCounter: { decrement: 1 },
+      },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to decrement post counter for user ${userId}:`,
+      error
+    );
+    // We don't throw here to prevent blocking the main operation
+  }
+}
 
 const getForumPosts = async (req, res) => {
   try {

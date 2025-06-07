@@ -34,6 +34,11 @@ const CreatePost = ({ setActivePage }) => {
           authorName: user.username,
         }),
       });
+      if (response.status === 204) {
+        navigate('/dashboard/forum');
+        return;
+      }
+
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
