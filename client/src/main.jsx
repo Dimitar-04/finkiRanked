@@ -6,13 +6,13 @@ import LandingPage from './LandingPage/LandingPage';
 import Register from './Register/Register';
 import Login from './LogIn/LogIn';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Dashboard from './Dashboard/Dashboard';
 import CreatePost from './CreatePost/CreatePost';
 import Task from './Dashboard/components/Task';
 import Forum from './Dashboard/components/Forum';
 import ForumPostDetail from './Dashboard/components/ForumPostDetail';
 import Profile from './Dashboard/components/Profile';
 import LeaderBoardEx from './LandingPage/components/LeaderBoardEx';
+import ManagePosts from "@/Dashboard/components/ManagePosts.jsx";
 createRoot(document.getElementById('root')).render(
   <Router>
     <Routes>
@@ -22,6 +22,7 @@ createRoot(document.getElementById('root')).render(
       <Route path="/dashboard" element={<Task />} />
       <Route path="/dashboard/create-post" element={<CreatePost />} />
       <Route path="/dashboard/forum" element={<Forum />} />
+      <Route path="/dashboard/manage-posts" element={<ManagePosts />} />
       <Route
         path="/dashboard/forum-detail/:postId"
         element={<ForumPostDetail />}

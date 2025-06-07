@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React  from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../assets/images/logoIcon.png';
 import logoText from '../../assets/images/logoText.png';
@@ -80,7 +80,7 @@ export default function Navbar() {
             <li>
               <button
                 className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
-                onClick={() => navigate('/dashboard/forum')}
+                onClick={() => navigate('/dashboard/manage-posts')}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

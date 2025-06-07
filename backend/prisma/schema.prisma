@@ -10,42 +10,54 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model comments {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  dateCreated DateTime     @default(now()) @db.Timestamptz(6)
-  post_id     String?      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content     String?      @default("")
-  author_id   String?      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  author_name String?
-  users       users?       @relation(fields: [author_id], references: [id], onDelete: Cascade)
-  forum_posts forum_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dateCreated    DateTime     @default(now()) @db.Timestamptz(6)
+  post_id        String?      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content        String?      @default("")
+  author_id      String?      @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_name    String?
+  users          users?       @relation(fields: [author_id], references: [id], onDelete: Cascade, map: "comments_author_id_fkey")
+  to_be_reviewed forum_posts? @relation(fields: [post_id], references: [id], onDelete: Cascade, map: "comments_to_be_reviewed_post_id_fkey")
+}
+
+model to_be_reviewed {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  content       String?
+  author_id     String?  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_name   String?
+  comment_count Int?     @default(0) @db.SmallInt
+  users         users?   @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "to_be_reviewed_author_id_fkey")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model forum_posts {
-  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title        String     @default("")
-  content      String?    @default("")
-  author_id    String?    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  author_name  String?
-  date_created DateTime?  @default(now()) @db.Date
-  comment_count Int       @default(0) 
-  comments     comments[]
-  users        users?     @relation(fields: [author_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String     @default("")
+  content       String?    @default("")
+  author_id     String?    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_name   String?
+  date_created  DateTime?  @default(now()) @db.Date
+  comment_count Int        @default(0)
+  comments      comments[]
+  users         users?     @relation(fields: [author_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "forum_posts_author_id_fkey")
 }
 
 model users {
-  id                  String        @id @default(dbgenerated("auth.uid()")) @db.Uuid
-  username            String        @unique
-  email               String        @unique
+  id                  String           @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  username            String           @unique
+  email               String           @unique
   name                String?
-  solved_problems     BigInt?       @default(0)
-  rank                String?       @default("Novice")
-  points              BigInt?       @default(0)
-  commentCounter      Int?          @default(3) @db.SmallInt
-  commentCheckCounter Int?          @default(0) @db.SmallInt
-  postCounter         Int?          @default(3) @db.SmallInt
-  postCheckCounter    Int?          @default(0) @db.SmallInt
-  isModerator         Boolean       @default(false)
+  solved_problems     BigInt?          @default(0)
+  rank                String?          @default("Novice")
+  points              BigInt?          @default(0)
+  commentCounter      Int?             @default(3) @db.SmallInt
+  commentCheckCounter Int?             @default(0) @db.SmallInt
+  postCounter         Int?             @default(3) @db.SmallInt
+  postCheckCounter    Int?             @default(0) @db.SmallInt
+  isModerator         Boolean          @default(false)
   comments            comments[]
   forum_posts         forum_posts[]
+  to_be_reviewed      to_be_reviewed[]
 }
