@@ -110,6 +110,7 @@ const Task = () => {
 
       if (data && data.input && data.output) {
         setTestCase({
+          id: data.id,
           input: data.input,
           output: data.output,
         });
@@ -131,104 +132,104 @@ const Task = () => {
     setShowTask(true);
   };
 
-  function incrementAttempts(user) {
-    const updatedUser = {
-      ...user,
-      attempts: (user.attempts || 0) + 1,
-    };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    return updatedUser;
-  }
+  // function incrementAttempts(user) {
+  //   const updatedUser = {
+  //     ...user,
+  //     attempts: (user.attempts || 0) + 1,
+  //   };
+  //   localStorage.setItem('user', JSON.stringify(updatedUser));
+  //   return updatedUser;
+  // }
 
-  function getMinutesSinceSevenAM() {
-    const now = new Date();
-    const sevenAM = new Date();
-    sevenAM.setHours(7, 0, 0, 0); // Set to 7:00 AM today
-    const diffMs = now.getTime() - sevenAM.getTime();
-    return Math.floor(diffMs / (1000 * 60)); // Convert to full minutes
-  }
+  // function getMinutesSinceSevenAM() {
+  //   const now = new Date();
+  //   const sevenAM = new Date();
+  //   sevenAM.setHours(7, 0, 0, 0); // Set to 7:00 AM today
+  //   const diffMs = now.getTime() - sevenAM.getTime();
+  //   return Math.floor(diffMs / (1000 * 60)); // Convert to full minutes
+  // }
 
-  function getTimeBonus() {
-    const minutes = getMinutesSinceSevenAM();
-    return Math.max(0, 60 - Math.floor(minutes * 0.0833));
-  }
+  // function getTimeBonus() {
+  //   const minutes = getMinutesSinceSevenAM();
+  //   return Math.max(0, 60 - Math.floor(minutes * 0.0833));
+  // }
 
-  function getAttemptScore(user) {
-    const attempts = user.attempts || 0;
+  // function getAttemptScore(user) {
+  //   const attempts = user.attempts || 0;
 
-    switch (attempts) {
-      case 0:
-        return 40;
-      case 1:
-        return 30;
-      case 2:
-        return 20;
-      case 3:
-        return 10;
-      default:
-        return 0;
-    }
-  }
+  //   switch (attempts) {
+  //     case 0:
+  //       return 40;
+  //     case 1:
+  //       return 30;
+  //     case 2:
+  //       return 20;
+  //     case 3:
+  //       return 10;
+  //     default:
+  //       return 0;
+  //   }
+  // }
 
-  function resetAttempts(user) {
-    const updatedUser = {
-      ...user,
-      attempts: 0,
-    };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    return updatedUser;
-  }
+  // function resetAttempts(user) {
+  //   const updatedUser = {
+  //     ...user,
+  //     attempts: 0,
+  //   };
+  //   localStorage.setItem('user', JSON.stringify(updatedUser));
+  //   return updatedUser;
+  // }
 
-  function calculateTotalScore(user) {
-    const score = parseInt(getTimeBonus()) + parseInt(getAttemptScore(user));
-    const updatedUser = {
-      ...user,
-      points: score + (parseInt(user.points) || 0),
-    };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+  // function calculateTotalScore(user) {
+  //   const score = parseInt(getTimeBonus()) + parseInt(getAttemptScore(user));
+  //   const updatedUser = {
+  //     ...user,
+  //     points: score + (parseInt(user.points) || 0),
+  //   };
+  //   localStorage.setItem('user', JSON.stringify(updatedUser));
 
-    return score;
-  }
+  //   return score;
+  // }
 
-  function incrementUserScore(user, score) {
-    const updatedUser = {
-      ...user,
-      points: (user.points || 0) + score,
-    };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    return updatedUser;
-  }
+  // function incrementUserScore(user, score) {
+  //   const updatedUser = {
+  //     ...user,
+  //     points: (user.points || 0) + score,
+  //   };
+  //   localStorage.setItem('user', JSON.stringify(updatedUser));
+  //   return updatedUser;
+  // }
 
-  async function updateTaskAttempts() {
-    if (!task || !task.id) return;
+  // async function updateTaskAttempts() {
+  //   if (!task || !task.id) return;
 
-    try {
-      // Update task attempts count on the server
-      await fetch(`/task/${task.id}/attempts`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.error('Error updating task attempts:', error);
-    }
-  }
+  //   try {
+  //     // Update task attempts count on the server
+  //     await fetch(`/task/${task.id}/attempts`, {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error('Error updating task attempts:', error);
+  //   }
+  // }
 
-  async function updateTaskSolved() {
-    if (!task || !task.id) return;
+  // async function updateTaskSolved() {
+  //   if (!task || !task.id) return;
 
-    try {
-      await fetch(`/task/${task.id}/solved`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch (error) {
-      console.error('Error updating task solved count:', error);
-    }
-  }
+  //   try {
+  //     await fetch(`/task/${task.id}/solved`, {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error('Error updating task solved count:', error);
+  //   }
+  // }
 
   async function handleSubmitSolution() {
     if (!task || !task.examples || task.examples.length === 0) {
@@ -236,41 +237,55 @@ const Task = () => {
       return;
     }
 
-    const userOutputElement = document.getElementById('userOutput');
-    const userOutputValue = userOutputElement ? userOutputElement.value : '';
-    console.log(typeof userOutputValue);
+    try {
+      const response = await fetch(`/task/${task.id}/evaluate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userOutput: document.getElementById('userOutput').value,
+          testCaseId: testCase.id,
+          userId: user.id,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        // Handle HTTP errors (e.g., 400, 404, 500)
+        // The 'result' might contain an error message from the backend
+        console.error('Server error:', result);
+        alert(
+          `Error: ${
+            result.message ||
+            'Failed to evaluate solution. Status: ' + response.status
+          }`
+        );
+        return;
+      }
+      if (result.success) {
+        alert(
+          `${result.message} You earned ${result.scoreAwarded} points. Your total points are now ${result.newTotalPoints}.`
+        );
+        // Optionally, update local user state if needed for immediate UI reflection,
+        // though a full page reload or re-fetch of user data on navigation might be better.
+        const updatedUserFromStorage =
+          JSON.parse(localStorage.getItem('user')) || {};
+        updatedUserFromStorage.points = result.newTotalPoints;
+        updatedUserFromStorage.solvedDailyChallenge = true; // Assuming backend sets this
+        updatedUserFromStorage.attempts = 0; // Assuming backend resets this
+        localStorage.setItem('user', JSON.stringify(updatedUserFromStorage));
 
-    let currentUser = JSON.parse(localStorage.getItem('user')) || {
-      attempts: 0,
-      points: 0,
-    };
+        navigate('/dashboard/forum');
+      } else {
+        alert(`${result.message} This was attempt #${result.attemptsMade}.`);
 
-    await updateTaskAttempts();
-
-    if (
-      userOutputValue == testCase.output ||
-      parseInt(userOutputValue) == testCase.output ||
-      `{userOutputValue}` == testCase.output
-    ) {
-      currentUser = incrementAttempts(currentUser);
-
-      const score = calculateTotalScore(currentUser);
-
-      currentUser = incrementUserScore(currentUser, score);
-
-      await updateTaskSolved();
-
-      currentUser = resetAttempts(currentUser);
-
-      alert(
-        `Correct! Your score is ${score} points. Your total points are now ${currentUser.points}.`
-      );
-
-      navigate('/dashboard/forum');
-    } else {
-      currentUser = incrementAttempts(currentUser);
-
-      alert(`Incorrect! Try again. This is attempt #${currentUser.attempts}.`);
+        const updatedUserFromStorage =
+          JSON.parse(localStorage.getItem('user')) || {};
+        updatedUserFromStorage.attempts = result.attemptsMade;
+        localStorage.setItem('user', JSON.stringify(updatedUserFromStorage));
+      }
+    } catch (error) {
+      console.error('Error evaluating solution:', error);
     }
   }
 
