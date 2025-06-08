@@ -8,6 +8,8 @@ class Challenge {
     this.solved_by = data.solved_by;
     this.expired = data.expired || false;
     this.examples = data.examples;
+    this.test_cases = data.test_cases;
+    this.output_type = data.output_type;
   }
 }
 

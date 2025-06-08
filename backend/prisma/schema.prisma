@@ -45,22 +45,23 @@ model forum_posts {
 }
 
 model users {
-  id                  String           @id @default(dbgenerated("auth.uid()")) @db.Uuid
-  username            String           @unique
-  email               String           @unique
-  name                String?
-  solved_problems     BigInt?          @default(0)
-  rank                String?          @default("Novice")
-  points              BigInt?          @default(0)
-  commentCounter      Int?             @default(3) @db.SmallInt
-  commentCheckCounter Int?             @default(0) @db.SmallInt
-  postCounter         Int?             @default(3) @db.SmallInt
-  postCheckCounter    Int?             @default(0) @db.SmallInt
-  isModerator         Boolean          @default(false)
-  attempts            Int?             @default(0) @db.SmallInt
-  comments            comments[]
-  forum_posts         forum_posts[]
-  to_be_reviewed      to_be_reviewed[]
+  id                   String           @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  username             String           @unique
+  email                String           @unique
+  name                 String?
+  solved_problems      BigInt?          @default(0)
+  rank                 String?          @default("Novice")
+  points               BigInt?          @default(0)
+  commentCounter       Int?             @default(3) @db.SmallInt
+  commentCheckCounter  Int?             @default(0) @db.SmallInt
+  postCounter          Int?             @default(3) @db.SmallInt
+  postCheckCounter     Int?             @default(0) @db.SmallInt
+  isModerator          Boolean          @default(false)
+  attempts             Int?             @default(0) @db.SmallInt
+  solvedDailyChallenge Boolean?
+  comments             comments[]
+  forum_posts          forum_posts[]
+  to_be_reviewed       to_be_reviewed[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -73,14 +74,15 @@ model challenges {
   solved_by    Int?         @db.SmallInt
   expired      Boolean?
   examples     Json?
+  output_type  String?
   test_cases   test_cases[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model test_cases {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  post_id    String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  input      String?
-  output     String?
-  challenges challenges @relation(fields: [post_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  challenge_id String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  input        String?
+  output       String?
+  challenges   challenges @relation(fields: [challenge_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
