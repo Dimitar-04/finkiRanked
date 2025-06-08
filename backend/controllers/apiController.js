@@ -82,6 +82,8 @@ async function createUserInSupabase(studentInstance) {
         postCounter: studentInstance.postCounter || 3,
         postCheckCounter: studentInstance.postCheckCounter || 0,
         isModerator: studentInstance.isModerator || false,
+        solvedDailyChallenge: studentInstance.solvedDailyChallenge || false,
+
       },
     });
     return { studentInstance, error: null };
@@ -142,7 +144,6 @@ const loginPOST = async (req, res) => {
           .json({ message: 'User not found in database', success: false });
       }
 
-      // Convert BigInt fields to string
       const safeUserData = convertBigIntToString(userData);
 
       res.status(200).json({

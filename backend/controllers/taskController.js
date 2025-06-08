@@ -56,7 +56,7 @@ const getTaskByDate = async (req, res) => {
                     id: testCase.id,
                     input: testCase.input || '',
                     output: testCase.output || '',
-                    post_id: testCase.post_id
+                    challenge_id: testCase.challenge_id
                 }));
             }
             
@@ -154,8 +154,40 @@ const updateSolvedTask = async (req, res) => {
     }
 }
 
+const fetchTestCaseForToday = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const testCases = await prisma.test_cases.findMany({
+            where: {
+                challenge_id: id,
+            },
+            select: {
+                id: true,
+                input: true,
+                output: true,
+                challenge_id: true,
+            },
+        });
+
+        if (testCases.length === 0) {
+            return res.status(404).json({ message: 'No test cases found for today' });
+        }
+
+        const randomTestCase = testCases[Math.floor(Math.random() * testCases.length)];
+
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).json(randomTestCase);
+
+    } catch (error) {
+        console.error('Error fetching test cases:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+}
+
 module.exports = {
     getTaskByDate,
     updateAttemptsTask,
     updateSolvedTask,
+    fetchTestCaseForToday,
 };
