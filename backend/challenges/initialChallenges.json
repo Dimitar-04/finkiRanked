@@ -1,0 +1,411 @@
+[
+  {
+    "title": "a-phone-code",
+    "description": "Your task is to calculate the length of the longest common starting sequence (prefix) among a list of phone numbers, which represents the city's phone code.",
+    "examples": [
+      {
+        "input": "3\n007\n00123\n00124",
+        "output": "2"
+      },
+      {
+        "input": "4\n12345\n123\n123987\n123456",
+        "output": "3"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "12\n5551234\n5551235\n5551236\n5551237\n5551238\n5551239\n5551240\n5551241\n5551242\n5551243\n5551244\n5551245",
+        "output": "5"
+      },
+      {
+        "input": "10\n9876543\n9876544\n9876545\n9876546\n9876547\n9876548\n9876549\n9876540\n9876541\n9876542",
+        "output": "6"
+      },
+      {
+        "input": "15\n4441111\n4442222\n4443333\n4444444\n4445555\n4446666\n4447777\n4448888\n4449999\n4440000\n4441234\n4445678\n4449012\n4443456\n4447890",
+        "output": "3"
+      },
+      {
+        "input": "11\n12345\n12346\n12347\n12348\n12349\n12340\n12341\n12342\n12343\n67890\n98765",
+        "output": "0"
+      },
+      {
+        "input": "14\n807123\n807124\n807125\n807126\n807127\n807128\n807129\n807130\n807131\n807132\n807133\n807134\n807135\n807136",
+        "output": "4"
+      },
+      {
+        "input": "10\n12345\n23456\n34567\n45678\n56789\n67890\n78901\n89012\n90123\n01234",
+        "output": "0"
+      },
+      {
+        "input": "13\n5551234567\n5551234568\n5551234569\n5551234560\n5551234561\n5551234562\n5551234563\n5551234564\n5551234565\n5551234566\n5551234577\n5551234588\n5551234599",
+        "output": "8"
+      },
+      {
+        "input": "15\n3141592653\n3141592654\n3141592655\n3141592656\n3141592657\n3141592658\n3141592659\n3141592650\n3141592651\n3141592652\n3141592660\n3141592661\n3141592662\n3141592663\n3141592664",
+        "output": "8"
+      },
+      {
+        "input": "12\n9998887770\n9998887771\n9998887772\n9998887773\n9998887774\n9998887775\n9998887776\n9998887777\n9998887778\n9998887779\n9998887780\n9998887781",
+        "output": "8"
+      },
+      {
+        "input": "10\n1111111111\n1111111112\n1111111113\n1111111114\n1111111115\n1111111116\n1111111117\n1111111118\n1111111119\n1111111110",
+        "output": "9"
+      }
+    ],
+    "difficulty": "Easy",
+    "output_type": "integer"
+  },
+  {
+    "title": "acronyms",
+    "description": "Develop a function that takes a sentence and converts it into its acronym by taking the first letter of each word.",
+    "examples": [
+      {
+        "input": "Programming Challenges is really cool",
+        "output": "PCIRC"
+      },
+      {
+        "input": "Portable Network Graphics",
+        "output": "PNG"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "Powerful Networked Graphics solutions deliver exceptional visualization capabilities for complex three-dimensional renderings with advanced lighting models that simulate realistic surface properties while optimizing computational resources through sophisticated algorithms designed by leading experts in computer graphics rendering technology across multiple industrial applications.",
+        "output": "PNGSDEVCCFTDRWALMTSRSPWOCRTSBALDEICRGTAMIA"
+      },
+      {
+        "input": "Hypertext Transfer Markup Language fundamentally revolutionized digital communications by establishing standardized document formatting protocols that enable cross-platform compatibility across diverse operating systems while supporting embedded media elements alongside interactive scripting capabilities through comprehensive browser-based rendering engines that continuously evolve with advancing web technologies.",
+        "output": "HTMLFRDCBESTDCPEDSMEISCTCBRETCEWT"
+      },
+      {
+        "input": "furthermore yesterday's investigation revealed critical market intelligence suggesting significant downward trends affecting quarterly projections across multiple business units particularly within international divisions operating under regulatory constraints while domestic operations continue showing resilience despite supply chain disruptions affecting manufacturing capabilities throughout north american distribution networks.",
+        "output": "FYIRCMISSDTAQPAMBUPWIDOURWDOCSRDSCDAMCTNDN"
+      },
+      {
+        "input": " linguistic analysis through sophisticated computational models represents fundamental advancements in natural language processing techniques enabling accurate machine translation systems while improving contextual understanding of semantic relationships between complex sentence structures across multiple languages regardless of syntactic variations commonly encountered in diverse cultural expressions of human communication  ",
+        "output": "LATSCMRFAINLPTEAMTSWICUOSRBCSSACMLROSVCEIDCEHC"
+      },
+      {
+        "input": "modern software business works through integrated development environments utilizing continuous integration pipelines with automated testing frameworks that enhance code quality while reducing deployment times across distributed systems architectures supporting microservices implementations for scalable enterprise applications requiring minimal downtime during updates throughout production environments.",
+        "output": "MSBWTIDEVUCIPWATFTECQWRDTADSASMIFSEARMDDUTE"
+      },
+      {
+        "input": "Automated System Workflows dramatically improve organizational efficiency by streamlining repetitive business processes through intelligent routing mechanisms that distribute tasks according to established priority levels while monitoring completion metrics against predetermined benchmarks ensuring optimal resource allocation throughout departments regardless of geographical distribution across multiple international office locations.",
+        "output": "ASWDIOEBSRBPTIRMTDTATEPLWMCMAPBESORTDROGDAMI"
+      },
+      {
+        "input": "PHP: Hypertext Preprocessor remains remarkably relevant in modern web development ecosystems despite emerging alternatives because its extensive library ecosystem provides developers with battle-tested solutions for common challenges while maintaining backward compatibility across versions ensuring legacy applications continue functioning alongside newer implementations throughout evolving technology landscapes.",
+        "output": "PHPRRIMWDEDAEBITELPDBTSCCWMBCAVELALCFANITEL"
+      },
+      {
+        "input": "Fundamental Information Flow Operations represent critical architectural components in distributed computing systems where data sequencing maintains transactional integrity throughout asynchronous processing environments while preventing race conditions that could otherwise compromise system stability during peak operational periods requiring careful implementation considerations especially within memory-constrained embedded computing platforms.",
+        "output": "FIFOERCACIDCSWTMTITAPEPRCTCOCSSPOPRCICCEWM"
+      },
+      {
+        "input": "Accelerated System Architecture Processing technology delivers unprecedented computational throughput for data-intensive applications requiring real-time analysis of streaming information sources while maintaining exceptionally low latency responses necessary for mission-critical operations where millisecond delays could potentially result in significant financial implications or compromised safety protocols within industrial control systems.",
+        "output": "ASAPTDUCTFDIARRTASISWMELLRNFMCWMDCPRIFSICPWIS"
+      },
+      {
+        "input": "wireless wide networks 1st generation 2nd generation 3rd generation technologies evolved dramatically through decades of telecommunications research establishing foundations for modern connectivity paradigms while overcoming significant technical limitations through innovative spectrum utilization techniques alongside increasingly sophisticated modulation approaches that maximize data throughput within constrained bandwidth allocations supporting exponential growth in connected devices worldwide.",
+        "output": "WWN123GETDTDOTREFMCPWOSTLTISUTALISMTWCBANNCE"
+      }
+    ],
+    "difficulty": "Easy",
+    "output_type": "string"
+  },
+  {
+    "title": "caesar-cipher",
+    "description": "Implement a function that encrypts a message using the Caesar cipher technique, which involves shifting each letter of the alphabet by a specified number of places.",
+    "examples": [
+      {
+        "input": "'ANTHONY', -3",
+        "output": "XKQELKV"
+      },
+      {
+        "input": "'JULIUS CAESAR', 3",
+        "output": "MXOLXV FDHVDU"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "'HELLO', 3",
+        "output": "KHOOR"
+      },
+      {
+        "input": "'XYZ', 3",
+        "output": "ABC"
+      },
+      {
+        "input": "'ABC', -3",
+        "output": "XYZ"
+      },
+      {
+        "input": "'The quick brown fox jumps over the lazy dog', 13",
+        "output": "Gur dhvpx oebja sbk whzcf bire gur ynml qbt"
+      },
+      {
+        "input": "'middle-Outz', 2",
+        "output": "okffng-Qwvb"
+      },
+      {
+        "input": "'No Change', 0",
+        "output": "No Change"
+      },
+      {
+        "input": "'Big shift!', 75",
+        "output": "Elj vkliw!"
+      },
+      {
+        "input": "'Negative Wrap!', -2",
+        "output": "LcEXPLGTc YpYn!"
+      },
+      {
+        "input": "'Veni, Vidi, Vici', -10",
+        "output": "Ludq, Lsds, Lsgs"
+      },
+      {
+        "input": "'All lowercase', 5",
+        "output": "Fqq qtbjwhfxj"
+      }
+    ],
+    "difficulty": "Easy",
+    "output_type": "string"
+  },
+  {
+    "title": "cakes",
+    "description": "You need to determine the maximum number of cakes you can bake given a list of required ingredients per cake and the quantities of those ingredients you currently possess.Line 1: Single integer N for the number of ingredients. N next lines: One for each ingredient. Each of these lines contains two positive integers: the first one is the required quantity of this ingredient per cake, the second one is the quantity of this ingredient you have in your kitchen.",
+    "examples": [
+      {
+        "input": "3\n100 500\n2 5\n70 1000",
+        "output": "2"
+      },
+      {
+        "input": "3\n100 50\n2 5\n70 1000",
+        "output": "0"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "10\n2 20\n3 33\n5 100\n7 77\n11 121\n13 130\n17 170\n19 190\n23 230\n29 290",
+        "output": "10"
+      },
+      {
+        "input": "12\n1 1000\n2 2000\n3 3000\n4 4000\n5 5000\n6 6000\n7 7000\n8 8000\n9 9000\n10 10000\n11 11000\n12 12000",
+        "output": "83"
+      },
+      {
+        "input": "15\n100 1000\n200 1500\n300 900\n400 800\n500 2500\n600 3600\n700 4900\n800 6400\n900 8100\n1000 10000\n1100 12100\n1200 14400\n1300 16900\n1400 19600\n1500 22500",
+        "output": "3"
+      },
+      {
+        "input": "18\n5 100\n10 200\n15 300\n20 400\n25 500\n30 600\n35 700\n40 800\n45 900\n50 1000\n55 1100\n60 1200\n65 1300\n70 1400\n75 1500\n80 1600\n85 1700\n90 1800",
+        "output": "20"
+      },
+      {
+        "input": "14\n7 70\n14 140\n21 210\n28 280\n35 350\n42 420\n49 490\n56 560\n63 630\n70 700\n77 770\n84 840\n91 910\n98 980",
+        "output": "10"
+      },
+      {
+        "input": "11\n100 1000\n200 2000\n300 3000\n400 4000\n500 5000\n600 6000\n700 7000\n800 8000\n900 9000\n1000 10000\n1100 11000",
+        "output": "10"
+      },
+      {
+        "input": "13\n2 100\n3 150\n4 200\n5 250\n6 300\n7 350\n8 400\n9 450\n10 500\n11 550\n12 600\n13 650\n14 700",
+        "output": "50"
+      },
+      {
+        "input": "16\n1 100\n2 200\n3 300\n4 400\n5 500\n6 600\n7 700\n8 800\n9 900\n10 1000\n11 1100\n12 1200\n13 1300\n14 1400\n15 1500\n16 1600",
+        "output": "100"
+      },
+      {
+        "input": "17\n10 100\n20 200\n30 300\n40 400\n50 500\n60 600\n70 700\n80 800\n90 900\n100 1000\n110 1100\n120 1200\n130 1300\n140 1400\n150 1500\n160 1600\n170 1700",
+        "output": "10"
+      },
+      {
+        "input": "20\n1 1000\n2 2000\n3 3000\n4 4000\n5 5000\n6 6000\n7 7000\n8 8000\n9 9000\n10 10000\n11 11000\n12 12000\n13 13000\n14 14000\n15 15000\n16 16000\n17 17000\n18 18000\n19 19000\n20 20000",
+        "output": "50"
+      }
+    ],
+    "difficulty": "Easy",
+    "output_type": "integer"
+  },
+
+  {
+    "title": "consecutive-numbers",
+    "description": "Design a function that identifies and returns all sequences of consecutive integers within a given list of numbers. The required length for a sequence to be considered 'consecutive' is given as the first input. Note that output sequences can contain numbers which are not consecutive in the input list",
+    "examples": [
+      {
+        "input": "2\n5 ; 1 ; 2 ; 3 ; 8 ; -5 ; -4 ; 7",
+        "output": "1 ; 2\n2 ; 3\n-5 ; -4"
+      },
+      {
+        "input": "3\n5 ; 1 ; 2 ; 3 ; 8 ; -5 ; -4 ; 7",
+        "output": "1 ; 2 ; 3"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "3\n10 1 5 2 6 3 7 4 8",
+        "output": "1 2 3\n2 3 4\n3 4 5\n4 5 6\n5 6 7\n6 7 8"
+      },
+      {
+        "input": "4\n-5 0 -4 1 -3 2 -2 3 -1",
+        "output": "-5 -4 -3 -2\n-4 -3 -2 -1\n-3 -2 -1 0\n-2 -1 0 1\n-1 0 1 2\n0 1 2 3"
+      },
+      {
+        "input": "2\n100 50 101 51 102 52 103",
+        "output": "50 51\n51 52\n100 101\n101 102\n102 103"
+      },
+      {
+        "input": "5\n20 1 19 2 18 3 17 4 16 5 15",
+        "output": "1 2 3 4 5\n15 16 17 18 19\n16 17 18 19 20"
+      },
+      {
+        "input": "3\n0 10 -1 9 -2 8 -3 7 -4 6 -5",
+        "output": "-5 -4 -3\n-4 -3 -2\n-3 -2 -1\n6 7 8\n7 8 9\n8 9 10"
+      },
+      {
+        "input": "4\n7 1 8 2 9 3 10 4 11 5 12 6",
+        "output": "1 2 3 4\n2 3 4 5\n3 4 5 6\n7 8 9 10\n8 9 10 11\n9 10 11 12"
+      },
+      {
+        "input": "2\n1 10 2 9 3 8 4 7 5 6",
+        "output": "1 2\n2 3\n3 4\n4 5\n5 6\n6 7\n7 8\n8 9\n9 10"
+      },
+      {
+        "input": "6\n-10 0 -9 1 -8 2 -7 3 -6 4 -5 5 -4",
+        "output": "-10 -9 -8 -7 -6 -5\n-9 -8 -7 -6 -5 -4\n0 1 2 3 4 5"
+      },
+      {
+        "input": "3\n50 40 30 51 41 31 52 42 32 53 43 33",
+        "output": "30 31 32\n31 32 33\n40 41 42\n41 42 43\n50 51 52\n51 52 53"
+      },
+      {
+        "input": "4\n15 1 14 2 13 3 12 4 11 5 10 6 9 7 8",
+        "output": "1 2 3 4\n2 3 4 5\n3 4 5 6\n4 5 6 7\n5 6 7 8\n6 7 8 9\n7 8 9 10\n8 9 10 11\n9 10 11 12\n10 11 12 13\n11 12 13 14\n12 13 14 15"
+      }
+    ],
+    "difficulty": "Medium",
+    "output_type": "string"
+  },
+
+  {
+    "title": "fibonacci",
+    "description": "Your goal is to build a function that generates an array containing a specified quantity of Fibonacci numbers. The Fibonacci sequence starts with 0 and 1, and each subsequent number is the sum of the two preceding ones.",
+    "examples": [
+      {
+        "input": "8",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13]"
+      },
+      {
+        "input": "14",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233]"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "25",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368]"
+      },
+      {
+        "input": "30",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229]"
+      },
+      {
+        "input": "18",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597]"
+      },
+      {
+        "input": "22",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946]"
+      },
+      {
+        "input": "35",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229, 832040, 1346269, 2178309, 3524578, 5702887]"
+      },
+      {
+        "input": "12",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89]"
+      },
+      {
+        "input": "28",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418]"
+      },
+      {
+        "input": "16",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610]"
+      },
+      {
+        "input": "33",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025, 121393, 196418, 317811, 514229, 832040, 1346269, 2178309]"
+      },
+      {
+        "input": "19",
+        "output": "[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584]"
+      }
+    ],
+    "difficulty": "Easy",
+    "output_type": "array"
+  },
+
+  {
+    "title": "first-non-repeating-character",
+    "description": "Write a function to find the first character in a string that does not appear again in that string. If every character is repeated, the function should return an empty string.",
+    "examples": [
+      {
+        "input": "'stress'",
+        "output": "'t'"
+      },
+      {
+        "input": "'aabbcce'",
+        "output": "'e'"
+      }
+    ],
+    "testcases": [
+      {
+        "input": "'abacabadabacabadabacabaeabacabadabacabadabacabadabacabad'",
+        "output": "'e'"
+      },
+      {
+        "input": "'abcdefghijklmnopqrstuvwxyzzyxwvutsrqponmlkjihgfedcbaabcdefghijklmnopqrstuvwxy1z'",
+        "output": "'1'"
+      },
+      {
+        "input": "'thequickbrownfoxjumpsoverthelazydogthequickbrownfoxjumpsoverthelazydogx'",
+        "output": "'x'"
+      },
+      {
+        "input": "'aabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzzabcdefghijklmnopqrstuvwxyz'",
+        "output": "'a'"
+      },
+      {
+        "input": "'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyx'",
+        "output": "'x'"
+      },
+      {
+        "input": "'1bcdefghijklmnopqrstuvwxyzaabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz'",
+        "output": "'1'"
+      },
+      {
+        "input": "'abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcf'",
+        "output": "'f'"
+      },
+      {
+        "input": "'qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbnmz'",
+        "output": "'z'"
+      },
+      {
+        "input": "'xxyyzzwwvvuuttssrrqqppoonnmmllkkjjiihhggffeeddccbbaa1'",
+        "output": "'1'"
+      },
+      {
+        "input": "'mnbvcxzlkjhgfdsapoiuytrewqmnbvcxzlkjhgfdsapoiuytrewqx'",
+        "output": "'x'"
+      }
+    ],
+    "difficulty": "Medium",
+    "output_type": "string"
+  }
+]

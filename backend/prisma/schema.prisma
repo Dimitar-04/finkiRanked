@@ -65,16 +65,15 @@ model users {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model challenges {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  solving_date   DateTime     @db.Timestamptz(6)
-  title          String?
-  content        String?
-  example_input  String?
-  example_output String?
-  attempted_by   Int?         @db.SmallInt
-  solved_by      Int?         @db.SmallInt
-  expired        Boolean?
-  test_cases     test_cases[]
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solving_date DateTime     @db.Timestamptz(6)
+  title        String?
+  content      String?
+  attempted_by Int?         @db.SmallInt
+  solved_by    Int?         @db.SmallInt
+  expired      Boolean?
+  examples     Json?
+  test_cases   test_cases[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
