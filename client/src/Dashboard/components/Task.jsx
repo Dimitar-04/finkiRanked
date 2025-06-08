@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
-import Navbar from "./Navbar";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import Navbar from './Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const [task, setTask] = useState(null);
   const [testCase, setTestCase] = useState(null);
+  const [effectiveTaskDate, setEffectiveTaskDate] = useState('');
   const today = new Date().toLocaleDateString();
-  const user = JSON.parse(localStorage.getItem("user")) || { attempts: 0 };
+  const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,13 +28,13 @@ const Task = () => {
 
   async function fetchTaskForToday(date) {
     try {
-      const formattedDate = new Date(date).toISOString().split("T")[0];
-      console.log("Fetching task for date:", formattedDate);
+      const formattedDate = new Date(date).toISOString().split('T')[0];
+      console.log('Fetching task for date:', formattedDate);
 
       const response = await fetch(`/task/${formattedDate}`, {
         headers: {
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
         },
       });
 
@@ -47,36 +48,36 @@ const Task = () => {
       try {
         data = JSON.parse(responseText);
       } catch (error) {
-        throw new Error("Failed to parse server response as JSON" + error);
+        throw new Error('Failed to parse server response as JSON' + error);
       }
 
       if (Array.isArray(data) && data.length > 0) {
         const taskData = data[0];
-        console.log("Processing task data:", taskData);
+        console.log('Processing task data:', taskData);
 
         setTask({
           id: taskData.id,
-          title: taskData.title || "Daily Challenge",
-          content: taskData.content || "No description available",
+          title: taskData.title || 'Daily Challenge',
+          content: taskData.content || 'No description available',
           examples: taskData.examples || [], // Use examples directly from the API response
         });
 
-        console.log("Fetched task:", task);
+        console.log('Fetched task:', task);
       } else {
-        console.error("No tasks found for the date");
+        console.error('No tasks found for the date');
         setTask({
-          title: "No Challenge Available",
-          content: "There is no challenge available for today.",
-          examples: [{ input: "N/A", output: "N/A" }],
+          title: 'No Challenge Available',
+          content: 'There is no challenge available for today.',
+          examples: [{ input: 'N/A', output: 'N/A' }],
         });
       }
     } catch (error) {
-      console.error("Error fetching task:", error);
+      console.error('Error fetching task:', error);
       setTask({
-        title: "Error Loading Challenge",
+        title: 'Error Loading Challenge',
         content:
           "There was an error loading today's challenge. Please try again later.",
-        examples: [{ input: "N/A", output: "N/A" }],
+        examples: [{ input: 'N/A', output: 'N/A' }],
       });
     }
   }
@@ -86,17 +87,17 @@ const Task = () => {
       ...user,
       solvedDailyChallenge: true,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
   async function fetchTestCaseForToday(id) {
     try {
-      console.log("Fetching test case for task ID:", id);
+      console.log('Fetching test case for task ID:', id);
       const response = await fetch(`/task/${id}/test-case`, {
         headers: {
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
         },
       });
 
@@ -105,7 +106,7 @@ const Task = () => {
       }
 
       const data = await response.json();
-      console.log("Fetched test case:", data);
+      console.log('Fetched test case:', data);
 
       if (data && data.input && data.output) {
         setTestCase({
@@ -113,11 +114,11 @@ const Task = () => {
           output: data.output,
         });
       } else {
-        console.error("No test case found for the task");
+        console.error('No test case found for the task');
         setTestCase(null);
       }
     } catch (error) {
-      console.error("Error fetching test case:", error);
+      console.error('Error fetching test case:', error);
       setTestCase(null);
     }
   }
@@ -135,7 +136,7 @@ const Task = () => {
       ...user,
       attempts: (user.attempts || 0) + 1,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
@@ -174,7 +175,7 @@ const Task = () => {
       ...user,
       attempts: 0,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
@@ -184,7 +185,7 @@ const Task = () => {
       ...user,
       points: score + (parseInt(user.points) || 0),
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
 
     return score;
   }
@@ -194,7 +195,7 @@ const Task = () => {
       ...user,
       points: (user.points || 0) + score,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
@@ -204,13 +205,13 @@ const Task = () => {
     try {
       // Update task attempts count on the server
       await fetch(`/task/${task.id}/attempts`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
     } catch (error) {
-      console.error("Error updating task attempts:", error);
+      console.error('Error updating task attempts:', error);
     }
   }
 
@@ -219,27 +220,27 @@ const Task = () => {
 
     try {
       await fetch(`/task/${task.id}/solved`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
     } catch (error) {
-      console.error("Error updating task solved count:", error);
+      console.error('Error updating task solved count:', error);
     }
   }
 
   async function handleSubmitSolution() {
     if (!task || !task.examples || task.examples.length === 0) {
-      alert("No challenge is currently available");
+      alert('No challenge is currently available');
       return;
     }
 
-    const userOutputElement = document.getElementById("userOutput");
-    const userOutputValue = userOutputElement ? userOutputElement.value : "";
+    const userOutputElement = document.getElementById('userOutput');
+    const userOutputValue = userOutputElement ? userOutputElement.value : '';
     console.log(typeof userOutputValue);
 
-    let currentUser = JSON.parse(localStorage.getItem("user")) || {
+    let currentUser = JSON.parse(localStorage.getItem('user')) || {
       attempts: 0,
       points: 0,
     };
@@ -265,7 +266,7 @@ const Task = () => {
         `Correct! Your score is ${score} points. Your total points are now ${currentUser.points}.`
       );
 
-      navigate("/dashboard/forum");
+      navigate('/dashboard/forum');
     } else {
       currentUser = incrementAttempts(currentUser);
 
@@ -274,111 +275,18 @@ const Task = () => {
   }
 
   return (
-    <div
-      data-theme="luxury"
-      className="dashboard h-screen flex bg-base-100 overflow-none"
-    >
-      <Navbar></Navbar>
-      <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
-        {!showTask ? (
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body items-center text-center">
-              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-8 h-8 text-primary"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-              </div>
-              <h1 className="card-title text-4xl font-bold mb-6">
-                Task for {today}
-              </h1>
-              <div className="divider"></div>
-              <div className="space-y-6 text-lg">
-                <div className="card bg-base-300 shadow-sm">
-                  <div className="card-body">
-                    <h2 className="card-title">Rules for Grading</h2>
-                    <ul className="list-disc list-inside space-y-2">
-                      <li>Earlier submissions receive better scores</li>
-                      <li>Multiple attempts will reduce your score</li>
-                      <li>Stay respectful and focused</li>
-                      <li>Have fun solving the problem!</li>
-                    </ul>
-                  </div>
-                </div>
-                <div className="alert">
+    <div data-theme="luxury" className="dashboard h-screen flex bg-base-100">
+      <Navbar />
+      {/* Add overflow-y-auto and proper flex constraints */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
+          {!showTask ? (
+            <div className="card bg-base-200 shadow-xl">
+              <div className="card-body items-center text-center">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="w-6 h-6 stroke-current"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                  <span>The task will be available for 24 hours</span>
-                </div>
-              </div>
-              {!user.solvedDailyChallenge && (
-                <div className="card-actions justify-center mt-8">
-                  <button
-                    onClick={handleStart}
-                    className="btn btn-lg border-amber-400 gap-2"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-6 h-6"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M5 3l14 9-14 9V3z" />
-                    </svg>
-                    Start Challenge
-                  </button>
-                </div>
-              )}
-
-              {user.solvedDailyChallenge && (
-                <div className="card-actions justify-center mt-8">
-                  <button
-                    className="btn btn-lg border-amber-400 gap-2"
-                    disabled
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-6 h-6"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M5 3l14 9-14 9V3z" />
-                    </svg>
-                    Come back tomorrow at 7 AM
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="card bg-base-200 shadow-xl">
-            <div className="card-body">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6 text-primary"
+                    className="w-8 h-8 text-primary"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -387,99 +295,193 @@ const Task = () => {
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                   </svg>
                 </div>
-                <h1 className="card-title text-3xl">Challenge for {today}</h1>
-              </div>
-
-              {task ? (
-                <>
-                  <div className="card bg-base-300 mb-8">
+                <h1 className="card-title text-4xl font-bold mb-6">
+                  Task for {today}
+                </h1>
+                <div className="divider"></div>
+                <div className="space-y-6 text-lg">
+                  <div className="card bg-base-300 shadow-sm">
                     <div className="card-body">
-                      <h2 className="card-title mb-4">
-                        Problem: {task.title || "Daily Challenge"}
-                      </h2>
-                      <p className="text-lg leading-relaxed">
-                        {task.content || "No description available"}
-                      </p>
+                      <h2 className="card-title">Rules for Grading</h2>
+                      <ul className="list-disc list-inside space-y-2">
+                        <li>Earlier submissions receive better scores</li>
+                        <li>Multiple attempts will reduce your score</li>
+                        <li>Stay respectful and focused</li>
+                        <li>Have fun solving the problem!</li>
+                      </ul>
                     </div>
                   </div>
+                  <div className="alert">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      className="w-6 h-6 stroke-current"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span>The task will be available for 24 hours</span>
+                  </div>
+                </div>
+                {!user.solvedDailyChallenge && (
+                  <div className="card-actions justify-center mt-8">
+                    <button
+                      onClick={handleStart}
+                      className="btn btn-lg border-amber-400 gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-6 h-6"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M5 3l14 9-14 9V3z" />
+                      </svg>
+                      Start Challenge
+                    </button>
+                  </div>
+                )}
 
-                  <div className="space-y-6 mb-8">
-                    <div className="card bg-primary/5">
+                {user.solvedDailyChallenge && (
+                  <div className="card-actions justify-center mt-8">
+                    <button
+                      className="btn btn-lg border-amber-400 gap-2"
+                      disabled
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-6 h-6"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M5 3l14 9-14 9V3z" />
+                      </svg>
+                      Come back tomorrow at 7 AM
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="card bg-base-200 shadow-xl">
+              <div className="card-body">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-6 h-6 text-primary"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                  </div>
+                  <h1 className="card-title text-3xl">Challenge for {today}</h1>
+                </div>
+
+                {task ? (
+                  <>
+                    <div className="card bg-base-300 mb-8">
                       <div className="card-body">
-                        <h3 className="card-title text-primary">Your Input</h3>
-                        <div className="text-xl font-mono mt-2 break-all whitespace-normal font-bold">
-                          {testCase && testCase.input}
-                        </div>
-                        <p className="text-sm mt-2 text-base-content/70">
-                          Use this input in your local editor
+                        <h2 className="card-title mb-4">
+                          Problem: {task.title || 'Daily Challenge'}
+                        </h2>
+                        <p className="text-lg leading-relaxed">
+                          {task.content || 'No description available'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="card bg-base-300">
-                      <div className="card-body">
-                        <h3 className="card-title">Example</h3>
-                        <div className="space-y-2 mt-2">
-                          {task.examples.map((element, index) => {
-                            console.log("Rendering example:", element);
-                            return (
-                              <p className="font-mono break-all" key={index}>
-                                Input: "{element.input}" → Output: "
-                                {element.output}"
-                              </p>
-                            );
-                          })}
+                    <div className="space-y-6 mb-8">
+                      <div className="card bg-primary/5">
+                        <div className="card-body">
+                          <h3 className="card-title text-primary">
+                            Your Input
+                          </h3>
+                          <div className="text-xl font-mono mt-2 break-all whitespace-normal font-bold">
+                            {testCase && testCase.input}
+                          </div>
+                          <p className="text-sm mt-2 text-base-content/70">
+                            Use this input in your local editor
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="card bg-base-300">
+                        <div className="card-body">
+                          <h3 className="card-title">Example</h3>
+                          <div className="space-y-2 mt-2">
+                            {task.examples.map((element, index) => {
+                              console.log('Rendering example:', element);
+                              return (
+                                <p className="font-mono break-all" key={index}>
+                                  Input: "{element.input}" → Output: "
+                                  {element.output}"
+                                </p>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
+                  </>
+                ) : (
+                  <div className="flex justify-center items-center py-12">
+                    <span className="loading loading-spinner loading-lg"></span>
                   </div>
-                </>
-              ) : (
-                <div className="flex justify-center items-center py-12">
-                  <span className="loading loading-spinner loading-lg"></span>
-                </div>
-              )}
+                )}
 
-              <div className="card bg-base-300">
-                <div className="card-body">
-                  <h3 className="card-title mb-4">Submit Your Solution</h3>
-                  <input
-                    id="userOutput"
-                    type="text"
-                    placeholder="Enter your output here"
-                    className="input input-bordered input-lg w-full mb-4"
-                  />
-                  <div className="card-actions justify-end gap-4">
-                    <button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            "Are you sure you want to go back? You won't be able to reattempt."
-                          )
-                        ) {
-                          toggleSolvedDailyChallenge(user);
-                          navigate("/dashboard/forum");
-                        }
-                      }}
-                      className="btn border-amber-400 btn-lg"
-                    >
-                      Go Back
-                    </button>
-                    <button
-                      onClick={() => handleSubmitSolution()}
-                      className="btn border-amber-400 btn-lg"
-                    >
-                      Submit Solution
-                    </button>
+                <div className="card bg-base-300">
+                  <div className="card-body">
+                    <h3 className="card-title mb-4">Submit Your Solution</h3>
+                    <input
+                      id="userOutput"
+                      type="text"
+                      placeholder="Enter your output here"
+                      className="input input-bordered input-lg w-full mb-4"
+                    />
+                    <div className="card-actions justify-end gap-4">
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to go back? You won't be able to reattempt."
+                            )
+                          ) {
+                            toggleSolvedDailyChallenge(user);
+                            navigate('/dashboard/forum');
+                          }
+                        }}
+                        className="btn border-amber-400 btn-lg"
+                      >
+                        Go Back
+                      </button>
+                      <button
+                        onClick={() => handleSubmitSolution()}
+                        className="btn border-amber-400 btn-lg"
+                      >
+                        Submit Solution
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 };
-
 export default Task;
