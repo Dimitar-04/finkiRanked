@@ -5,11 +5,13 @@ async function resetPostCounters() {
   try {
     const result = await prisma.users.updateMany({
       data: {
-        postCounter: 5,
+        postCounter: 3,
       },
     });
   } catch (error) {
     console.error('Error resetting post counters:', error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
 const job = schedule.scheduleJob('0 0 * * *', function () {
