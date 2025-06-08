@@ -1,13 +1,207 @@
-import React, { useState } from 'react';
-import Navbar from './Navbar';
+import React, { useState } from "react";
+import Navbar from "./Navbar";
+import { useNavigate } from "react-router-dom";
 
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
+  const [task, setTask] = useState(null);
   const today = new Date().toLocaleDateString();
+  const user = JSON.parse(localStorage.getItem("user")) || { attempts: 0 };
+  const navigate = useNavigate();
+  const userOutput = document.getElementById("userOutput")?.value || "";
+
+  async function fetchTaskForToday(date) {
+    try {
+      const formattedDate = new Date(date).toISOString().split("T")[0];
+      console.log("Fetching task for date:", formattedDate);
+
+      const response = await fetch(`/task/${formattedDate}`, {
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        throw new Error("Failed to parse server response as JSON");
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
+        const taskData = data[0];
+        console.log("Processing task data:", taskData);
+
+        setTask({
+          id: taskData.id,
+          title: taskData.title || "Daily Challenge",
+          content: taskData.content || "No description available",
+          examples: taskData.examples || [], // Use examples directly from the API response
+        });
+
+        console.log("Fetched task:", taskData);
+      } else {
+        console.error("No tasks found for the date");
+        setTask({
+          title: "No Challenge Available",
+          content: "There is no challenge available for today.",
+          examples: [{ input: "N/A", output: "N/A" }],
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching task:", error);
+      setTask({
+        title: "Error Loading Challenge",
+        content:
+          "There was an error loading today's challenge. Please try again later.",
+        examples: [{ input: "N/A", output: "N/A" }],
+      });
+    }
+  }
 
   const handleStart = () => {
+    fetchTaskForToday(Date.now());
     setShowTask(true);
   };
+  function incrementAttempts(user) {
+    const updatedUser = {
+      ...user,
+      attempts: (user.attempts || 0) + 1,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    return updatedUser;
+  }
+
+  function getMinutesSinceSevenAM() {
+    const now = new Date();
+    const sevenAM = new Date();
+    sevenAM.setHours(7, 0, 0, 0); // Set to 7:00 AM today
+    const diffMs = now.getTime() - sevenAM.getTime();
+    return Math.floor(diffMs / (1000 * 60)); // Convert to full minutes
+  }
+
+  function getTimeBonus() {
+    const minutes = getMinutesSinceSevenAM();
+    return Math.max(0, 60 - Math.floor(minutes * 0.0833));
+  }
+
+  function getAttemptScore(user) {
+    const attempts = user.attempts || 0;
+
+    switch (attempts) {
+      case 0:
+        return 40;
+      case 1:
+        return 30;
+      case 2:
+        return 20;
+      case 3:
+        return 10;
+      default:
+        return 0;
+    }
+  }
+
+  function resetAttempts(user) {
+    const updatedUser = {
+      ...user,
+      attempts: 0,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    return updatedUser;
+  }
+
+  function calculateTotalScore(user) {
+    return getTimeBonus() + getAttemptScore(user);
+  }
+
+  function incrementUserScore(user, score) {
+    const updatedUser = {
+      ...user,
+      points: (user.points || 0) + score,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    return updatedUser;
+  }
+
+  async function updateTaskAttempts() {
+    if (!task || !task.id) return;
+
+    try {
+      // Update task attempts count on the server
+      await fetch(`/task/${task.id}/attempts`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      console.error("Error updating task attempts:", error);
+    }
+  }
+
+  async function updateTaskSolved() {
+    if (!task || !task.id) return;
+
+    try {
+      await fetch(`/task/${task.id}/solved`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      console.error("Error updating task solved count:", error);
+    }
+  }
+
+  async function handleSubmitSolution() {
+    if (!task || !task.examples || task.examples.length === 0) {
+      alert("No challenge is currently available");
+      return;
+    }
+
+    const userOutputElement = document.getElementById("userOutput");
+    const userOutputValue = userOutputElement ? userOutputElement.value : "";
+
+    const expectedOutput = task.examples[0].output;
+
+    let currentUser = JSON.parse(localStorage.getItem("user")) || {
+      attempts: 0,
+      points: 0,
+    };
+
+    await updateTaskAttempts();
+
+    if (userOutputValue === expectedOutput) {
+      currentUser = incrementAttempts(currentUser);
+
+      const score = calculateTotalScore(currentUser);
+
+      currentUser = incrementUserScore(currentUser, score);
+
+      await updateTaskSolved();
+
+      currentUser = resetAttempts(currentUser);
+
+      alert(
+        `Correct! Your score is ${score} points. Your total points are now ${currentUser.points}.`
+      );
+
+      navigate("/dashboard/forum");
+    } else {
+      currentUser = incrementAttempts(currentUser);
+
+      alert(`Incorrect! Try again. This is attempt #${currentUser.attempts}.`);
+    }
+  }
 
   return (
     <div
@@ -103,54 +297,68 @@ const Task = () => {
                 <h1 className="card-title text-3xl">Challenge for {today}</h1>
               </div>
 
-              <div className="card bg-base-300 mb-8">
-                <div className="card-body">
-                  <h2 className="card-title mb-4">Problem: String Reversal</h2>
-                  <p className="text-lg leading-relaxed">
-                    Write a function that takes a string as input and returns
-                    its reverse. You must implement this manually without using
-                    built-in reverse functions or shortcuts like Python's [::-1]
-                    slicing.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                <div className="card bg-primary/5">
-                  <div className="card-body">
-                    <h3 className="card-title text-primary">Your Input</h3>
-                    <div className="text-2xl font-mono mt-2">"ANDREJ"</div>
-                    <p className="text-sm mt-2 text-base-content/70">
-                      Use this input in your local editor
-                    </p>
-                  </div>
-                </div>
-
-                <div className="card bg-base-300">
-                  <div className="card-body">
-                    <h3 className="card-title">Example</h3>
-                    <div className="space-y-2 mt-2">
-                      <p className="font-mono">
-                        Input: "hello" → Output: "olleh"
-                      </p>
-                      <p className="font-mono">
-                        Input: "world" → Output: "dlrow"
+              {task ? (
+                <>
+                  <div className="card bg-base-300 mb-8">
+                    <div className="card-body">
+                      <h2 className="card-title mb-4">
+                        Problem: {task.title || "Daily Challenge"}
+                      </h2>
+                      <p className="text-lg leading-relaxed">
+                        {task.content || "No description available"}
                       </p>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="card bg-primary/5">
+                      <div className="card-body">
+                        <h3 className="card-title text-primary">Your Input</h3>
+                        <div className="text-2xl font-mono mt-2">"ANDREJ"</div>
+                        <p className="text-sm mt-2 text-base-content/70">
+                          Use this input in your local editor
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="card bg-base-300">
+                      <div className="card-body">
+                        <h3 className="card-title">Example</h3>
+                        <div className="space-y-2 mt-2">
+                          {task.examples.map((element, index) => {
+                            console.log("Rendering example:", element);
+                            return (
+                              <p className="font-mono" key={index}>
+                                Input: "{element.input}" → Output: "
+                                {element.output}"
+                              </p>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-center items-center py-12">
+                  <span className="loading loading-spinner loading-lg"></span>
                 </div>
-              </div>
+              )}
 
               <div className="card bg-base-300">
                 <div className="card-body">
                   <h3 className="card-title mb-4">Submit Your Solution</h3>
                   <input
+                    id="userOutput"
                     type="text"
                     placeholder="Enter your output here"
                     className="input input-bordered input-lg w-full mb-4"
                   />
                   <div className="card-actions justify-end">
-                    <button className="btn border-amber-400 btn-lg">
+                    <button
+                      onClick={() => handleSubmitSolution()}
+                      className="btn border-amber-400 btn-lg"
+                    >
                       Submit Solution
                     </button>
                   </div>
