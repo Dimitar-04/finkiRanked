@@ -1,13 +1,88 @@
 import React, { useState } from 'react';
 import Navbar from './Navbar';
+import {useNavigate} from "react-router-dom";
 
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const today = new Date().toLocaleDateString();
+  const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
+  const navigate = useNavigate();
+  const userOutput = document.getElementById('userOutput')?.value || '';
+
+  function fetchTaskForToday(date) {
+
+  }
 
   const handleStart = () => {
+    fetchTaskForToday(Date.now());
     setShowTask(true);
   };
+  function incrementAttempts(user) {
+    const updatedUser = {
+      ...user,
+      attempts: (user.attempts || 0) + 1,
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  }
+  function getMinutesSinceSevenAM(){
+    const now = new Date();
+    const sevenAM = new Date();
+    sevenAM.setHours(7, 0, 0, 0); // Set to 7:00 AM today
+    const diffMs = now.getTime() - sevenAM.getTime();
+    return Math.floor(diffMs / (1000 * 60)); // Convert to full minutes
+  }
+  function getTimeBonus() {
+    const minutes = getMinutesSinceSevenAM();
+    return Math.max(0, 60 - Math.floor(minutes * 0.0833));
+  }
+  function getAttemptScore(user) {
+    const attempts = user.attempts || 0;
+
+    switch (attempts) {
+      case 0: return 40;
+      case 1: return 30;
+      case 2: return 20;
+      case 3: return 10;
+      default: return 0;
+    }
+  }
+  function resetAttempts(user) {
+    const updatedUser = {
+      ...user,
+      attempts: 0,
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  }
+  function calculateTotalScore(user) {
+    return getTimeBonus() + getAttemptScore(user);
+  }
+
+  function incrementUserScore(user, score) {
+    const updatedUser = {
+      ...user,
+      points: (user.points || 0) + score,
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  }
+
+  function handleSubmit() {
+    if(userOutput === testCase.output){
+        incrementAttempts(user);
+        const score = calculateTotalScore(user);
+        incrementUserScore(user,score)
+        alert(`Correct! Your score is ${score} and your total points are now ${user.points}`);
+        resetAttempts(user);
+        navigate('/dashboard/forum');
+    }
+    else{
+        incrementAttempts(user);
+        alert(`Incorrect! Try again`);
+    }
+  }
+
 
   return (
     <div
@@ -145,12 +220,13 @@ const Task = () => {
                 <div className="card-body">
                   <h3 className="card-title mb-4">Submit Your Solution</h3>
                   <input
+                      id="userOutput"
                     type="text"
                     placeholder="Enter your output here"
                     className="input input-bordered input-lg w-full mb-4"
                   />
                   <div className="card-actions justify-end">
-                    <button className="btn border-amber-400 btn-lg">
+                    <button className="btn border-amber-400 btn-lg" onClick={handleSubmit}>
                       Submit Solution
                     </button>
                   </div>
