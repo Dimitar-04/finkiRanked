@@ -1,14 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import { useNavigate } from "react-router-dom";
 
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const [task, setTask] = useState(null);
+  const [testCase, setTestCase] = useState(null);
   const today = new Date().toLocaleDateString();
   const user = JSON.parse(localStorage.getItem("user")) || { attempts: 0 };
   const navigate = useNavigate();
-  const userOutput = document.getElementById("userOutput")?.value || "";
+
+  useEffect(() => {
+    if (task && task.id) {
+      fetchTestCaseForToday(task.id);
+    }
+  }, [task]);
 
   async function fetchTaskForToday(date) {
     try {
@@ -31,8 +37,8 @@ const Task = () => {
       let data;
       try {
         data = JSON.parse(responseText);
-      } catch (parseError) {
-        throw new Error("Failed to parse server response as JSON");
+      } catch (error) {
+        throw new Error("Failed to parse server response as JSON" + error);
       }
 
       if (Array.isArray(data) && data.length > 0) {
@@ -46,7 +52,7 @@ const Task = () => {
           examples: taskData.examples || [], // Use examples directly from the API response
         });
 
-        console.log("Fetched task:", taskData);
+        console.log("Fetched task:", task);
       } else {
         console.error("No tasks found for the date");
         setTask({
@@ -66,10 +72,55 @@ const Task = () => {
     }
   }
 
+  function toggleSolvedDailyChallenge(user) {
+    const updatedUser = {
+      ...user,
+      solvedDailyChallenge: true,
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    return updatedUser;
+  }
+
+  async function fetchTestCaseForToday(id) {
+    try {
+      console.log("Fetching test case for task ID:", id);
+      const response = await fetch(`/task/${id}/test-case`, {
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetched test case:", data);
+
+      if (data && data.input && data.output) {
+        setTestCase({
+          input: data.input,
+          output: data.output,
+        });
+      } else {
+        console.error("No test case found for the task");
+        setTestCase(null);
+      }
+    } catch (error) {
+      console.error("Error fetching test case:", error);
+      setTestCase(null);
+    }
+  }
+
   const handleStart = () => {
     fetchTaskForToday(Date.now());
+
+    // toggleSolvedDailyChallenge(user);
+
     setShowTask(true);
   };
+
   function incrementAttempts(user) {
     const updatedUser = {
       ...user,
@@ -119,7 +170,14 @@ const Task = () => {
   }
 
   function calculateTotalScore(user) {
-    return getTimeBonus() + getAttemptScore(user);
+    const score = parseInt(getTimeBonus()) + parseInt(getAttemptScore(user));
+    const updatedUser = {
+      ...user,
+      points: score + (parseInt(user.points) || 0),
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+
+    return score;
   }
 
   function incrementUserScore(user, score) {
@@ -170,8 +228,7 @@ const Task = () => {
 
     const userOutputElement = document.getElementById("userOutput");
     const userOutputValue = userOutputElement ? userOutputElement.value : "";
-
-    const expectedOutput = task.examples[0].output;
+    console.log(typeof userOutputValue);
 
     let currentUser = JSON.parse(localStorage.getItem("user")) || {
       attempts: 0,
@@ -180,7 +237,11 @@ const Task = () => {
 
     await updateTaskAttempts();
 
-    if (userOutputValue === expectedOutput) {
+    if (
+      userOutputValue == testCase.output ||
+      parseInt(userOutputValue) == testCase.output ||
+      `{userOutputValue}` == testCase.output
+    ) {
       currentUser = incrementAttempts(currentUser);
 
       const score = calculateTotalScore(currentUser);
@@ -258,24 +319,47 @@ const Task = () => {
                   <span>The task will be available for 24 hours</span>
                 </div>
               </div>
-              <div className="card-actions justify-center mt-8">
-                <button
-                  onClick={handleStart}
-                  className="btn btn-lg border-amber-400 gap-2"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-6 h-6"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+              {!user.solvedDailyChallenge && (
+                <div className="card-actions justify-center mt-8">
+                  <button
+                    onClick={handleStart}
+                    className="btn btn-lg border-amber-400 gap-2"
                   >
-                    <path d="M5 3l14 9-14 9V3z" />
-                  </svg>
-                  Start Challenge
-                </button>
-              </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-6 h-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M5 3l14 9-14 9V3z" />
+                    </svg>
+                    Start Challenge
+                  </button>
+                </div>
+              )}
+
+              {user.solvedDailyChallenge && (
+                <div className="card-actions justify-center mt-8">
+                  <button
+                    className="btn btn-lg border-amber-400 gap-2"
+                    disabled
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-6 h-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M5 3l14 9-14 9V3z" />
+                    </svg>
+                    Come back tomorrow at 7 AM
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -310,11 +394,13 @@ const Task = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div className="space-y-6 mb-8">
                     <div className="card bg-primary/5">
                       <div className="card-body">
                         <h3 className="card-title text-primary">Your Input</h3>
-                        <div className="text-2xl font-mono mt-2">"ANDREJ"</div>
+                        <div className="text-xl font-mono mt-2 break-all whitespace-normal font-bold">
+                          {testCase && testCase.input}
+                        </div>
                         <p className="text-sm mt-2 text-base-content/70">
                           Use this input in your local editor
                         </p>
@@ -328,7 +414,7 @@ const Task = () => {
                           {task.examples.map((element, index) => {
                             console.log("Rendering example:", element);
                             return (
-                              <p className="font-mono" key={index}>
+                              <p className="font-mono break-all" key={index}>
                                 Input: "{element.input}" → Output: "
                                 {element.output}"
                               </p>
@@ -354,7 +440,22 @@ const Task = () => {
                     placeholder="Enter your output here"
                     className="input input-bordered input-lg w-full mb-4"
                   />
-                  <div className="card-actions justify-end">
+                  <div className="card-actions justify-end gap-4">
+                    <button
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "Are you sure you want to go back? You won't be able to reattempt."
+                          )
+                        ) {
+                          toggleSolvedDailyChallenge(user);
+                          navigate("/dashboard/forum");
+                        }
+                      }}
+                      className="btn border-amber-400 btn-lg"
+                    >
+                      Go Back
+                    </button>
                     <button
                       onClick={() => handleSubmitSolution()}
                       className="btn border-amber-400 btn-lg"
