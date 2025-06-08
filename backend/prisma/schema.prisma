@@ -45,36 +45,35 @@ model forum_posts {
 }
 
 model users {
-  id                   String           @id @default(dbgenerated("auth.uid()")) @db.Uuid
-  username             String           @unique
-  email                String           @unique
-  name                 String?
-  solved_problems      BigInt?          @default(0)
-  rank                 String?          @default("Novice")
-  points               BigInt?          @default(0)
-  commentCounter       Int?             @default(3) @db.SmallInt
-  commentCheckCounter  Int?             @default(0) @db.SmallInt
-  postCounter          Int?             @default(3) @db.SmallInt
-  postCheckCounter     Int?             @default(0) @db.SmallInt
-  isModerator          Boolean          @default(false)
-  started_challenge_at DateTime?        @default(now()) @db.Timestamptz(6)
-  comments             comments[]
-  forum_posts          forum_posts[]
-  to_be_reviewed       to_be_reviewed[]
+  id                  String           @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  username            String           @unique
+  email               String           @unique
+  name                String?
+  solved_problems     BigInt?          @default(0)
+  rank                String?          @default("Novice")
+  points              BigInt?          @default(0)
+  commentCounter      Int?             @default(3) @db.SmallInt
+  commentCheckCounter Int?             @default(0) @db.SmallInt
+  postCounter         Int?             @default(3) @db.SmallInt
+  postCheckCounter    Int?             @default(0) @db.SmallInt
+  isModerator         Boolean          @default(false)
+  attempts            Int?             @default(0) @db.SmallInt
+  comments            comments[]
+  forum_posts         forum_posts[]
+  to_be_reviewed      to_be_reviewed[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model challenges {
-  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  solving_date   DateTime     @db.Timestamptz(6)
-  title          String?
-  content        String?
-  example_input  String?
-  example_output String?
-  attempted_by   Int?         @db.SmallInt
-  solved_by      Int?         @db.SmallInt
-  expired        Boolean?
-  test_cases     test_cases[]
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solving_date DateTime     @db.Date
+  title        String?
+  content      String?
+  attempted_by Int?         @db.SmallInt
+  solved_by    Int?         @db.SmallInt
+  expired      Boolean?
+  examples     Json?
+  test_cases   test_cases[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
