@@ -1,24 +1,40 @@
-import React, { useState } from "react";
-import Navbar from "./Navbar";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import Navbar from './Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const [task, setTask] = useState(null);
-  const today = new Date().toLocaleDateString();
-  const user = JSON.parse(localStorage.getItem("user")) || { attempts: 0 };
+  const [effectiveTaskDate, setEffectiveTaskDate] = useState(
+    new Date().toLocaleDateString()
+  );
+
+  const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
   const navigate = useNavigate();
-  const userOutput = document.getElementById("userOutput")?.value || "";
+
+  useEffect(() => {
+    const now = new Date();
+    let initialEffectiveDate = new Date(now);
+    if (now.getHours() < 7) {
+      initialEffectiveDate.setDate(now.getDate() - 1);
+    }
+    setEffectiveTaskDate(initialEffectiveDate.toLocaleDateString());
+  }, []);
 
   async function fetchTaskForToday(date) {
     try {
-      const formattedDate = new Date(date).toISOString().split("T")[0];
-      console.log("Fetching task for date:", formattedDate);
+      const currentDate = new Date(date);
+      let dateToFetch = new Date(currentDate);
+      if (currentDate.getHours() < 7) {
+        dateToFetch.setDate(currentDate.getDate() - 1);
+      }
+      const formattedDate = dateToFetch.toISOString().split('T')[0];
+      setEffectiveTaskDate(dateToFetch.toLocaleDateString());
 
       const response = await fetch(`/task/${formattedDate}`, {
         headers: {
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
         },
       });
 
@@ -32,36 +48,36 @@ const Task = () => {
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        throw new Error("Failed to parse server response as JSON");
+        throw new Error('Failed to parse server response as JSON');
       }
 
       if (Array.isArray(data) && data.length > 0) {
         const taskData = data[0];
-        console.log("Processing task data:", taskData);
+        console.log('Processing task data:', taskData);
 
         setTask({
           id: taskData.id,
-          title: taskData.title || "Daily Challenge",
-          content: taskData.content || "No description available",
+          title: taskData.title || 'Daily Challenge',
+          content: taskData.content || 'No description available',
           examples: taskData.examples || [], // Use examples directly from the API response
         });
 
-        console.log("Fetched task:", taskData);
+        console.log('Fetched task:', taskData);
       } else {
-        console.error("No tasks found for the date");
+        console.error('No tasks found for the date');
         setTask({
-          title: "No Challenge Available",
-          content: "There is no challenge available for today.",
-          examples: [{ input: "N/A", output: "N/A" }],
+          title: 'No Challenge Available',
+          content: 'There is no challenge available for today.',
+          examples: [{ input: 'N/A', output: 'N/A' }],
         });
       }
     } catch (error) {
-      console.error("Error fetching task:", error);
+      console.error('Error fetching task:', error);
       setTask({
-        title: "Error Loading Challenge",
+        title: 'Error Loading Challenge',
         content:
           "There was an error loading today's challenge. Please try again later.",
-        examples: [{ input: "N/A", output: "N/A" }],
+        examples: [{ input: 'N/A', output: 'N/A' }],
       });
     }
   }
@@ -75,7 +91,7 @@ const Task = () => {
       ...user,
       attempts: (user.attempts || 0) + 1,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
@@ -114,7 +130,7 @@ const Task = () => {
       ...user,
       attempts: 0,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
@@ -127,7 +143,7 @@ const Task = () => {
       ...user,
       points: (user.points || 0) + score,
     };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    localStorage.setItem('user', JSON.stringify(updatedUser));
     return updatedUser;
   }
 
@@ -137,13 +153,13 @@ const Task = () => {
     try {
       // Update task attempts count on the server
       await fetch(`/task/${task.id}/attempts`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
     } catch (error) {
-      console.error("Error updating task attempts:", error);
+      console.error('Error updating task attempts:', error);
     }
   }
 
@@ -152,28 +168,28 @@ const Task = () => {
 
     try {
       await fetch(`/task/${task.id}/solved`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
     } catch (error) {
-      console.error("Error updating task solved count:", error);
+      console.error('Error updating task solved count:', error);
     }
   }
 
   async function handleSubmitSolution() {
     if (!task || !task.examples || task.examples.length === 0) {
-      alert("No challenge is currently available");
+      alert('No challenge is currently available');
       return;
     }
 
-    const userOutputElement = document.getElementById("userOutput");
-    const userOutputValue = userOutputElement ? userOutputElement.value : "";
+    const userOutputElement = document.getElementById('userOutput');
+    const userOutputValue = userOutputElement ? userOutputElement.value : '';
 
     const expectedOutput = task.examples[0].output;
 
-    let currentUser = JSON.parse(localStorage.getItem("user")) || {
+    let currentUser = JSON.parse(localStorage.getItem('user')) || {
       attempts: 0,
       points: 0,
     };
@@ -195,7 +211,7 @@ const Task = () => {
         `Correct! Your score is ${score} points. Your total points are now ${currentUser.points}.`
       );
 
-      navigate("/dashboard/forum");
+      navigate('/dashboard/forum');
     } else {
       currentUser = incrementAttempts(currentUser);
 
@@ -302,10 +318,10 @@ const Task = () => {
                   <div className="card bg-base-300 mb-8">
                     <div className="card-body">
                       <h2 className="card-title mb-4">
-                        Problem: {task.title || "Daily Challenge"}
+                        Problem: {task.title || 'Daily Challenge'}
                       </h2>
                       <p className="text-lg leading-relaxed">
-                        {task.content || "No description available"}
+                        {task.content || 'No description available'}
                       </p>
                     </div>
                   </div>
@@ -326,7 +342,7 @@ const Task = () => {
                         <h3 className="card-title">Example</h3>
                         <div className="space-y-2 mt-2">
                           {task.examples.map((element, index) => {
-                            console.log("Rendering example:", element);
+                            console.log('Rendering example:', element);
                             return (
                               <p className="font-mono" key={index}>
                                 Input: "{element.input}" → Output: "
