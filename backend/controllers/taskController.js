@@ -9,7 +9,9 @@ const getTaskByDate = async (req, res) => {
 
     let effectiveDate;
 
-    if (date === now.toISOString().split('T')[0]) {
+    const localDate = now.toLocaleDateString('en-CA');
+
+    if (date === localDate) {
       if (now.getHours() < 7) {
         effectiveDate = new Date(now);
         effectiveDate.setDate(now.getDate() - 1);
@@ -17,7 +19,9 @@ const getTaskByDate = async (req, res) => {
         effectiveDate = now;
       }
     } else {
-      effectiveDate = new Date(date);
+      return res
+        .status(404)
+        .json({ message: 'Cannot fetch task for different date!' });
     }
 
     const taskDate = new Date(
