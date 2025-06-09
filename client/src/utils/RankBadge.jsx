@@ -15,13 +15,7 @@ const RankBadge = ({ rankName, size = "md", className = "" }) => {
         src={rankInfo.icon}
         alt={rankInfo.title}
         className={iconClassName}
-        onError={(e) => {
-          // Fallback to emoji if image fails to load
-          e.target.style.display = "none";
-          e.target.nextSibling.style.display = "inline";
-        }}
       />
-      <span style={{ display: "none" }}>{rankInfo.emoji}</span>
       <span>{rankName}</span>
     </div>
   );
