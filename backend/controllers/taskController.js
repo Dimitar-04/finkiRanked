@@ -262,7 +262,7 @@ const evaluateTask = async (req, res) => {
           ? 20
           : 30;
       const totalScore = timeBonus + attemptScore + difficultyScore;
-
+      const userRank = getRankByPoints(totalScore);
       const updatedUser = await prisma.users.update({
         where: {
           id: userId,
@@ -272,14 +272,16 @@ const evaluateTask = async (req, res) => {
           attempts: { increment: 1 },
           solvedDailyChallenge: true,
           solved_problems: { increment: 1 },
+          rank: userRank.title,
         },
       });
       const responseUser = { ...updatedUser };
+      console.log('Updated User:', responseUser);
       if (typeof responseUser.points === 'bigint') {
         responseUser.points = responseUser.points.toString();
       }
 
-      const userRank = getRankByPoints(responseUser.points);
+      console.log('User Rank:', userRank);
       await prisma.challenges.update({
         where: { id: taskId },
         data: { solved_by: { increment: 1 } },
