@@ -95,96 +95,6 @@ const getTaskByDate = async (req, res) => {
   }
 };
 
-const updateAttemptsTask = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Check if id is a UUID (string) or numeric
-    const where = {};
-    if (
-      id.match(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      )
-    ) {
-      where.id = id;
-    } else {
-      try {
-        where.id = parseInt(id);
-      } catch (e) {
-        where.id = id; // If parsing fails, use as is
-      }
-    }
-
-    const updatedTask = await prisma.challenges.update({
-      where: where,
-      data: {
-        attempted_by: { increment: 1 },
-      },
-    });
-
-    // Convert BigInt to string for JSON response
-    const result = { ...updatedTask };
-    if (typeof result.attempted_by === 'bigint') {
-      result.attempted_by = result.attempted_by.toString();
-    }
-    if (typeof result.solved_by === 'bigint') {
-      result.solved_by = result.solved_by.toString();
-    }
-
-    res.status(200).json(result);
-  } catch (error) {
-    console.error('Error updating task attempts:', error);
-    res
-      .status(500)
-      .json({ message: 'Internal server error', error: error.message });
-  }
-};
-
-const updateSolvedTask = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Check if id is a UUID (string) or numeric
-    const where = {};
-    if (
-      id.match(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-      )
-    ) {
-      where.id = id;
-    } else {
-      try {
-        where.id = parseInt(id);
-      } catch (e) {
-        where.id = id; // If parsing fails, use as is
-      }
-    }
-
-    const updatedTask = await prisma.challenges.update({
-      where: where,
-      data: {
-        solved_by: { increment: 1 },
-      },
-    });
-
-    // Convert BigInt to string for JSON response
-    const result = { ...updatedTask };
-    if (typeof result.attempted_by === 'bigint') {
-      result.attempted_by = result.attempted_by.toString();
-    }
-    if (typeof result.solved_by === 'bigint') {
-      result.solved_by = result.solved_by.toString();
-    }
-
-    res.status(200).json(result);
-  } catch (error) {
-    console.error('Error updating task solved count:', error);
-    res
-      .status(500)
-      .json({ message: 'Internal server error', error: error.message });
-  }
-};
-
 const fetchTestCaseForToday = async (req, res) => {
   const { id } = req.params;
 
@@ -250,6 +160,39 @@ function getAttemptScore(attempts) {
   }
 }
 
+function isOutputCorrect(userOutput, expectedOutput, outputType) {
+  const normalizeString = (str) =>
+    str.toLowerCase().replace(/[,"']/g, '').replace(/\s+/g, ' ').trim();
+
+  const normalizeArray = (str) => {
+    const cleaned = str.replace(/[\[\]]/g, '');
+    return cleaned
+      .split(/[\s,]+/)
+      .filter((val) => val !== '')
+      .map((val) => val.trim());
+  };
+
+  if (outputType === 'integer') {
+    return parseInt(userOutput) === parseInt(expectedOutput);
+  }
+
+  if (outputType === 'float') {
+    return Math.abs(parseFloat(userOutput) - parseFloat(expectedOutput)) < 1e-6;
+  }
+  if (outputType === 'array') {
+    const userArr = normalizeArray(userOutput);
+    const expectedArr = normalizeArray(expectedOutput);
+    if (userArr.length !== expectedArr.length) return false;
+    for (let i = 0; i < userArr.length; i++) {
+      if (userArr[i] !== expectedArr[i]) return false;
+    }
+    return true;
+  }
+  const a = normalizeString(userOutput);
+  const b = normalizeString(expectedOutput);
+  return a === b;
+}
+
 const evaluateTask = async (req, res) => {
   const { id: taskId } = req.params;
   const { userOutput, testCaseId, userId } = req.body;
@@ -284,7 +227,16 @@ const evaluateTask = async (req, res) => {
         attempted_by: { increment: 1 },
       },
     });
-    if (userOutput == testCase.output) {
+
+    const taskOutputType = await prisma.challenges.findUnique({
+      where: {
+        id: taskId,
+      },
+      select: {
+        output_type: true,
+      },
+    });
+    if (isOutputCorrect(userOutput, testCase.output, taskOutputType)) {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);
       const totalScore = timeBonus + attemptScore;
@@ -297,6 +249,7 @@ const evaluateTask = async (req, res) => {
           points: { increment: totalScore },
           attempts: { increment: 1 },
           solvedDailyChallenge: true,
+          solved_problems: { increment: 1 },
         },
       });
       const responseUser = { ...updatedUser };
@@ -341,8 +294,7 @@ const evaluateTask = async (req, res) => {
 };
 module.exports = {
   getTaskByDate,
-  updateAttemptsTask,
-  updateSolvedTask,
+
   fetchTestCaseForToday,
   evaluateTask,
 };

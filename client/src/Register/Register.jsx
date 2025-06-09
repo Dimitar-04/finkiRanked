@@ -85,7 +85,7 @@ const Register = () => {
           data.message.includes('Email address already registered') ||
           data.message.includes('email address has already been registered')
         ) {
-          setError('Email already exists');
+          setError('Email already in use');
         } else {
           // Generic error
           setError(data.message || 'Registration failed');

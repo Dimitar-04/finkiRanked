@@ -7,19 +7,10 @@ const Task = () => {
   const [task, setTask] = useState(null);
   const [testCase, setTestCase] = useState(null);
   const [effectiveTaskDate, setEffectiveTaskDate] = useState('');
-  const [formattedTitle, setFormattedTitle] = useState('');
+
   const today = new Date().toLocaleDateString();
   const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const now = new Date();
-    let initialEffectiveDate = new Date(now);
-    if (now.getHours() < 7) {
-      initialEffectiveDate.setDate(now.getDate() - 1);
-    }
-    setEffectiveTaskDate(initialEffectiveDate.toLocaleDateString());
-  }, []);
 
   useEffect(() => {
     if (task && task.id) {
@@ -30,7 +21,6 @@ const Task = () => {
   async function fetchTaskForToday(date) {
     try {
       const formattedDate = new Date(date).toISOString().split('T')[0];
-      console.log('Fetching task for date:', formattedDate);
 
       const response = await fetch(`/task/${formattedDate}`, {
         headers: {
@@ -66,8 +56,6 @@ const Task = () => {
           content: taskData.content || 'No description available',
           examples: taskData.examples || [], // Use examples directly from the API response
         });
-
-        console.log('Fetched task:', task);
       } else {
         console.error('No tasks found for the date');
         setTask({
@@ -98,7 +86,6 @@ const Task = () => {
 
   async function fetchTestCaseForToday(id) {
     try {
-      console.log('Fetching test case for task ID:', id);
       const response = await fetch(`/task/${id}/test-case`, {
         headers: {
           Accept: 'application/json',
@@ -111,7 +98,6 @@ const Task = () => {
       }
 
       const data = await response.json();
-      console.log('Fetched test case:', data);
 
       if (data && data.input) {
         setTestCase({
@@ -203,7 +189,7 @@ const Task = () => {
         <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
           {!showTask ? (
             <div className="card bg-base-200 shadow-xl">
-              <div className="card-body items-center text-center">
+              <div className="card-body items-center ">
                 <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -224,7 +210,7 @@ const Task = () => {
                   <div className="card bg-base-300 shadow-sm">
                     <div className="card-body">
                       <h2 className="card-title">Rules for Grading</h2>
-                      <ul className="list-disc list-inside space-y-2">
+                      <ul className="list-disc pl-5 space-y-2">
                         <li>Earlier submissions receive better scores</li>
                         <li>Multiple attempts will reduce your score</li>
                         <li>Stay respectful and focused</li>
@@ -249,47 +235,27 @@ const Task = () => {
                     <span>The task will be available for 24 hours</span>
                   </div>
                 </div>
-                {user.solvedDailyChallenge && (
-                  <div className="card-actions justify-center mt-8">
-                    <button
-                      onClick={handleStart}
-                      className="btn btn-lg border-amber-400 gap-2"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-6 h-6"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M5 3l14 9-14 9V3z" />
-                      </svg>
-                      Start Challenge
-                    </button>
-                  </div>
-                )}
 
-                {user.solvedDailyChallenge && (
-                  <div className="card-actions justify-center mt-8">
-                    <button
-                      className="btn btn-lg border-amber-400 gap-2"
-                      disabled
+                <div className="card-actions justify-center mt-8">
+                  <button
+                    onClick={handleStart}
+                    className="btn btn-lg border-amber-400 gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-6 h-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-6 h-6"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M5 3l14 9-14 9V3z" />
-                      </svg>
-                      Come back tomorrow at 7 AM
-                    </button>
-                  </div>
-                )}
+                      <path d="M5 3l14 9-14 9V3z" />
+                    </svg>
+                    {user.solvedDailyChallenge
+                      ? 'View Challenge'
+                      : 'Start Challenge'}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -300,6 +266,28 @@ const Task = () => {
                     Challenge for {today}
                   </h1>
                 </div>
+
+                {user.solvedDailyChallenge && (
+                  <div className="alert alert-info mb-4">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      className="w-6 h-6 stroke-current"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+                    <span>
+                      You have already completed today's challenge. Come back
+                      tomorrow at 7 AM for a new challenge!
+                    </span>
+                  </div>
+                )}
 
                 {task ? (
                   <>
@@ -339,7 +327,6 @@ const Task = () => {
                           <h3 className="card-title">Example</h3>
                           <div className="space-y-2 mt-2">
                             {task.examples.map((element, index) => {
-                              console.log('Rendering example:', element);
                               return (
                                 <p className="font-mono break-all" key={index}>
                                   Input: "{element.input}" → Output: "
@@ -364,9 +351,14 @@ const Task = () => {
                     <textarea
                       id="userOutput"
                       type="text"
-                      placeholder="Enter your output here..."
+                      placeholder={
+                        user.solvedDailyChallenge
+                          ? 'Challenge already completed'
+                          : 'Enter your output here...'
+                      }
                       className="textarea textarea-bordered textarea-lg w-full mb-4"
                       rows="6"
+                      disabled={user.solvedDailyChallenge}
                     />
                     <div className="card-actions justify-end gap-4">
                       <button
@@ -386,9 +378,16 @@ const Task = () => {
                       </button>
                       <button
                         onClick={() => handleSubmitSolution()}
-                        className="btn border-amber-400 btn-lg"
+                        className={`btn btn-lg ${
+                          user.solvedDailyChallenge
+                            ? 'btn-disabled'
+                            : 'border-amber-400'
+                        }`}
+                        disabled={user.solvedDailyChallenge}
                       >
-                        Submit Solution
+                        {user.solvedDailyChallenge
+                          ? 'Already Completed'
+                          : 'Submit Solution'}
                       </button>
                     </div>
                   </div>
