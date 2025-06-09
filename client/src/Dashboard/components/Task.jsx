@@ -7,6 +7,7 @@ const Task = () => {
   const [task, setTask] = useState(null);
   const [testCase, setTestCase] = useState(null);
   const [effectiveTaskDate, setEffectiveTaskDate] = useState('');
+  const [formattedTitle, setFormattedTitle] = useState('');
   const today = new Date().toLocaleDateString();
   const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
   const navigate = useNavigate();
@@ -54,10 +55,14 @@ const Task = () => {
       if (Array.isArray(data) && data.length > 0) {
         const taskData = data[0];
         console.log('Processing task data:', taskData);
+        let processedTitle = taskData.title
+          .split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
 
         setTask({
           id: taskData.id,
-          title: taskData.title || 'Daily Challenge',
+          title: processedTitle || 'Daily Challenge',
           content: taskData.content || 'No description available',
           examples: taskData.examples || [], // Use examples directly from the API response
         });
@@ -108,11 +113,10 @@ const Task = () => {
       const data = await response.json();
       console.log('Fetched test case:', data);
 
-      if (data && data.input && data.output) {
+      if (data && data.input) {
         setTestCase({
           id: data.id,
           input: data.input,
-          output: data.output,
         });
       } else {
         console.error('No test case found for the task');
@@ -131,105 +135,6 @@ const Task = () => {
 
     setShowTask(true);
   };
-
-  // function incrementAttempts(user) {
-  //   const updatedUser = {
-  //     ...user,
-  //     attempts: (user.attempts || 0) + 1,
-  //   };
-  //   localStorage.setItem('user', JSON.stringify(updatedUser));
-  //   return updatedUser;
-  // }
-
-  // function getMinutesSinceSevenAM() {
-  //   const now = new Date();
-  //   const sevenAM = new Date();
-  //   sevenAM.setHours(7, 0, 0, 0); // Set to 7:00 AM today
-  //   const diffMs = now.getTime() - sevenAM.getTime();
-  //   return Math.floor(diffMs / (1000 * 60)); // Convert to full minutes
-  // }
-
-  // function getTimeBonus() {
-  //   const minutes = getMinutesSinceSevenAM();
-  //   return Math.max(0, 60 - Math.floor(minutes * 0.0833));
-  // }
-
-  // function getAttemptScore(user) {
-  //   const attempts = user.attempts || 0;
-
-  //   switch (attempts) {
-  //     case 0:
-  //       return 40;
-  //     case 1:
-  //       return 30;
-  //     case 2:
-  //       return 20;
-  //     case 3:
-  //       return 10;
-  //     default:
-  //       return 0;
-  //   }
-  // }
-
-  // function resetAttempts(user) {
-  //   const updatedUser = {
-  //     ...user,
-  //     attempts: 0,
-  //   };
-  //   localStorage.setItem('user', JSON.stringify(updatedUser));
-  //   return updatedUser;
-  // }
-
-  // function calculateTotalScore(user) {
-  //   const score = parseInt(getTimeBonus()) + parseInt(getAttemptScore(user));
-  //   const updatedUser = {
-  //     ...user,
-  //     points: score + (parseInt(user.points) || 0),
-  //   };
-  //   localStorage.setItem('user', JSON.stringify(updatedUser));
-
-  //   return score;
-  // }
-
-  // function incrementUserScore(user, score) {
-  //   const updatedUser = {
-  //     ...user,
-  //     points: (user.points || 0) + score,
-  //   };
-  //   localStorage.setItem('user', JSON.stringify(updatedUser));
-  //   return updatedUser;
-  // }
-
-  // async function updateTaskAttempts() {
-  //   if (!task || !task.id) return;
-
-  //   try {
-  //     // Update task attempts count on the server
-  //     await fetch(`/task/${task.id}/attempts`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     });
-  //   } catch (error) {
-  //     console.error('Error updating task attempts:', error);
-  //   }
-  // }
-
-  // async function updateTaskSolved() {
-  //   if (!task || !task.id) return;
-
-  //   try {
-  //     await fetch(`/task/${task.id}/solved`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //     });
-  //   } catch (error) {
-  //     console.error('Error updating task solved count:', error);
-  //   }
-  // }
 
   async function handleSubmitSolution() {
     if (!task || !task.examples || task.examples.length === 0) {
@@ -390,19 +295,9 @@ const Task = () => {
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-6 h-6 text-primary"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                  </div>
-                  <h1 className="card-title text-3xl">Challenge for {today}</h1>
+                  <h1 className="card-title text-3xl text-left flex-1">
+                    Challenge for {today}
+                  </h1>
                 </div>
 
                 {task ? (
@@ -424,7 +319,15 @@ const Task = () => {
                           <h3 className="card-title text-primary">
                             Your Input
                           </h3>
-                          <div className="text-xl font-mono mt-2 break-all whitespace-normal font-bold">
+                          <div
+                            className={`text-xl font-mono mt-2 break-all font-bold ${
+                              testCase &&
+                              testCase.input &&
+                              testCase.input.includes('\n')
+                                ? 'whitespace-pre-line'
+                                : 'whitespace-normal'
+                            }`}
+                          >
                             {testCase && testCase.input}
                           </div>
                           <p className="text-sm mt-2 text-base-content/70">
@@ -460,11 +363,12 @@ const Task = () => {
                 <div className="card bg-base-300">
                   <div className="card-body">
                     <h3 className="card-title mb-4">Submit Your Solution</h3>
-                    <input
+                    <textarea
                       id="userOutput"
                       type="text"
-                      placeholder="Enter your output here"
-                      className="input input-bordered input-lg w-full mb-4"
+                      placeholder="Enter your output here..."
+                      className="textarea textarea-bordered textarea-lg w-full mb-4"
+                      rows="6"
                     />
                     <div className="card-actions justify-end gap-4">
                       <button

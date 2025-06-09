@@ -178,7 +178,7 @@ const fetchTestCaseForToday = async (req, res) => {
       select: {
         id: true,
         input: true,
-        output: true,
+
         challenge_id: true,
       },
     });
