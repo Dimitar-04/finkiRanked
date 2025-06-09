@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
+import { supabase } from '../contexts/AuthContext';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +24,18 @@ const Login = () => {
 
       if (data.success) {
         console.log(data);
+
+        // Store user in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Also sign in with the Supabase client
+        // This is needed to update the AuthContext
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        // Now navigate - the AuthContext will pick up the session change
         navigate('/dashboard');
       } else {
         setError(data.message || 'Login failed');
