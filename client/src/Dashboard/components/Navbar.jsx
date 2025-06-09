@@ -1,9 +1,8 @@
-import React  from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../assets/images/logoIcon.png';
 import logoText from '../../assets/images/logoText.png';
 import pp from '../../assets/images/pp.svg';
-import RankBadge from "@/utils/RankBadge.jsx";
 
 export default function Navbar() {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -77,7 +76,7 @@ export default function Navbar() {
               Forum
             </button>
           </li>
-          {user.isModerator && (
+          {user && user.isModerator && (
             <li>
               <button
                 className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
@@ -117,8 +116,12 @@ export default function Navbar() {
             className="flex flex-col items-start"
             onClick={() => navigate('/dashboard/profile')}
           >
-            <span className="font-medium text-left">{user.username}</span>
-            <RankBadge rankName={user.rank} size="md" />
+            <span className="font-medium text-left">
+              {user && user.username}
+            </span>
+            <span className="text-sm text-base-content/70">
+              {user && user.rank}
+            </span>
           </div>
         </button>
       </div>
