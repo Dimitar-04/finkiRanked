@@ -1,7 +1,7 @@
-import Navbar from "@/Dashboard/components/Navbar";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import RankBadge from "../../utils/RankBadge";
+import Navbar from '@/Dashboard/components/Navbar';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import RankBadge from '../../utils/RankBadge';
 
 const LeaderBoardEx = () => {
   const [landing, setLanding] = useState(false);
@@ -14,9 +14,9 @@ const LeaderBoardEx = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/") {
+    if (location.pathname === '/') {
       setLanding(true);
-    } else if (location.pathname === "/dashboard/leaderboard") {
+    } else if (location.pathname === '/dashboard/leaderboard') {
       setLanding(false);
     }
   }, [location.pathname]);
@@ -37,9 +37,9 @@ const LeaderBoardEx = () => {
           import.meta.env.VITE_SUPABASE_URL
         }/functions/v1/leaderboard?page=${page}&limit=20`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
         }
@@ -52,7 +52,7 @@ const LeaderBoardEx = () => {
       const data = await response.json();
 
       if (data.error) {
-        throw new Error(data.message || "Failed to fetch leaderboard");
+        throw new Error(data.message || 'Failed to fetch leaderboard');
       }
 
       if (append) {
@@ -64,7 +64,7 @@ const LeaderBoardEx = () => {
 
       setPagination(data.pagination);
     } catch (err) {
-      console.error("Error fetching leaderboard:", err);
+      console.error('Error fetching leaderboard:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -137,7 +137,7 @@ const LeaderBoardEx = () => {
 
       <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
         <h1 className="text-4xl font-bold">Leaderboard</h1>
-        <p>WARNING: The leaderboard updates every 5 minutes</p>
+        <p>Note: The leaderboard updates every 5 minutes</p>
 
         {pagination && (
           <div className="stats shadow">
@@ -186,7 +186,7 @@ const LeaderBoardEx = () => {
         {pagination && pagination.hasNextPage && (
           <button
             className={`btn btn-lg ${
-              loadingMore ? "btn-disabled" : "btn-primary"
+              loadingMore ? 'btn-disabled' : 'btn-primary'
             }`}
             onClick={handleLoadMore}
             disabled={loadingMore}
@@ -197,14 +197,14 @@ const LeaderBoardEx = () => {
                 Loading...
               </>
             ) : (
-              "Load More"
+              'Load More'
             )}
           </button>
         )}
 
         {pagination && !pagination.hasNextPage && leaderboard.length > 0 && (
           <div className="text-center text-base-content/70">
-            <p>You've reached the end of the leaderboard! 🎉</p>
+            <p>You've reached the end of the leaderboard!</p>
           </div>
         )}
       </div>

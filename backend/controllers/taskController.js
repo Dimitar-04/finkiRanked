@@ -1,3 +1,4 @@
+const { get } = require('http');
 const prisma = require('../lib/prisma');
 
 const getTaskByDate = async (req, res) => {
@@ -127,6 +128,30 @@ const fetchTestCaseForToday = async (req, res) => {
       .json({ message: 'Internal server error', error: error.message });
   }
 };
+const RANK_DATA = {
+  Novice: { id: 1, title: 'Novice', requiredPoints: 0 },
+  Learner: { id: 2, title: 'Learner', requiredPoints: 300 },
+  Coder: { id: 3, title: 'Coder', requiredPoints: 800 },
+  'Problem Solver': { id: 4, title: 'Problem Solver', requiredPoints: 1500 },
+  Algorithmist: { id: 5, title: 'Algorithmist', requiredPoints: 2500 },
+  'Hacker Mage': { id: 6, title: 'Hacker Mage', requiredPoints: 4000 },
+  Challenger: { id: 7, title: 'Challenger', requiredPoints: 6000 },
+  'Code Master': { id: 8, title: 'Code Master', requiredPoints: 8500 },
+  'FINKI Royalty': { id: 9, title: 'FINKI Royalty', requiredPoints: 11000 },
+  'FINKI Legend': { id: 10, title: 'FINKI Legend', requiredPoints: 16000 },
+};
+
+function getRankByPoints(points) {
+  const ranks = Object.values(RANK_DATA).sort(
+    (a, b) => b.requiredPoints - a.requiredPoints
+  );
+  for (const rank of ranks) {
+    if (points >= rank.requiredPoints) {
+      return rank;
+    }
+  }
+  return RANK_DATA['Novice'];
+}
 
 function getMinutesSinceSevenAM() {
   const now = new Date();
@@ -146,18 +171,12 @@ function getTimeBonus() {
 }
 
 function getAttemptScore(attempts) {
-  switch (attempts) {
-    case 1:
-      return 40;
-    case 2:
-      return 30;
-    case 3:
-      return 20;
-    case 4:
-      return 10;
-    default:
-      return 0;
-  }
+  const maxScore = 40;
+  const decayPerAttempt = 5;
+  const minScore = 5;
+
+  const score = maxScore - (attempts - 1) * decayPerAttempt;
+  return Math.max(minScore, score);
 }
 
 function isOutputCorrect(userOutput, expectedOutput, outputType) {
@@ -228,18 +247,21 @@ const evaluateTask = async (req, res) => {
       },
     });
 
-    const taskOutputType = await prisma.challenges.findUnique({
+    const task = await prisma.challenges.findUnique({
       where: {
         id: taskId,
       },
-      select: {
-        output_type: true,
-      },
     });
-    if (isOutputCorrect(userOutput, testCase.output, taskOutputType)) {
+    if (isOutputCorrect(userOutput, testCase.output, task.output_type)) {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);
-      const totalScore = timeBonus + attemptScore;
+      const difficultyScore =
+        task.difficulty === 'easy'
+          ? 10
+          : task.difficulty === 'medium'
+          ? 20
+          : 30;
+      const totalScore = timeBonus + attemptScore + difficultyScore;
 
       const updatedUser = await prisma.users.update({
         where: {
@@ -256,6 +278,8 @@ const evaluateTask = async (req, res) => {
       if (typeof responseUser.points === 'bigint') {
         responseUser.points = responseUser.points.toString();
       }
+
+      const userRank = getRankByPoints(responseUser.points);
       await prisma.challenges.update({
         where: { id: taskId },
         data: { solved_by: { increment: 1 } },
@@ -266,6 +290,8 @@ const evaluateTask = async (req, res) => {
         message: 'Task solved successfully!',
         scoreAwarded: totalScore,
         newTotalPoints: responseUser.points,
+        rank: userRank.title,
+        rankInfo: userRank,
       });
     } else {
       const newAttempts = attempts + 1;

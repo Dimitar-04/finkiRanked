@@ -164,7 +164,7 @@ const Task = () => {
           JSON.parse(localStorage.getItem('user')) || {};
         updatedUserFromStorage.points = result.newTotalPoints;
         updatedUserFromStorage.solvedDailyChallenge = true; // Assuming backend sets this
-        updatedUserFromStorage.attempts = 0; // Assuming backend resets this
+        updatedUserFromStorage.rank = result.rank; // Assuming backend resets this
         localStorage.setItem('user', JSON.stringify(updatedUserFromStorage));
 
         navigate('/dashboard/forum');

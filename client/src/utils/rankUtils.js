@@ -10,76 +10,76 @@ import finkiRoyaltyIcon from '../assets/rankIcons/royalty.png';
 import finkiLegendIcon from '../assets/rankIcons/finkilegend.png';
 
 export const RANK_DATA = {
-  "Novice": {
+  Novice: {
     id: 1,
-    title: "Novice",
+    title: 'Novice',
     requiredPoints: 0,
     icon: noviceIcon,
-    color: "#A0AEC0"
+    color: '#A0AEC0',
   },
-  "Learner": {
+  Learner: {
     id: 2,
-    title: "Learner",
+    title: 'Learner',
     requiredPoints: 300,
     icon: learnerIcon,
-    color: "#4299E1"
+    color: '#4299E1',
   },
-  "Coder": {
+  Coder: {
     id: 3,
-    title: "Coder",
+    title: 'Coder',
     requiredPoints: 800,
     icon: coderIcon,
-    color: "#48BB78"
+    color: '#48BB78',
   },
-  "Problem Solver": {
+  'Problem Solver': {
     id: 4,
-    title: "Problem Solver",
+    title: 'Problem Solver',
     requiredPoints: 1500,
     icon: problemSolverIcon,
-    color: "#38B2AC"
+    color: '#38B2AC',
   },
-  "Algorithmist": {
+  Algorithmist: {
     id: 5,
-    title: "Algorithmist",
+    title: 'Algorithmist',
     requiredPoints: 2500,
     icon: algorithmistIcon,
-    color: "#805AD5"
+    color: '#805AD5',
   },
-  "Hacker Mage": {
+  'Hacker Mage': {
     id: 6,
-    title: "Hacker Mage",
+    title: 'Hacker Mage',
     requiredPoints: 4000,
     icon: hackerMageIcon,
-    color: "#D69E2E"
+    color: '#D69E2E',
   },
-  "Challenger": {
+  Challenger: {
     id: 7,
-    title: "Challenger",
+    title: 'Challenger',
     requiredPoints: 6000,
     icon: challengerIcon,
-    color: "#F56565"
+    color: '#F56565',
   },
-  "Code Master": {
+  'Code Master': {
     id: 8,
-    title: "Code Master",
+    title: 'Code Master',
     requiredPoints: 8500,
     icon: codeMasterIcon,
-    color: "#ED8936"
+    color: '#ED8936',
   },
-  "FINKI Royalty": {
+  'FINKI Royalty': {
     id: 9,
-    title: "FINKI Royalty",
-    requiredPoints: 12000,
+    title: 'FINKI Royalty',
+    requiredPoints: 11000,
     icon: finkiRoyaltyIcon,
-    color: "#ECC94B"
+    color: '#ECC94B',
   },
-  "FINKI Legend": {
+  'FINKI Legend': {
     id: 10,
-    title: "FINKI Legend",
+    title: 'FINKI Legend',
     requiredPoints: 16000,
     icon: finkiLegendIcon,
-    color: "#9F7AEA"
-  }
+    color: '#9F7AEA',
+  },
 };
 
 /**
@@ -88,7 +88,7 @@ export const RANK_DATA = {
  * @returns {object} Rank data object
  */
 export const getRankInfo = (rankName) => {
-  return RANK_DATA[rankName] || RANK_DATA["Novice"];
+  return RANK_DATA[rankName] || RANK_DATA['Novice'];
 };
 
 /**
@@ -96,17 +96,6 @@ export const getRankInfo = (rankName) => {
  * @param {number} points - User's current points
  * @returns {object} Rank data object
  */
-export const getRankByPoints = (points) => {
-  const ranks = Object.values(RANK_DATA).sort((a, b) => b.requiredPoints - a.requiredPoints);
-  
-  for (const rank of ranks) {
-    if (points >= rank.requiredPoints) {
-      return rank;
-    }
-  }
-  
-  return RANK_DATA["Novice"];
-};
 
 /**
  * Create a rank badge component props
@@ -116,17 +105,17 @@ export const getRankByPoints = (points) => {
  */
 export const getRankBadgeProps = (rankName, size = 'md') => {
   const rankInfo = getRankInfo(rankName);
-  
+
   const sizeClasses = {
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-3 py-1',
-    lg: 'text-base px-4 py-2'
+    lg: 'text-base px-4 py-2',
   };
 
   const iconSizes = {
     sm: 'w-4 h-4',
     md: 'w-5 h-5',
-    lg: 'w-6 h-6'
+    lg: 'w-6 h-6',
   };
 
   return {
@@ -134,8 +123,8 @@ export const getRankBadgeProps = (rankName, size = 'md') => {
     className: `inline-flex items-center gap-2 rounded-full font-medium ${sizeClasses[size]}`,
     style: {
       backgroundColor: rankInfo.color,
-      color: '#FFFFFF'
+      color: '#FFFFFF',
     },
-    iconClassName: iconSizes[size]
+    iconClassName: iconSizes[size],
   };
 };
