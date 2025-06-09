@@ -164,6 +164,7 @@ const Task = () => {
           JSON.parse(localStorage.getItem('user')) || {};
         updatedUserFromStorage.points = result.newTotalPoints;
         updatedUserFromStorage.solvedDailyChallenge = true; // Assuming backend sets this
+        toggleSolvedDailyChallenge(user);
         updatedUserFromStorage.rank = result.rank; // Assuming backend resets this
         localStorage.setItem('user', JSON.stringify(updatedUserFromStorage));
 
@@ -363,14 +364,7 @@ const Task = () => {
                     <div className="card-actions justify-end gap-4">
                       <button
                         onClick={() => {
-                          if (
-                            window.confirm(
-                              "Are you sure you want to go back? You won't be able to reattempt."
-                            )
-                          ) {
-                            toggleSolvedDailyChallenge(user);
                             navigate('/dashboard/forum');
-                          }
                         }}
                         className="btn border-amber-400 btn-lg"
                       >
