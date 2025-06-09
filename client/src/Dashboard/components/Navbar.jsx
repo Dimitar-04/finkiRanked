@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logoIcon from '../../assets/images/logoIcon.png';
 import logoText from '../../assets/images/logoText.png';
 import pp from '../../assets/images/pp.svg';
+import RankBadge from "@/utils/RankBadge.jsx";
 
 export default function Navbar() {
   const user = JSON.parse(localStorage.getItem('user'));
@@ -117,7 +118,7 @@ export default function Navbar() {
             onClick={() => navigate('/dashboard/profile')}
           >
             <span className="font-medium text-left">{user.username}</span>
-            <span className="text-sm text-base-content/70">{user.rank}</span>
+            <RankBadge rankName={user.rank} size="md" />
           </div>
         </button>
       </div>

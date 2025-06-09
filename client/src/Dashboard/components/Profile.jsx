@@ -2,6 +2,7 @@
 import React from "react";
 import pp from "../../assets/images/pp.svg";
 import Navbar from "./Navbar";
+import RankBadge from "@/utils/RankBadge.jsx";
 
 const Profile = () => {
   const handleSignOut = () => {
@@ -34,9 +35,9 @@ const Profile = () => {
             <p className="text-gray-500">{user.email}</p>
             <div className="mt-4">
               <p className="text-lg">
-                <span className="font-bold">Rank:</span> {user.rank}
+                <RankBadge rankName={user.rank} size="lg" />
               </p>
-              <p className="text-lg">
+              <p className="text-lg mt-5">
                 <span className="font-bold">Points:</span> {user.points}
               </p>
             </div>
