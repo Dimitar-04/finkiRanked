@@ -1,6 +1,10 @@
 import React from "react";
 import lista from "../../assets/images/listaNoBg.png";
+import {useNavigate} from "react-router-dom";
 const VisionSection = () => {
+
+  const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem("user"));
   return (
     <div className="hero bg-base-200 min-h-[80vh]">
       <div className="hero-content flex-col lg:flex-row-reverse">
@@ -15,7 +19,7 @@ const VisionSection = () => {
             points, students receive one of the ten ranks and are ranked on a
             leaderboard.
           </p>
-          <a className="btn btn-xl w-80 bg-black">Join now</a>
+          <a className="btn btn-xl w-80 bg-black" onClick={() => { user ? navigate("/dashboard") : navigate("/register") }}>Join now</a>
         </div>
         <img src={lista} className="w-100 h-100" />
       </div>

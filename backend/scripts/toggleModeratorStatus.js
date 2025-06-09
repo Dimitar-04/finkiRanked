@@ -1,8 +1,15 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const path = require('path');
+
+// Load .env from parent directory (backend/)
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 // This script toggles the moderator status of a user in the Supabase database.
 // node scripts/toggleModeratorStatus.js USER_ID_HERE
+
+// Debug: Check if env vars are loaded
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Loaded' : 'Not loaded');
+console.log('SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Loaded' : 'Not loaded');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,

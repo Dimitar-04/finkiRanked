@@ -24,7 +24,7 @@ const NavbarLanding = () => {
         )}
         {user && (
           <button className="btn btn-lg" onClick={() => navigate("/dashboard")}>
-            {user.username}
+            To Dashboard
           </button>
         )}
       </div>
