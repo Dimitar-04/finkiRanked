@@ -1,6 +1,7 @@
 import Navbar from "@/Dashboard/components/Navbar";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import RankBadge from "../../utils/RankBadge";
 
 const LeaderBoardEx = () => {
   const [landing, setLanding] = useState(false);
@@ -167,7 +168,7 @@ const LeaderBoardEx = () => {
                   <th>{getPosition(index)}</th>
                   <td className="font-medium">{user.username}</td>
                   <td>
-                    <div className="badge badge-secondary">{user.rank}</div>
+                    <RankBadge rankName={user.rank} size="md" />
                   </td>
                   <td className="font-mono font-bold">{user.points}</td>
                 </tr>
