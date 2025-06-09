@@ -129,7 +129,8 @@ const Task = () => {
   }
 
   const handleStart = () => {
-    fetchTaskForToday(Date.now());
+    const today = new Date();
+    fetchTaskForToday(today);
 
     // toggleSolvedDailyChallenge(user);
 
@@ -248,7 +249,7 @@ const Task = () => {
                     <span>The task will be available for 24 hours</span>
                   </div>
                 </div>
-                {!user.solvedDailyChallenge && (
+                {user.solvedDailyChallenge && (
                   <div className="card-actions justify-center mt-8">
                     <button
                       onClick={handleStart}
@@ -302,9 +303,9 @@ const Task = () => {
 
                 {task ? (
                   <>
-                    <div className="card bg-base-300 mb-8">
+                    <div className="card bg-base-300 mb-2">
                       <div className="card-body">
-                        <h2 className="card-title mb-4">
+                        <h2 className="card-title mb-1">
                           Problem: {task.title || 'Daily Challenge'}
                         </h2>
                         <p className="text-lg leading-relaxed">
@@ -316,11 +317,11 @@ const Task = () => {
                     <div className="space-y-6 mb-8">
                       <div className="card bg-primary/5">
                         <div className="card-body">
-                          <h3 className="card-title text-primary">
-                            Your Input
+                          <h3 className="card-title text-seondary underline">
+                            Your Input:
                           </h3>
                           <div
-                            className={`text-xl font-mono mt-2 break-all font-bold ${
+                            className={`text-xl font-mono mt-3 break-all font-bold ${
                               testCase &&
                               testCase.input &&
                               testCase.input.includes('\n')
@@ -330,9 +331,6 @@ const Task = () => {
                           >
                             {testCase && testCase.input}
                           </div>
-                          <p className="text-sm mt-2 text-base-content/70">
-                            Use this input in your local editor
-                          </p>
                         </div>
                       </div>
 

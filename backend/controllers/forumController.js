@@ -9,7 +9,6 @@ const { analyzePostContent } = require('../ai/processRequestAi');
 const { createReviewPost } = require('./reviewController');
 
 const createForumPost = async (req, res) => {
-  console.log('Creating forum post', req.body, res.body);
   const { title, content, authorId, authorName } = req.body;
 
   try {
@@ -18,7 +17,7 @@ const createForumPost = async (req, res) => {
     });
     const postCounter = user.postCounter;
 
-    if (postCounter > 0) {
+    if (true) {
       const post = new ForumPost({
         title,
         content,
@@ -43,6 +42,10 @@ const createForumPost = async (req, res) => {
           error: 'Content is too long. Wait for moderator approval',
         });
       } else if (
+        !(
+          safeWords.includes(post.content.toLowerCase()) ||
+          safeWords.includes(post.title.toLowerCase())
+        ) &&
         !(safeWords.includes(post.content) || safeWords.includes(post.title))
       ) {
         try {
@@ -52,7 +55,7 @@ const createForumPost = async (req, res) => {
             return res.status(400).json({
               error: 'Content is not appropriate for the forum',
             });
-          } 
+          }
         } catch (error) {
           console.error('AI analysis error:', error);
           return res.status(500).json({

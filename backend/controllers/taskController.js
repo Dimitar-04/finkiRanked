@@ -2,34 +2,48 @@ const prisma = require('../lib/prisma');
 
 const getTaskByDate = async (req, res) => {
   const { date } = req.params;
+  console.log(date);
 
   try {
+    const now = new Date();
+
+    let effectiveDate;
+
+    if (date === now.toISOString().split('T')[0]) {
+      if (now.getHours() < 7) {
+        effectiveDate = new Date(now);
+        effectiveDate.setDate(now.getDate() - 1);
+      } else {
+        effectiveDate = now;
+      }
+    } else {
+      effectiveDate = new Date(date);
+    }
+
+    const taskDate = new Date(
+      Date.UTC(
+        effectiveDate.getUTCFullYear(),
+        effectiveDate.getUTCMonth(),
+        effectiveDate.getUTCDate()
+      )
+    );
+
+    console.log(
+      'Effective Date for Task (UTC midnight):',
+      taskDate.toISOString()
+    );
+
     let tasks = await prisma.challenges.findMany({
       where: {
-        solving_date: {
-          gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
-          lt: new Date(new Date(date).setHours(23, 59, 59, 999)),
-        },
+        solving_date: taskDate,
+        expired: false,
       },
       include: {
         test_cases: true,
       },
     });
 
-    if (tasks.length === 0) {
-      tasks = await prisma.challenges.findMany({
-        where: {
-          expired: false,
-        },
-        orderBy: {
-          solving_date: 'desc',
-        },
-        take: 1,
-        include: {
-          test_cases: true, // Include test cases data
-        },
-      });
-    }
+    console.log('Tasks found:', tasks);
 
     if (tasks.length === 0) {
       return res.status(404).json({ message: 'No tasks found for this date' });
@@ -213,12 +227,13 @@ function getMinutesSinceSevenAM() {
 
 function getTimeBonus() {
   const minutes = getMinutesSinceSevenAM();
+  console.log('Minutes since 7 AM:', minutes);
   return Math.max(0, 60 - Math.floor(minutes * 0.0833));
 }
 
 function getAttemptScore(attempts) {
   switch (attempts) {
-    case 1: // First actual attempt being evaluated
+    case 1:
       return 40;
     case 2:
       return 30;
@@ -276,7 +291,7 @@ const evaluateTask = async (req, res) => {
         },
         data: {
           points: { increment: totalScore },
-          attempts: 0,
+          attempts: { increment: 1 },
           solvedDailyChallenge: true,
         },
       });

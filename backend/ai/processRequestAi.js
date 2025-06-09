@@ -29,7 +29,7 @@ async function analyzePostContent(title, content) {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5, // Even lower temperature for more consistent responses
+      temperature: 0.2, // Even lower temperature for more consistent responses
     });
 
     const aiResponse = response.choices[0].message.content.trim();
