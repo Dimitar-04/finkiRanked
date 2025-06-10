@@ -140,14 +140,16 @@ const LeaderBoardEx = () => {
         <p>Note: The leaderboard updates every 5 minutes</p>
 
         {pagination && (
-          <div className="stats shadow">
+          <div className="flex">
             <div className="stat">
               <div className="stat-title">Total Users</div>
-              <div className="stat-value">{pagination.totalUsers}</div>
+
+              <div className=" text-3xl">{pagination.totalUsers}</div>
             </div>
             <div className="stat">
               <div className="stat-title">Showing</div>
-              <div className="stat-value">{leaderboard.length}</div>
+
+              <div className="text-3xl">{leaderboard.length}</div>
             </div>
           </div>
         )}

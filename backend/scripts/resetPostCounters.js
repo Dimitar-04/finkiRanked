@@ -25,3 +25,5 @@ process.on('SIGINT', function () {
   console.log('Post counter reset scheduler stopped');
   process.exit(0);
 });
+
+resetPostCounters();

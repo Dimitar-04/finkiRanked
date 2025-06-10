@@ -29,9 +29,10 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
+  console.log('User from context:', user);
+  console.log('User from localStorage:', localUser);
 
-  // IMPORTANT: This is the key fix - explicitly check if both are null/undefined
-  if (!user || !localUser) {
+  if (!user && !localUser) {
     console.log('Not authenticated, redirecting to login');
     return (
       <Navigate

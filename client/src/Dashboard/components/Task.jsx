@@ -6,7 +6,9 @@ const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const [task, setTask] = useState(null);
   const [testCase, setTestCase] = useState(null);
-  const [effectiveTaskDate, setEffectiveTaskDate] = useState('');
+  const [evalResult, setEvalResult] = useState('');
+  const [isCorrect, setIsCorrect] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const today = new Date().toLocaleDateString();
   const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
@@ -128,6 +130,7 @@ const Task = () => {
       alert('No challenge is currently available');
       return;
     }
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`/task/${task.id}/evaluate`, {
@@ -155,23 +158,27 @@ const Task = () => {
         return;
       }
       if (result.success) {
-        alert(
+        setEvalResult(
           `${result.message} You earned ${result.scoreAwarded} points. Your total points are now ${result.newTotalPoints}.`
         );
-        // Optionally, update local user state if needed for immediate UI reflection,
-        // though a full page reload or re-fetch of user data on navigation might be better.
+        setIsCorrect(true);
+
         const updatedUserFromStorage =
           JSON.parse(localStorage.getItem('user')) || {};
         updatedUserFromStorage.points = result.newTotalPoints;
-        updatedUserFromStorage.solvedDailyChallenge = true; // Assuming backend sets this
-        console.log(user.rank);
+        updatedUserFromStorage.solvedDailyChallenge = true;
+        updatedUserFromStorage.pointsAwarded = result.scoreAwarded;
+
         toggleSolvedDailyChallenge(user);
-        updatedUserFromStorage.rank = result.rank; // Assuming backend resets this
+        updatedUserFromStorage.rank = result.rank;
         localStorage.setItem('user', JSON.stringify(updatedUserFromStorage));
 
-        navigate('/dashboard/forum');
+        // navigate('/dashboard/forum');
       } else {
-        alert(`${result.message} This was attempt #${result.attemptsMade}.`);
+        setEvalResult(
+          `${result.message} This was attempt: ${result.attemptsMade}.`
+        );
+        setIsCorrect(false);
 
         const updatedUserFromStorage =
           JSON.parse(localStorage.getItem('user')) || {};
@@ -180,13 +187,14 @@ const Task = () => {
       }
     } catch (error) {
       console.error('Error evaluating solution:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
     <div data-theme="luxury" className="dashboard h-screen flex bg-base-100">
       <Navbar />
-      {/* Add overflow-y-auto and proper flex constraints */}
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
           {!showTask ? (
@@ -358,31 +366,67 @@ const Task = () => {
                           ? 'Challenge already completed'
                           : 'Enter your output here...'
                       }
-                      className="textarea textarea-bordered textarea-lg w-full mb-4"
+                      className={`textarea textarea-bordered textarea-lg w-full mb-4 ${
+                        isCorrect === null
+                          ? ''
+                          : isCorrect
+                          ? 'border-green-500'
+                          : 'border-red-500'
+                      }`}
                       rows="6"
-                      disabled={user.solvedDailyChallenge}
+                      disabled={user.solvedDailyChallenge || isSubmitting}
                     />
+                    {user.solvedDailyChallenge && (
+                      <p className="text-lg text-success">
+                        You earned: {user.pointsAwarded} for today's task
+                      </p>
+                    )}
+
+                    {isSubmitting && (
+                      <div className="flex justify-center items-center my-2">
+                        <span className="loading loading-spinner loading-md mr-2"></span>
+                        <span>Evaluating your solution...</span>
+                      </div>
+                    )}
+
+                    <p
+                      className={`mt-2 mb-10 text-lg ${
+                        isCorrect
+                          ? 'text-success'
+                          : isCorrect === false
+                          ? 'text-error'
+                          : ''
+                      }`}
+                    >
+                      {evalResult}
+                    </p>
+
                     <div className="card-actions justify-end gap-4">
                       <button
                         onClick={() => {
                           navigate('/dashboard/forum');
                         }}
                         className="btn border-amber-400 btn-lg"
+                        disabled={isSubmitting}
                       >
                         Go Back
                       </button>
                       <button
                         onClick={() => handleSubmitSolution()}
                         className={`btn btn-lg ${
-                          user.solvedDailyChallenge
+                          user.solvedDailyChallenge || isSubmitting
                             ? 'btn-disabled'
                             : 'border-amber-400'
                         }`}
-                        disabled={user.solvedDailyChallenge}
+                        disabled={user.solvedDailyChallenge || isSubmitting}
                       >
-                        {user.solvedDailyChallenge
-                          ? 'Already Completed'
-                          : 'Submit Solution'}
+                        {isSubmitting ? (
+                          <span className="loading loading-spinner"></span>
+                        ) : user.solvedDailyChallenge ? (
+                          'Already Completed'
+                        ) : (
+                          'Submit Solution'
+                        )}
                       </button>
                     </div>
                   </div>

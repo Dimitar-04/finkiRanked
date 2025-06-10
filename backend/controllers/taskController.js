@@ -256,9 +256,9 @@ const evaluateTask = async (req, res) => {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);
       const difficultyScore =
-        task.difficulty === 'easy'
+        task.difficulty === 'Easy'
           ? 10
-          : task.difficulty === 'medium'
+          : task.difficulty === 'Medium'
           ? 20
           : 30;
       const totalScore = timeBonus + attemptScore + difficultyScore;
