@@ -24,6 +24,7 @@ const Register = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData.email);
 
     if (!validateEmail(formData.email)) {
       setError('Email must end with @students.finki.ukim.mk');
