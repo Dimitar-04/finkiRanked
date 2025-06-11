@@ -83,7 +83,6 @@ async function createUserInSupabase(studentInstance) {
         postCheckCounter: studentInstance.postCheckCounter || 0,
         isModerator: studentInstance.isModerator || false,
         solvedDailyChallenge: studentInstance.solvedDailyChallenge || false,
-
       },
     });
     return { studentInstance, error: null };
@@ -123,6 +122,14 @@ const loginPOST = async (req, res) => {
         .status(400)
         .json({ message: 'Email and password are required', success: false });
     }
+    const userData = await prisma.users.findUnique({
+      where: { email: email },
+    });
+    if (!userData) {
+      return res
+        .status(404)
+        .json({ message: 'User not found in database', success: false });
+    }
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -147,15 +154,15 @@ const loginPOST = async (req, res) => {
       const safeUserData = convertBigIntToString(userData);
 
       res.status(200).json({
-        message: 'Login successful',
+        message: 'User data retrieved',
         success: true,
         user: safeUserData,
       });
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      return res
+    } catch (error) {
+      console.error('Login error:', error);
+      res
         .status(500)
-        .json({ message: 'Database error', success: false });
+        .json({ message: 'An error occurred during login', success: false });
     }
   } catch (error) {
     console.error('Login error:', error);

@@ -113,7 +113,7 @@ export default function Navbar() {
             className="w-10 h-10 rounded-full border-2 border-base-content/10"
           />
           <div
-            className="flex flex-col items-start"
+            className="flex flex-col items-start cursor-pointer"
             onClick={() => navigate('/dashboard/profile')}
           >
             <span className="font-medium text-left">

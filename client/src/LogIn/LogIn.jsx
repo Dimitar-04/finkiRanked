@@ -20,6 +20,15 @@ const Login = () => {
     setLoading(true);
 
     try {
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -32,10 +41,7 @@ const Login = () => {
 
       if (data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+
         navigate('/dashboard');
       } else {
         setError(data.message || 'Login failed');

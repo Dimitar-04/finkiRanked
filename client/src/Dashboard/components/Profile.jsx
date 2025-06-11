@@ -1,18 +1,21 @@
 // Example for Profile.jsx
-import React from "react";
-import pp from "../../assets/images/pp.svg";
-import Navbar from "./Navbar";
-import RankBadge from "@/utils/RankBadge.jsx";
-
+import React from 'react';
+import pp from '../../assets/images/pp.svg';
+import Navbar from './Navbar';
+import RankBadge from '@/utils/RankBadge.jsx';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 const Profile = () => {
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
-    window.location.href = "/";
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/');
   };
-  const user = JSON.parse(localStorage.getItem("user"));
-  console.log("User data:", user);
+  const user = JSON.parse(localStorage.getItem('user'));
+  console.log('User data:', user);
   if (!user) {
-    console.error("No user data found in localStorage.");
+    console.error('No user data found in localStorage.');
   }
   return (
     <div

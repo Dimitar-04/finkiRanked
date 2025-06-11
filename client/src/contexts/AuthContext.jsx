@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   // Inactivity duration in milliseconds (30 minutes)
-  const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+  const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
 
   // Function to handle logout - use useCallback to prevent recreation on every render
   const logout = useCallback(async () => {
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
     const handleActivity = () => {
       if (user) {
-        // Only reset if there's a user
+        localStorage.setItem('lastActivityTimestamp', Date.now().toString());
         resetInactivityTimer();
       }
     };
@@ -136,6 +136,22 @@ export const AuthProvider = ({ children }) => {
       }
     };
   }, []);
+  useEffect(() => {
+    const checkLastActivity = () => {
+      const lastActivity = localStorage.getItem('lastActivityTimestamp');
+      if (lastActivity && user) {
+        const inactiveTime = Date.now() - parseInt(lastActivity);
+        if (inactiveTime > INACTIVITY_TIMEOUT) {
+          console.log('Detected inactivity between sessions');
+          logout();
+        }
+      }
+    };
+
+    if (user) {
+      checkLastActivity();
+    }
+  }, [user, logout, INACTIVITY_TIMEOUT]);
 
   // Auth context value
   const value = {
