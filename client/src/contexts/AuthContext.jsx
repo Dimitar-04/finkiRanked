@@ -6,7 +6,13 @@ import { useCallback } from 'react';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'supabase-auth-token',
+    storage: localStorage,
+  },
+});
 
 // Create the context
 export const AuthContext = createContext();
@@ -22,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   // Inactivity duration in milliseconds (30 minutes)
-  const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
+  const INACTIVITY_TIMEOUT = 20 * 60 * 1000;
 
   // Function to handle logout - use useCallback to prevent recreation on every render
   const logout = useCallback(async () => {
@@ -36,6 +42,39 @@ export const AuthProvider = ({ children }) => {
       console.error('Error during logout:', error);
     }
   }, [navigate]);
+
+  useEffect(() => {
+    const checkStaleSession = () => {
+      // Check for user in localStorage
+      const storedUser = localStorage.getItem('user');
+      const lastActivity = localStorage.getItem('lastActivityTimestamp');
+
+      console.log('Initial session check:', {
+        hasStoredUser: !!storedUser,
+        lastActivity: lastActivity
+          ? new Date(parseInt(lastActivity)).toLocaleString()
+          : null,
+      });
+
+      if (storedUser && lastActivity) {
+        // If we have both user and timestamp, check if session is stale
+        const inactiveTime = Date.now() - parseInt(lastActivity);
+        if (inactiveTime > INACTIVITY_TIMEOUT) {
+          console.log('Found stale session - logging out');
+          // Clear everything without setting user state (will happen in initializeAuth)
+          localStorage.removeItem('user');
+          localStorage.removeItem('lastActivityTimestamp');
+          supabase.auth
+            .signOut()
+            .catch((err) => console.error('Error signing out:', err));
+          navigate('/');
+        }
+      }
+    };
+
+    // Run this check immediately
+    checkStaleSession();
+  }, []);
 
   // Function to reset the inactivity timer - use useCallback
   const resetInactivityTimer = useCallback(() => {
@@ -99,11 +138,17 @@ export const AuthProvider = ({ children }) => {
 
         if (data?.session?.user) {
           setUser(data.session.user);
+
+          localStorage.setItem('lastActivityTimestamp', Date.now().toString());
         } else {
           // If no Supabase session, check localStorage
           const storedUser = localStorage.getItem('user');
           if (storedUser) {
             setUser(JSON.parse(storedUser));
+            localStorage.setItem(
+              'lastActivityTimestamp',
+              Date.now().toString()
+            );
           }
         }
       } catch (error) {
@@ -136,22 +181,26 @@ export const AuthProvider = ({ children }) => {
       }
     };
   }, []);
-  useEffect(() => {
-    const checkLastActivity = () => {
-      const lastActivity = localStorage.getItem('lastActivityTimestamp');
-      if (lastActivity && user) {
-        const inactiveTime = Date.now() - parseInt(lastActivity);
-        if (inactiveTime > INACTIVITY_TIMEOUT) {
-          console.log('Detected inactivity between sessions');
-          logout();
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const checkLastActivity = () => {
+  //     const lastActivity = localStorage.getItem('lastActivityTimestamp');
+  //     if (lastActivity && user) {
+  //       const inactiveTime = Date.now() - parseInt(lastActivity);
+  //       if (inactiveTime > INACTIVITY_TIMEOUT) {
+  //         console.log('Detected inactivity between sessions');
+  //         logout();
+  //       } else {
+  //         localStorage.setItem('lastActivityTimestamp', Date.now().toString());
+  //       }
+  //     } else if (user && !lastActivity) {
+  //       localStorage.setItem('lastActivityTimestamp', Date.now().toString());
+  //     }
+  //   };
 
-    if (user) {
-      checkLastActivity();
-    }
-  }, [user, logout, INACTIVITY_TIMEOUT]);
+  //   if (user) {
+  //     checkLastActivity();
+  //   }
+  // }, [user, logout, INACTIVITY_TIMEOUT]);
 
   // Auth context value
   const value = {
