@@ -109,7 +109,7 @@ const ForumPostDetail = () => {
               <h2 className="card-title text-3xl break-words">{post.title}</h2>
 
               <div className="flex items-center gap-2 mt-2 md:mt-0">
-                <span className="badge badge-tertiary text-xs">
+                <span className="badge badge-tertiary text-xs p-4 ">
                   By {post.authorName}
                 </span>
               </div>
