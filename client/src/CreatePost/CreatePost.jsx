@@ -1,33 +1,46 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const CreatePost = () => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [error, setError] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectNeeded, setRedirectNeeded] = useState(false);
+  const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
+
+  const showModal = (message, type = "info") => {
+    setModal({ isOpen: true, message, type });
+  };
+
+  const closeModal = () => {
+    setModal({ isOpen: false, message: "", type: "" });
+    if (modal.type === "success" || modal.type === "pending") {
+      navigate("/dashboard/forum");
+    } else if (modal.type === "auth") {
+      navigate("/login");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsSubmitting(true);
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user || !user.id || !user.name) {
-      alert('You must be logged in to create a post.');
+      showModal("You must be logged in to create a post.", "auth");
       setIsSubmitting(false);
-      navigate('/login');
       return;
     }
 
     try {
-      const response = await fetch('/forum/posts', {
-        method: 'POST',
+      const response = await fetch("/forum/posts", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title,
@@ -38,12 +51,14 @@ const CreatePost = () => {
       });
 
       if (response.status === 204) {
-        navigate('/dashboard/forum');
+        showModal("Post created successfully!", "success");
         return;
       }
       if (response.status === 401) {
-        alert('Content is too long. Wait for moderator approval');
-        navigate('/dashboard/forum');
+        showModal(
+          "Content is too long. Your post has been submitted for moderator approval.",
+          "pending"
+        );
         return;
       }
 
@@ -52,9 +67,9 @@ const CreatePost = () => {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
-      navigate('/dashboard/forum');
+      showModal("Post created successfully!", "success");
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error("Error creating post:", error);
       setError(error.message);
     } finally {
       setIsSubmitting(false);
@@ -72,7 +87,7 @@ const CreatePost = () => {
             Create a Post
           </h2>
           <button
-            onClick={() => navigate('/dashboard/forum')}
+            onClick={() => navigate("/dashboard/forum")}
             className="btn btn-outline gap-2"
           >
             <svg
@@ -91,8 +106,79 @@ const CreatePost = () => {
 
         <form
           onSubmit={handleSubmit}
-          className="card bg-base-200 shadow-xl w-full"
+          className="card bg-base-200 shadow-xl w-full relative"
         >
+          {/* Info icon positioned at top-right of form */}
+          <div className="absolute top-6 right-6 z-10">
+            <div className="dropdown dropdown-hover dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-ghost btn-circle btn-sm"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div
+                tabIndex={0}
+                className="dropdown-content z-[1] card card-compact w-80 p-2 shadow bg-base-200 text-base-content border border-base-300"
+              >
+                <div className="card-body">
+                  <h3 className="font-bold text-lg mb-3">Posting Guidelines</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start gap-2">
+                      <span className="text-success">✓</span>
+                      <span>Keep discussions respectful and constructive</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-success">✓</span>
+                      <span>Use clear, descriptive titles</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-success">✓</span>
+                      <span>Share academic resources and study tips</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-success">✓</span>
+                      <span>Ask questions about courses and assignments</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-error">✗</span>
+                      <span>No spam, offensive, or inappropriate content</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-error">✗</span>
+                      <span>No sharing of exam answers or cheating</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-error">✗</span>
+                      <span>No personal attacks or harassment</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 bg-warning/20 rounded-lg">
+                    <p className="text-xs">
+                      <strong>Note:</strong> Posts exceeding character limits or
+                      containing sensitive content will be reviewed by
+                      moderators before publication.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="card-body p-6 sm:p-8">
             <div className="space-y-8">
               <div className="form-control w-full">
@@ -134,7 +220,7 @@ const CreatePost = () => {
             <div className="card-actions justify-end mt-8">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/forum')}
+                onClick={() => navigate("/dashboard/forum")}
                 className="btn btn-ghost btn-lg"
                 disabled={isSubmitting}
               >
@@ -145,11 +231,81 @@ const CreatePost = () => {
                 className="btn border-amber-400 btn-lg"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Publishing...' : 'Publish Post'}
+                {isSubmitting ? "Publishing..." : "Publish Post"}
               </button>
             </div>
           </div>
         </form>
+      </div>
+
+      {/* Modal */}
+      <div className={`modal ${modal.isOpen ? "modal-open" : ""}`}>
+        <div className="modal-box">
+          <div className="flex items-center gap-3 mb-4">
+            {modal.type === "success" && (
+              <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-success-content"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+            )}
+            {modal.type === "pending" && (
+              <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-warning-content"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  ></path>
+                </svg>
+              </div>
+            )}
+            {modal.type === "auth" && (
+              <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-error-content"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  ></path>
+                </svg>
+              </div>
+            )}
+            <h3 className="font-bold text-lg">
+              {modal.type === "success" && "Success!"}
+              {modal.type === "pending" && "Pending Approval"}
+              {modal.type === "auth" && "Authentication Required"}
+            </h3>
+          </div>
+          <p className="py-4">{modal.message}</p>
+          <div className="modal-action">
+            <button className="btn btn-primary" onClick={closeModal}>
+              OK
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

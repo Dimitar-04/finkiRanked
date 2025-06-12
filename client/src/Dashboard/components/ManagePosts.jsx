@@ -9,8 +9,40 @@ const ManagePosts = () => {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [modal, setModal] = useState({
+    isOpen: false,
+    message: "",
+    type: "",
+    postId: null,
+    post: null,
+  });
   const postsPerPage = 5;
   const user = JSON.parse(localStorage.getItem("user"));
+
+  const showModal = (message, type, postId = null, post = null) => {
+    setModal({ isOpen: true, message, type, postId, post });
+  };
+
+  const closeModal = () => {
+    setModal({
+      isOpen: false,
+      message: "",
+      type: "",
+      postId: null,
+      post: null,
+    });
+  };
+
+  const confirmAction = async () => {
+    if (modal.type === "delete") {
+      await handleDeletePost(modal.postId);
+    } else if (modal.type === "approve") {
+      await handleApprovePost(modal.post);
+    }
+    closeModal();
+  };
 
   useEffect(() => {
     fetchPosts();
@@ -18,6 +50,12 @@ const ManagePosts = () => {
 
   const fetchPosts = async () => {
     try {
+      if (page === 0) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
       const response = await fetch(
         `/review/posts?page=${page}&limit=${postsPerPage}`
       );
@@ -41,8 +79,12 @@ const ManagePosts = () => {
       }
     } catch (error) {
       console.error("Error fetching forum posts:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
     }
   };
+
   const handleDeletePost = async (postId) => {
     try {
       const response = await fetch(`/review/posts/${postId}`, {
@@ -100,77 +142,155 @@ const ManagePosts = () => {
       <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
         <div className="flex-1 ml-8">
           <h1 className="text-4xl font-bold mb-10">Posts that need approval</h1>
-          <div className="space-y-4" w-300>
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="p-4 border rounded-lg shadow-sm hover:shadow-md transition  relative"
-              >
-                <button
-                  className=" absolute top-2 right-20 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
 
-                    if (
-                      window.confirm(
-                        "Are you sure you want to approve this post?"
-                      )
-                    ) {
-                      handleApprovePost(post);
-                    }
-                  }}
-                >
-                  <img src={doneAll} alt="Approve" className="w-10 h-10" />
-                </button>
-                <button
-                  className=" absolute top-2 right-8 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      window.confirm(
-                        "Are you sure you want to delete this post?"
-                      )
-                    ) {
-                      handleDeletePost(post.id);
-                    }
-                  }}
-                >
-                  <img src={trashIcon} alt="Delete" className="w-10 h-10" />
-                </button>
-
-                <div className="flex items-center gap-4 mt-2">
-                  <h2
-                    className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
-                    onClick={() => {
-                      console.log("Post clicked:", post);
-                      navigate(`/dashboard/forum-detail/${post.id}`, {
-                        state: { post },
-                      });
-                    }}
-                  >
-                    {post.title}
-                  </h2>
-                </div>
-
-                <p className="text-m text-gray-500">
-                  By {post.authorName},{" "}
-                  <span>{post.dateCreated.split("T")[0]}</span>
-                </p>
-                <p className="mt-2 text-gray-400 text-xl">
-                  {post.content && post.content.length > 300
-                    ? post.content.slice(0, 300) + "..."
-                    : post.content}
-                </p>
-              </div>
-            ))}
-          </div>
-          {hasMore && (
-            <div className="flex justify-center mt-6">
-              <button onClick={handleLoadMore} className="btn btn-outline">
-                Load More
-              </button>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <span className="loading loading-spinner loading-lg"></span>
             </div>
+          ) : (
+            <>
+              <div className="space-y-4" w-300>
+                {posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="p-4 border rounded-lg shadow-sm hover:shadow-md transition  relative"
+                  >
+                    <button
+                      className=" absolute top-2 right-20 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showModal(
+                          "Are you sure you want to approve this post?",
+                          "approve",
+                          post.id,
+                          post
+                        );
+                      }}
+                    >
+                      <img src={doneAll} alt="Approve" className="w-10 h-10" />
+                    </button>
+                    <button
+                      className=" absolute top-2 right-8 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        showModal(
+                          "Are you sure you want to delete this post?",
+                          "delete",
+                          post.id
+                        );
+                      }}
+                    >
+                      <img src={trashIcon} alt="Delete" className="w-10 h-10" />
+                    </button>
+
+                    <div className="flex items-center gap-4 mt-2">
+                      <h2
+                        className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
+                        onClick={() => {
+                          console.log("Post clicked:", post);
+                          navigate(`/dashboard/forum-detail/${post.id}`, {
+                            state: { post },
+                          });
+                        }}
+                      >
+                        {post.title}
+                      </h2>
+                    </div>
+
+                    <p className="text-m text-gray-500">
+                      By {post.authorName},{" "}
+                      <span>{post.dateCreated.split("T")[0]}</span>
+                    </p>
+                    <p className="mt-2 text-gray-400 text-xl">
+                      {post.content && post.content.length > 300
+                        ? post.content.slice(0, 300) + "..."
+                        : post.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {hasMore && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={handleLoadMore}
+                    className={`btn btn-outline ${
+                      loadingMore ? "btn-disabled" : ""
+                    }`}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm mr-2"></span>
+                        Loading...
+                      </>
+                    ) : (
+                      "Load More"
+                    )}
+                  </button>
+                </div>
+              )}
+            </>
           )}
+        </div>
+      </div>
+
+      {/* Modal */}
+      <div className={`modal ${modal.isOpen ? "modal-open" : ""}`}>
+        <div className="modal-box">
+          <div className="flex items-center gap-3 mb-4">
+            {modal.type === "approve" && (
+              <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-success-content"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+            )}
+            {modal.type === "delete" && (
+              <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-error-content"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  ></path>
+                </svg>
+              </div>
+            )}
+            <h3 className="font-bold text-lg">
+              {modal.type === "approve" && "Approve Post"}
+              {modal.type === "delete" && "Delete Post"}
+            </h3>
+          </div>
+          <p className="py-4">{modal.message}</p>
+          <div className="modal-action">
+            <button className="btn btn-ghost" onClick={closeModal}>
+              Cancel
+            </button>
+            <button
+              className={`btn ${
+                modal.type === "approve" ? "btn-success" : "btn-error"
+              }`}
+              onClick={confirmAction}
+            >
+              {modal.type === "approve" ? "Approve" : "Delete"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

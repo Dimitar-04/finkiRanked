@@ -36,7 +36,7 @@ const createForumPost = async (req, res) => {
         return res.status(400).json({
           error: 'Content contains inappropriate language',
         });
-      } else if (post.content.length > 100) {
+      } else if (post.content.length > 200) {
         createReviewPost(req, res);
         return res.status(401).json({
           error: 'Content is too long. Wait for moderator approval',

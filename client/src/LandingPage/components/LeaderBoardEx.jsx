@@ -94,7 +94,7 @@ const LeaderBoardEx = () => {
     return (
       <div
         data-theme="luxury"
-        className="dashboard h-screen flex bg-base-100 overflow-none"
+        className="min-h-screen flex bg-base-100"
       >
         {!landing ? <Navbar /> : null}
         <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
@@ -109,7 +109,7 @@ const LeaderBoardEx = () => {
     return (
       <div
         data-theme="luxury"
-        className="dashboard h-screen flex bg-base-100 overflow-none"
+        className="min-h-screen flex bg-base-100"
       >
         {!landing ? <Navbar /> : null}
         <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
@@ -131,11 +131,11 @@ const LeaderBoardEx = () => {
   return (
     <div
       data-theme="luxury"
-      className="dashboard h-screen flex bg-base-100 overflow-none"
+      className="min-h-screen flex bg-base-100"
     >
       {!landing ? <Navbar /> : null}
 
-      <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
+      <div className="flex w-full flex-col items-center p-20 gap-10">
         <h1 className="text-4xl font-bold">Leaderboard</h1>
         <p>Note: The leaderboard updates every 5 minutes</p>
 
@@ -154,29 +154,31 @@ const LeaderBoardEx = () => {
           </div>
         )}
 
-        <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 w-full max-w-4xl">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Username</th>
-                <th>Rank Tier</th>
-                <th>Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.map((user, index) => (
-                <tr key={user.id} className="hover">
-                  <th>{getPosition(index)}</th>
-                  <td className="font-medium">{user.username}</td>
-                  <td>
-                    <RankBadge rankName={user.rank} size="md" />
-                  </td>
-                  <td className="font-mono font-bold">{user.points}</td>
+        <div className="w-full max-w-4xl">
+          <div className="rounded-box border border-base-content/5 bg-base-100">
+            <table className="table w-full">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Username</th>
+                  <th>Rank Tier</th>
+                  <th>Points</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {leaderboard.map((user, index) => (
+                  <tr key={user.id} className="hover">
+                    <th>{getPosition(index)}</th>
+                    <td className="font-medium">{user.username}</td>
+                    <td>
+                      <RankBadge rankName={user.rank} size="md" />
+                    </td>
+                    <td className="font-mono font-bold">{user.points}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {error && leaderboard.length > 0 && (
