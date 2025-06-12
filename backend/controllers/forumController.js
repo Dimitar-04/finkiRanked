@@ -36,7 +36,7 @@ const createForumPost = async (req, res) => {
         return res.status(400).json({
           error: 'Content contains inappropriate language',
         });
-      } else if (post.content.length > 200) {
+      } else if (post.content.length > 100) {
         createReviewPost(req, res);
         return res.status(401).json({
           error: 'Content is too long. Wait for moderator approval',
@@ -104,7 +104,6 @@ async function decrementPostCounter(userId) {
       `Failed to decrement post counter for user ${userId}:`,
       error
     );
-    // We don't throw here to prevent blocking the main operation
   }
 }
 const createApprovedForumPost = async (req, res) => {
@@ -149,7 +148,6 @@ const getForumPosts = async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const skip = page * limit;
 
-    // Use Prisma to fetch posts with pagination
     const posts = await prisma.forum_posts.findMany({
       skip,
       take: limit,
@@ -158,7 +156,6 @@ const getForumPosts = async (req, res) => {
       },
     });
 
-    // Convert to domain objects
     const forumPosts = posts.map(
       (post) =>
         new ForumPost({
@@ -251,7 +248,6 @@ const createComment = async (req, res) => {
   }
 
   try {
-    // Create domain object first
     const comment = new Comment({
       content: content,
       authorName: authorName,
@@ -279,7 +275,6 @@ const createComment = async (req, res) => {
       data: { comment_count: { increment: 1 } },
     });
 
-    // Update the domain object with the generated ID
     comment.id = savedComment.id;
 
     res.status(201).json({

@@ -3,7 +3,6 @@ const prisma = require('../lib/prisma');
 
 const getTaskByDate = async (req, res) => {
   const { date } = req.params;
-  console.log(date);
 
   try {
     const now = new Date();
@@ -33,11 +32,6 @@ const getTaskByDate = async (req, res) => {
       )
     );
 
-    console.log(
-      'Effective Date for Task (UTC midnight):',
-      taskDate.toISOString()
-    );
-
     let tasks = await prisma.challenges.findMany({
       where: {
         solving_date: taskDate,
@@ -47,8 +41,6 @@ const getTaskByDate = async (req, res) => {
         test_cases: true,
       },
     });
-
-    console.log('Tasks found:', tasks);
 
     if (tasks.length === 0) {
       return res.status(404).json({ message: 'No tasks found for this date' });
@@ -225,15 +217,14 @@ const evaluateTask = async (req, res) => {
         id: testCaseId,
       },
     });
-    console.log('Test Case:', testCase.challenge_id);
-    console.log('Task ID:', taskId);
+
     if (testCase.challenge_id !== taskId) {
       return res
         .status(400)
         .json({ message: 'Test case does not belong to the task' });
     }
     let user = await prisma.users.findUnique({ where: { id: userId } });
-    console.log('User:', user);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -276,7 +267,7 @@ const evaluateTask = async (req, res) => {
         },
       });
       const responseUser = { ...updatedUser };
-      console.log('Updated User:', responseUser);
+
       if (typeof responseUser.points === 'bigint') {
         responseUser.points = responseUser.points.toString();
       }
