@@ -62,6 +62,8 @@ model users {
   comments             comments[]
   forum_posts          forum_posts[]
   to_be_reviewed       to_be_reviewed[]
+
+  @@index([points(sort: Desc)])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -75,6 +77,7 @@ model challenges {
   expired      Boolean?
   examples     Json?
   output_type  String?
+  difficulty   String?
   test_cases   test_cases[]
 }
 
