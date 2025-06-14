@@ -1,46 +1,48 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const CreatePost = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [error, setError] = useState("");
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectNeeded, setRedirectNeeded] = useState(false);
-  const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
+  const [modal, setModal] = useState({ isOpen: false, message: '', type: '' });
   const navigate = useNavigate();
 
-  const showModal = (message, type = "info") => {
+  const showModal = (message, type = 'info') => {
     setModal({ isOpen: true, message, type });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, message: "", type: "" });
-    if (modal.type === "success" || modal.type === "pending") {
-      navigate("/dashboard/forum");
-    } else if (modal.type === "auth") {
-      navigate("/login");
+    setModal({ isOpen: false, message: '', type: '' });
+    if (modal.type === 'success' || modal.type === 'pending') {
+      navigate('/dashboard/forum');
+    } else if (modal.type === 'auth') {
+      navigate('/login');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsSubmitting(true);
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = JSON.parse(localStorage.getItem('user'));
 
     if (!user || !user.id || !user.name) {
-      showModal("You must be logged in to create a post.", "auth");
+      showModal('You must be logged in to create a post.', 'auth');
       setIsSubmitting(false);
       return;
     }
+    const token = localStorage.getItem('jwt');
 
     try {
-      const response = await fetch("/forum/posts", {
-        method: "POST",
+      const response = await fetch('/forum/posts', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title,
@@ -51,13 +53,13 @@ const CreatePost = () => {
       });
 
       if (response.status === 204) {
-        showModal("Post created successfully!", "success");
+        showModal('Post created successfully!', 'success');
         return;
       }
       if (response.status === 401) {
         showModal(
-          "Content is too long. Your post has been submitted for moderator approval.",
-          "pending"
+          'Content is too long. Your post has been submitted for moderator approval.',
+          'pending'
         );
         return;
       }
@@ -67,9 +69,9 @@ const CreatePost = () => {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
-      showModal("Post created successfully!", "success");
+      showModal('Post created successfully!', 'success');
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post:', error);
       setError(error.message);
     } finally {
       setIsSubmitting(false);
@@ -87,7 +89,7 @@ const CreatePost = () => {
             Create a Post
           </h2>
           <button
-            onClick={() => navigate("/dashboard/forum")}
+            onClick={() => navigate('/dashboard/forum')}
             className="btn btn-outline gap-2"
           >
             <svg
@@ -220,7 +222,7 @@ const CreatePost = () => {
             <div className="card-actions justify-end mt-8">
               <button
                 type="button"
-                onClick={() => navigate("/dashboard/forum")}
+                onClick={() => navigate('/dashboard/forum')}
                 className="btn btn-ghost btn-lg"
                 disabled={isSubmitting}
               >
@@ -231,7 +233,7 @@ const CreatePost = () => {
                 className="btn border-amber-400 btn-lg"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Publishing..." : "Publish Post"}
+                {isSubmitting ? 'Publishing...' : 'Publish Post'}
               </button>
             </div>
           </div>
@@ -239,10 +241,10 @@ const CreatePost = () => {
       </div>
 
       {/* Modal */}
-      <div className={`modal ${modal.isOpen ? "modal-open" : ""}`}>
+      <div className={`modal ${modal.isOpen ? 'modal-open' : ''}`}>
         <div className="modal-box">
           <div className="flex items-center gap-3 mb-4">
-            {modal.type === "success" && (
+            {modal.type === 'success' && (
               <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-success-content"
@@ -259,7 +261,7 @@ const CreatePost = () => {
                 </svg>
               </div>
             )}
-            {modal.type === "pending" && (
+            {modal.type === 'pending' && (
               <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-warning-content"
@@ -276,7 +278,7 @@ const CreatePost = () => {
                 </svg>
               </div>
             )}
-            {modal.type === "auth" && (
+            {modal.type === 'auth' && (
               <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-error-content"
@@ -294,9 +296,9 @@ const CreatePost = () => {
               </div>
             )}
             <h3 className="font-bold text-lg">
-              {modal.type === "success" && "Success!"}
-              {modal.type === "pending" && "Pending Approval"}
-              {modal.type === "auth" && "Authentication Required"}
+              {modal.type === 'success' && 'Success!'}
+              {modal.type === 'pending' && 'Pending Approval'}
+              {modal.type === 'auth' && 'Authentication Required'}
             </h3>
           </div>
           <p className="py-4">{modal.message}</p>

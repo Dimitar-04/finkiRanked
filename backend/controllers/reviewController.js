@@ -3,7 +3,7 @@ const ForumPost = require('../models/ForumPost');
 const ForumController = require('./forumController');
 const filter = require('leo-profanity');
 const safeWords = require('../filters/safeWords');
-
+const verifyModeratorStatus = require('../services/checkModeratorStatus');
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
@@ -33,7 +33,14 @@ const getReviewPosts = async (req, res) => {
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
     const skip = page * limit;
-
+    const userId = req.query.userId;
+    const hasModeratorStatus = await verifyModeratorStatus(userId);
+    if (!hasModeratorStatus) {
+      console.log('Access denied: User is not a moderator');
+      return res.status(403).json({
+        error: 'Access denied. Only moderators can access review posts.',
+      });
+    }
     try {
       const posts = await prisma.to_be_reviewed.findMany({
         skip,
@@ -72,7 +79,14 @@ const getReviewPosts = async (req, res) => {
 
 const deleteReviewPost = async (req, res) => {
   const { id } = req.params;
-
+  const userId = req.query.userId;
+  const hasModeratorStatus = await verifyModeratorStatus(userId);
+  if (!hasModeratorStatus) {
+    console.log('Access denied: User is not a moderator');
+    return res.status(403).json({
+      error: 'Access denied. Only moderators can access review posts.',
+    });
+  }
   try {
     // Delete using Prisma
     await prisma.to_be_reviewed.delete({
@@ -94,8 +108,17 @@ const approveReviewPost = async (req, res) => {
   try {
     console.log('Approving review post', req.params.id);
     const { id } = req.params;
+    const userId = req.query.userId;
 
-    // 1. Get the post to be approved
+    const hasModeratorStatus = await verifyModeratorStatus(userId);
+
+    if (!hasModeratorStatus) {
+      console.log('Access denied: User is not a moderator');
+      return res.status(403).json({
+        error: 'Access denied. Only moderators can access review posts.',
+      });
+    }
+
     const postToApprove = await prisma.to_be_reviewed.findUnique({
       where: { id },
     });
@@ -104,7 +127,6 @@ const approveReviewPost = async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    // 2. Create a new forum post with the same data
     const newForumPost = await prisma.forum_posts.create({
       data: {
         title: postToApprove.title,
@@ -114,12 +136,10 @@ const approveReviewPost = async (req, res) => {
       },
     });
 
-    // 3. Delete the post from to_be_reviewed
     await prisma.to_be_reviewed.delete({
       where: { id },
     });
 
-    // 4. Send success response with the created post
     res.status(200).json({
       message: 'Post approved and published successfully',
       post: newForumPost,

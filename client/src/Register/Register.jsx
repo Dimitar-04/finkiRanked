@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { supabase } from '../contexts/AuthContext';
 
 const Register = () => {
   const [error, setError] = React.useState('');
@@ -9,7 +10,7 @@ const Register = () => {
     password: false,
     confirmPassword: false,
   });
-  const [loading, setLoading] = useState(false); // Loader state
+  const [loading, setLoading] = useState(false);
 
   const togglePasswordVisibility = (field) => {
     setShowPassword((prev) => ({
@@ -94,13 +95,18 @@ const Register = () => {
       });
 
       const data = await response.json();
+
       if (data.success) {
         localStorage.setItem('user', JSON.stringify(data.user));
         try {
-          await supabase.auth.signInWithPassword({
+          const { data: authData } = await supabase.auth.signInWithPassword({
             email: formData.email,
             password: formData.password,
           });
+          localStorage.setItem(
+            'jwt',
+            JSON.stringify(authData.session?.access_token)
+          );
         } catch (supabaseError) {
           console.error('Supabase auth error:', supabaseError);
         }

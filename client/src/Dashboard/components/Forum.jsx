@@ -18,6 +18,8 @@ const Forum = () => {
   }, [page]);
 
   const fetchPosts = async () => {
+    const token = localStorage.getItem('jwt');
+    console.log(token);
     try {
       if (page === 0) {
         setLoading(true);
@@ -26,7 +28,12 @@ const Forum = () => {
       }
       
       const response = await fetch(
-        `/forum/posts?page=${page}&limit=${postsPerPage}`
+        `/forum/posts?page=${page}&limit=${postsPerPage}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -34,7 +41,6 @@ const Forum = () => {
       const data = await response.json();
       if (page === 0) {
         setPosts(data);
-        console.log('Fetched posts:', data);
       } else {
         setPosts((prevPosts) => [...prevPosts, ...data]);
       }
@@ -50,11 +56,13 @@ const Forum = () => {
   };
 
   const handleDeletePost = async (postId) => {
+    const token = localStorage.getItem('jwt');
     try {
       const response = await fetch(`/forum/posts/${postId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) {

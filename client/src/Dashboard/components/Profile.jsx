@@ -5,17 +5,34 @@ import Navbar from './Navbar';
 import RankBadge from '@/utils/RankBadge.jsx';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 const Profile = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
+  useEffect(() => {
+    if (!user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
   const handleSignOut = async () => {
     await logout();
     navigate('/');
   };
-  const user = JSON.parse(localStorage.getItem('user'));
-  console.log('User data:', user);
+
   if (!user) {
-    console.error('No user data found in localStorage.');
+    return (
+      <div
+        data-theme="luxury"
+        className="h-screen flex items-center justify-center"
+      >
+        <div className="text-center">
+          <span className="loading loading-spinner loading-lg"></span>
+          <p className="mt-4">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
   return (
     <div

@@ -7,6 +7,7 @@ filter.add(mkProfanity);
 const safeWords = require('../filters/safeWords');
 const { analyzePostContent } = require('../ai/processRequestAi');
 const { createReviewPost } = require('./reviewController');
+const verifyModeratorStatus = require('../services/checkModeratorStatus');
 
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
@@ -72,7 +73,6 @@ const createForumPost = async (req, res) => {
         },
       });
 
-      // Update the domain object with the generated ID
       post.id = savedPost.id;
       await decrementPostCounter(authorId);
 
@@ -106,6 +106,7 @@ async function decrementPostCounter(userId) {
     );
   }
 }
+//Dali treba?
 const createApprovedForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
@@ -175,59 +176,36 @@ const getForumPosts = async (req, res) => {
   }
 };
 
-const updateForumPost = async (req, res) => {
+const deleteForumPost = async (req, res) => {
   const { id } = req.params;
-  const { title, content } = req.body;
+  const userId = req.user.sub;
 
   try {
-    // Update using Prisma
-    const updatedPost = await prisma.forum_posts.update({
+    const post = await prisma.forum_posts.findUnique({
       where: { id },
-      data: {
-        title,
-        content,
+      select: {
+        author_id: true,
       },
     });
 
-    if (!updatedPost) {
+    if (!post) {
       return res.status(404).json({ error: 'Forum post not found' });
     }
 
-    // Create domain object from updated data
-    const post = new ForumPost({
-      id: updatedPost.id,
-      title: updatedPost.title,
-      content: updatedPost.content,
-      authorName: updatedPost.author_name,
-      dateCreated: updatedPost.date_created,
-    });
-
-    res.status(200).json({
-      message: 'Forum post updated successfully',
-      post,
-    });
-  } catch (err) {
-    // Prisma throws when record not found
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: 'Forum post not found' });
+    if (post.author_id === userId) {
+      await prisma.forum_posts.delete({ where: { id } });
+      return res.status(204).send();
     }
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
 
-const deleteForumPost = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Delete using Prisma
-    await prisma.forum_posts.delete({
-      where: { id },
-    });
-
+    const hasPermission = await verifyModeratorStatus(userId);
+    if (!hasPermission) {
+      return res.status(403).json({
+        error: 'You do not have permission to delete this post',
+      });
+    }
+    await prisma.forum_posts.delete({ where: { id } });
     res.status(204).send();
   } catch (err) {
-    // Prisma throws when record not found
     if (err.code === 'P2025') {
       return res.status(404).json({ error: 'Forum post not found' });
     }
@@ -238,7 +216,6 @@ const deleteForumPost = async (req, res) => {
 
 // Comment Functions
 const createComment = async (req, res) => {
-  // Accept post_id, content, authorId, authorName from body
   const { post_id, content, authorId, authorName } = req.body;
 
   if (!post_id || !content || !authorId || !authorName) {
@@ -261,7 +238,6 @@ const createComment = async (req, res) => {
       });
     }
 
-    // Store in database using Prisma
     const savedComment = await prisma.comments.create({
       data: {
         post_id: post_id,
@@ -306,7 +282,6 @@ const getComments = async (req, res) => {
       },
     });
 
-    // Convert to domain objects
     const comments = dbComments.map(
       (comment) =>
         new Comment({
@@ -325,50 +300,27 @@ const getComments = async (req, res) => {
   }
 };
 
-const updateComment = async (req, res) => {
-  const { commentId } = req.params;
-  const { content } = req.body;
-
-  try {
-    // Update using Prisma
-    const updatedComment = await prisma.comments.update({
-      where: { id: commentId },
-      data: { content },
-    });
-
-    // Create domain object from updated data
-    const comment = new Comment({
-      id: updatedComment.id,
-      content: updatedComment.content,
-      authorName: updatedComment.author_name,
-      dateCreated: updatedComment.dateCreated,
-    });
-
-    res.status(200).json({
-      message: 'Comment updated successfully',
-      comment,
-    });
-  } catch (err) {
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: 'Comment not found' });
-    }
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-
 const deleteComment = async (req, res) => {
   const { commentId } = req.params;
-
+  const userId = req.user.sub;
   try {
     // First get the comment to find its post_id
     const comment = await prisma.comments.findUnique({
       where: { id: commentId },
-      select: { post_id: true },
+      select: { post_id: true, author_id: true },
     });
 
     if (!comment) {
       return res.status(404).json({ error: 'Comment not found' });
+    }
+    const user = await prisma.users.findUnique({
+      where: { id: userId },
+      select: { isModerator: true },
+    });
+    if (comment.author_id !== userId && !(user && user.isModerator)) {
+      return res.status(403).json({
+        error: 'You do not have permission to delete this comment',
+      });
     }
 
     // Delete the comment
@@ -397,11 +349,11 @@ const deleteComment = async (req, res) => {
 module.exports = {
   createForumPost,
   getForumPosts,
-  updateForumPost,
+
   deleteForumPost,
   createComment,
   getComments,
-  updateComment,
+
   deleteComment,
   createApprovedForumPost,
 };

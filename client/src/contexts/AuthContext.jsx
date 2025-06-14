@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }) => {
     try {
       await supabase.auth.signOut();
       localStorage.removeItem('user');
+      localStorage.removeItem('lastActivityTimestamp');
+      localStorage.removeItem('jwt');
       sessionStorage.clear();
       setUser(null);
       navigate('/login?reason=inactivity');
@@ -181,28 +183,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
   }, []);
-  // useEffect(() => {
-  //   const checkLastActivity = () => {
-  //     const lastActivity = localStorage.getItem('lastActivityTimestamp');
-  //     if (lastActivity && user) {
-  //       const inactiveTime = Date.now() - parseInt(lastActivity);
-  //       if (inactiveTime > INACTIVITY_TIMEOUT) {
-  //         console.log('Detected inactivity between sessions');
-  //         logout();
-  //       } else {
-  //         localStorage.setItem('lastActivityTimestamp', Date.now().toString());
-  //       }
-  //     } else if (user && !lastActivity) {
-  //       localStorage.setItem('lastActivityTimestamp', Date.now().toString());
-  //     }
-  //   };
 
-  //   if (user) {
-  //     checkLastActivity();
-  //   }
-  // }, [user, logout, INACTIVITY_TIMEOUT]);
-
-  // Auth context value
   const value = {
     user,
     loading,
