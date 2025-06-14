@@ -2,6 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import React, { useState, useEffect } from 'react';
 
+//Vidi dali tuka treba jwt da se implementira
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const [localUser, setLocalUser] = useState(null);

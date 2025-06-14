@@ -18,9 +18,27 @@ const ManagePosts = () => {
     postId: null,
     post: null,
   });
+  const closeModal = () => {
+    setModal({
+      isOpen: false,
+      message: '',
+      type: '',
+      postId: null,
+      post: null,
+    });
+  };
+
+  const confirmAction = () => {
+    if (modal.type === 'delete' && modal.postId) {
+      handleDeletePost(modal.postId);
+    } else if (modal.type === 'approve' && modal.post) {
+      handleApprovePost(modal.post);
+    }
+    closeModal();
+  };
   const postsPerPage = 5;
   const user = JSON.parse(localStorage.getItem('user'));
-
+  const token = localStorage.getItem('jwt');
   useEffect(() => {
     fetchPosts();
   }, [page]);
