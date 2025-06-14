@@ -1,19 +1,20 @@
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
 
-// Load .env from parent directory (backend/)
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-// This script toggles the moderator status of a user in the Supabase database.
-// node scripts/toggleModeratorStatus.js USER_ID_HERE
-
-// Debug: Check if env vars are loaded
-console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Loaded' : 'Not loaded');
-console.log('SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Loaded' : 'Not loaded');
+console.log(
+  'SUPABASE_URL:',
+  process.env.SUPABASE_URL ? 'Loaded' : 'Not loaded'
+);
+console.log(
+  'SERVICE_ROLE_KEY:',
+  process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Loaded' : 'Not loaded'
+);
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY 
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 async function toggleModeratorStatus(userId) {
@@ -23,23 +24,25 @@ async function toggleModeratorStatus(userId) {
       .select('isModerator, username')
       .eq('id', userId)
       .single();
-    
+
     if (fetchError) throw fetchError;
     if (!user) {
       console.error(`User with ID ${userId} not found`);
       return;
     }
-    
+
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
       .update({ isModerator: !user.isModerator })
       .eq('id', userId)
       .select('username')
       .single();
-      
+
     if (updateError) throw updateError;
-    
-    console.log(`User ${user.username} moderator status changed to: ${!user.isModerator}`);
+
+    console.log(
+      `User ${user.username} moderator status changed to: ${!user.isModerator}`
+    );
   } catch (error) {
     console.error('Error:', error);
   }

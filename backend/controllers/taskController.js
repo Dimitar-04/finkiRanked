@@ -3,6 +3,7 @@ const prisma = require('../lib/prisma');
 
 const getTaskByDate = async (req, res) => {
   const { date } = req.params;
+  console.log(date);
 
   try {
     const now = new Date();
@@ -243,6 +244,7 @@ const evaluateTask = async (req, res) => {
         id: taskId,
       },
     });
+    console.log(task.difficulty);
     if (isOutputCorrect(userOutput, testCase.output, task.output_type)) {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import doneAll from "../../assets/images/done-all.svg";
-import trashIcon from "../../assets/images/delete.svg"; // Add this import
-import Navbar from "./Navbar";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import doneAll from '../../assets/images/done-all.svg';
+import trashIcon from '../../assets/images/delete.svg'; // Add this import
+import Navbar from './Navbar';
 
 const ManagePosts = () => {
   const navigate = useNavigate();
@@ -10,8 +10,8 @@ const ManagePosts = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem("user"));
-
+  const user = JSON.parse(localStorage.getItem('user'));
+  const token = localStorage.getItem('jwt');
   useEffect(() => {
     fetchPosts();
   }, [page]);
@@ -19,16 +19,21 @@ const ManagePosts = () => {
   const fetchPosts = async () => {
     try {
       const response = await fetch(
-        `/review/posts?page=${page}&limit=${postsPerPage}`
+        `/review/posts?page=${page}&limit=${postsPerPage}&userId=${user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      console.log("Response status:", response.status);
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Fetched posts data:", data);
+      console.log('Fetched posts data:', data);
 
       if (page === 0) {
         setPosts(data);
@@ -40,50 +45,58 @@ const ManagePosts = () => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error("Error fetching forum posts:", error);
+      console.error('Error fetching forum posts:', error);
     }
   };
   const handleDeletePost = async (postId) => {
     try {
-      const response = await fetch(`/review/posts/${postId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `/review/posts/${postId}?userId=${user.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      console.log("Post deleted successfully");
+      console.log('Post deleted successfully');
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error('Error deleting post:', error);
     }
   };
 
   const handleApprovePost = async (post) => {
     try {
-      const response = await fetch(`/review/posts/${post.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          authorId: user.id,
-          authorName: user.name,
-          title: post.title,
-          content: post.content,
-        }),
-      });
+      const response = await fetch(
+        `/review/posts/${post.id}?userId=${user.id}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            authorId: user.id,
+            authorName: user.name,
+            title: post.title,
+            content: post.content,
+          }),
+        }
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       setPosts((prevPosts) =>
         prevPosts.filter((postce) => postce.id !== post.id)
       );
-      console.log("Post approved successfully");
+      console.log('Post approved successfully');
     } catch (error) {
-      console.error("Error approving post:", error);
+      console.error('Error approving post:', error);
     }
   };
 
@@ -113,7 +126,7 @@ const ManagePosts = () => {
 
                     if (
                       window.confirm(
-                        "Are you sure you want to approve this post?"
+                        'Are you sure you want to approve this post?'
                       )
                     ) {
                       handleApprovePost(post);
@@ -128,7 +141,7 @@ const ManagePosts = () => {
                     e.stopPropagation();
                     if (
                       window.confirm(
-                        "Are you sure you want to delete this post?"
+                        'Are you sure you want to delete this post?'
                       )
                     ) {
                       handleDeletePost(post.id);
@@ -142,7 +155,7 @@ const ManagePosts = () => {
                   <h2
                     className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
                     onClick={() => {
-                      console.log("Post clicked:", post);
+                      console.log('Post clicked:', post);
                       navigate(`/dashboard/forum-detail/${post.id}`, {
                         state: { post },
                       });
@@ -153,12 +166,12 @@ const ManagePosts = () => {
                 </div>
 
                 <p className="text-m text-gray-500">
-                  By {post.authorName},{" "}
-                  <span>{post.dateCreated.split("T")[0]}</span>
+                  By {post.authorName},{' '}
+                  <span>{post.dateCreated.split('T')[0]}</span>
                 </p>
                 <p className="mt-2 text-gray-400 text-xl">
                   {post.content && post.content.length > 300
-                    ? post.content.slice(0, 300) + "..."
+                    ? post.content.slice(0, 300) + '...'
                     : post.content}
                 </p>
               </div>

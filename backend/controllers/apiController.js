@@ -1,4 +1,4 @@
-const supabase = require('../supabaseClient');
+const { supabase, restartSupabaseConnection } = require('../supabaseClient');
 const Student = require('../models/Student');
 const prisma = require('../lib/prisma');
 

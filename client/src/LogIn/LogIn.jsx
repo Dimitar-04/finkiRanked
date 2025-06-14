@@ -25,6 +25,7 @@ const Login = () => {
           email,
           password,
         });
+      localStorage.setItem('jwt', authData.session?.access_token);
       if (authError) {
         setError(authError.message);
         return;

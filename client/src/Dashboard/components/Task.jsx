@@ -13,7 +13,7 @@ const Task = () => {
   const today = new Date().toLocaleDateString();
   const user = JSON.parse(localStorage.getItem('user')) || { attempts: 0 };
   const navigate = useNavigate();
-
+  const token = localStorage.getItem('jwt');
   useEffect(() => {
     if (task && task.id) {
       fetchTestCaseForToday(task.id);
@@ -28,6 +28,8 @@ const Task = () => {
         headers: {
           Accept: 'application/json',
           'Cache-Control': 'no-cache',
+
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -56,7 +58,7 @@ const Task = () => {
           id: taskData.id,
           title: processedTitle || 'Daily Challenge',
           content: taskData.content || 'No description available',
-          examples: taskData.examples || [], // Use examples directly from the API response
+          examples: taskData.examples || [],
         });
       } else {
         console.error('No tasks found for the date');
@@ -92,6 +94,7 @@ const Task = () => {
         headers: {
           Accept: 'application/json',
           'Cache-Control': 'no-cache',
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -137,6 +140,7 @@ const Task = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           userOutput: document.getElementById('userOutput').value,

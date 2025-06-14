@@ -22,12 +22,14 @@ const CreatePost = () => {
       navigate('/login');
       return;
     }
+    const token = localStorage.getItem('jwt');
 
     try {
       const response = await fetch('/forum/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title,

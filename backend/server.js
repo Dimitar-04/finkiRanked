@@ -7,6 +7,7 @@ const apiRouter = require('./routers/apiRouter');
 const forumRouter = require('./routers/forumRouter');
 const reviewRouter = require('./routers/reviewRouter');
 const taskRouter = require('./routers/taskRouter');
+const authenticateToken = require('./auth/auth');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,9 +18,9 @@ app.use(
 );
 app.use('/api', apiRouter);
 
-app.use('/forum', forumRouter);
-app.use('/review', reviewRouter);
-app.use('/task', taskRouter);
+app.use('/forum', authenticateToken, forumRouter);
+app.use('/review', authenticateToken, reviewRouter);
+app.use('/task', authenticateToken, taskRouter);
 app.get('/', indexRouter);
 app.use((req, res, next) => {
   if (req.method === 'GET' && req.accepts('html')) {
