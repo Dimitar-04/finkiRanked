@@ -10,6 +10,7 @@ class Challenge {
     this.examples = data.examples;
     this.test_cases = data.test_cases;
     this.output_type = data.output_type;
+    this.difficulty = data.difficulty;
   }
 }
 
