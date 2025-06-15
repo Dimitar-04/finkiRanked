@@ -5,9 +5,9 @@ import {
   useEffect,
   useRef,
   useCallback,
-} from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -15,7 +15,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
-    storageKey: 'supabase-auth-token',
+    storageKey: "supabase-auth-token",
     storage: localStorage,
     autoRefreshToken: true,
   },
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   // 2 minutes timeout (in milliseconds)
-  const INACTIVITY_TIMEOUT = 2 * 60 * 1000;
+  const INACTIVITY_TIMEOUT = 7 * 60 * 1000;
 
   // Update userRef when user changes
   useEffect(() => {
@@ -54,8 +54,8 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     try {
       console.log(
-        'Logging out user due to:',
-        isActiveRef.current ? 'manual logout' : 'inactivity'
+        "Logging out user due to:",
+        isActiveRef.current ? "manual logout" : "inactivity"
       );
       setIsLoggingOut(true);
 
@@ -66,9 +66,9 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Remove data first to prevent race conditions
-      localStorage.removeItem('jwt');
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastActivityTimestamp');
+      localStorage.removeItem("jwt");
+      localStorage.removeItem("user");
+      localStorage.removeItem("lastActivityTimestamp");
 
       // Call signOut only once
       await supabase.auth.signOut();
@@ -78,14 +78,14 @@ export const AuthProvider = ({ children }) => {
       userRef.current = null;
 
       // Navigate to home page
-      navigate('/');
+      navigate("/");
 
       // Reset logout flag after navigation
       setTimeout(() => {
         setIsLoggingOut(false);
       }, 1000);
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
       setIsLoggingOut(false);
     }
   }, [navigate]); // Remove user dependency
@@ -105,11 +105,11 @@ export const AuthProvider = ({ children }) => {
       // Update timestamp in localStorage, but limit frequency to avoid excessive writes
       const now = Date.now();
       const lastStoredTime = parseInt(
-        localStorage.getItem('lastActivityTimestamp') || '0'
+        localStorage.getItem("lastActivityTimestamp") || "0"
       );
       if (now - lastStoredTime > 10000) {
         // Only update every 10 seconds
-        localStorage.setItem('lastActivityTimestamp', now.toString());
+        localStorage.setItem("lastActivityTimestamp", now.toString());
 
         // Debug log with reduced frequency
         if (import.meta.env.DEV) {
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }) => {
 
       inactivityTimeoutRef.current = setTimeout(() => {
         isActiveRef.current = false;
-        console.warn('User inactive for 2 minutes, logging out...');
+        console.warn("User inactive for 2 minutes, logging out...");
         logout();
       }, INACTIVITY_TIMEOUT);
     }
@@ -131,18 +131,18 @@ export const AuthProvider = ({ children }) => {
   // Initial session check
   useEffect(() => {
     const checkStaleSession = () => {
-      const storedUser = localStorage.getItem('user');
-      const lastActivity = localStorage.getItem('lastActivityTimestamp');
+      const storedUser = localStorage.getItem("user");
+      const lastActivity = localStorage.getItem("lastActivityTimestamp");
 
       if (storedUser && lastActivity) {
         const inactiveTime = Date.now() - parseInt(lastActivity);
 
         if (inactiveTime > INACTIVITY_TIMEOUT) {
-          console.log('Found stale session - logging out');
-          localStorage.removeItem('user');
-          localStorage.removeItem('lastActivityTimestamp');
+          console.log("Found stale session - logging out");
+          localStorage.removeItem("user");
+          localStorage.removeItem("lastActivityTimestamp");
           supabase.auth.signOut();
-          navigate('/');
+          navigate("/");
         }
       }
     };
@@ -152,53 +152,45 @@ export const AuthProvider = ({ children }) => {
 
   // Set up activity listeners - use a stable reference to avoid recreation
   useEffect(() => {
-    // Only set up listeners if we have a user
-    if (!userRef.current) return;
+    if (!user) return; // ✅ Use `user` instead of `userRef.current`
 
-    // Debug log only once when setting up listeners
     if (import.meta.env.DEV) {
-      console.log('Setting up activity listeners for inactivity timeout');
+      console.log("Setting up activity listeners for inactivity timeout");
     }
 
     const activityEvents = [
-      'mousedown',
-      'mousemove',
-      'keypress',
-      'scroll',
-      'touchstart',
-      'click',
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+      "click",
     ];
 
-    // Make sure to debounce the activity handler to prevent excessive timer resets
     let debounceTimeout;
-    const DEBOUNCE_DELAY = 1000; // 1 second
+    const DEBOUNCE_DELAY = 1000;
 
     const handleActivity = () => {
       if (debounceTimeout) clearTimeout(debounceTimeout);
-
       debounceTimeout = setTimeout(() => {
         resetInactivityTimer();
       }, DEBOUNCE_DELAY);
     };
 
-    // Add event listeners
     activityEvents.forEach((event) => {
       document.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Set initial timer when mounting
-    resetInactivityTimer();
+    resetInactivityTimer(); // ✅ Ensure it's called when the user logs in
 
-    // Visibility change detection (tab switching)
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         resetInactivityTimer();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // Cleanup
     return () => {
       if (debounceTimeout) clearTimeout(debounceTimeout);
 
@@ -206,14 +198,14 @@ export const AuthProvider = ({ children }) => {
         document.removeEventListener(event, handleActivity);
       });
 
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
 
       if (inactivityTimeoutRef.current) {
         clearTimeout(inactivityTimeoutRef.current);
         inactivityTimeoutRef.current = null;
       }
     };
-  }, [resetInactivityTimer]); // Only depend on the stable resetInactivityTimer
+  }, [resetInactivityTimer, user]); // Only depend on the stable resetInactivityTimer
 
   // Initial auth and auth listener setup
   useEffect(() => {
@@ -222,11 +214,11 @@ export const AuthProvider = ({ children }) => {
         const { data } = await supabase.auth.getSession();
         if (data?.session?.user) {
           setUser(data.session.user);
-          localStorage.setItem('jwt', data.session.access_token);
+          localStorage.setItem("jwt", data.session.access_token);
           // userRef will be updated via the user effect
         }
       } catch (error) {
-        console.error('Error retrieving session:', error);
+        console.error("Error retrieving session:", error);
       } finally {
         setLoading(false);
       }
@@ -237,23 +229,23 @@ export const AuthProvider = ({ children }) => {
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (import.meta.env.DEV && event !== 'TOKEN_REFRESHED') {
-          console.log('Auth state changed:', event);
+        if (import.meta.env.DEV && event !== "TOKEN_REFRESHED") {
+          console.log("Auth state changed:", event);
         }
 
-        if (event === 'SIGNED_IN' && session?.user) {
+        if (event === "SIGNED_IN" && session?.user) {
           setUser(session.user);
-          localStorage.setItem('jwt', session.access_token);
+          localStorage.setItem("jwt", session.access_token);
           // userRef will be updated via the user effect
-        } else if (event === 'SIGNED_OUT') {
+        } else if (event === "SIGNED_OUT") {
           setUser(null);
-          localStorage.removeItem('jwt');
+          localStorage.removeItem("jwt");
           if (inactivityTimeoutRef.current) {
             clearTimeout(inactivityTimeoutRef.current);
             inactivityTimeoutRef.current = null;
           }
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          localStorage.setItem('jwt', session.access_token);
+        } else if (event === "TOKEN_REFRESHED" && session) {
+          localStorage.setItem("jwt", session.access_token);
           // Only reset timer if not logged out
           if (userRef.current) {
             resetInactivityTimer();
