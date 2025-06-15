@@ -59,7 +59,6 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoggingOut(true);
 
-      // Clear both timers
       if (inactivityTimeoutRef.current) {
         clearTimeout(inactivityTimeoutRef.current);
         inactivityTimeoutRef.current = null;

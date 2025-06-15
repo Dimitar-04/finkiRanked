@@ -327,7 +327,7 @@ const Task = () => {
                             Your Input:
                           </h3>
                           <div
-                            className={`text-xl font-mono mt-3 break-all font-bold ${
+                            className={`text-xl font-mono mt-3 break-words font-bold ${
                               testCase &&
                               testCase.input &&
                               testCase.input.includes("\n")
