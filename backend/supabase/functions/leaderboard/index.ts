@@ -1,7 +1,7 @@
 // Supabase Edge Function - leaderboard.ts
-import { serve } from 'https://deno.land/std/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js';
-
+import { serve } from "https://deno.land/std/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js";
+import supabase from "../../../supabaseClient";
 // Cache constants
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const PAGE_SIZE = 20;
@@ -14,35 +14,35 @@ type CacheEntry = {
 
 serve(async (req: Request): Promise<Response> => {
   // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 200,
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
     });
   }
 
   try {
     const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
+    const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(
-      url.searchParams.get('limit') || PAGE_SIZE.toString()
+      url.searchParams.get("limit") || PAGE_SIZE.toString()
     );
 
     if (page < 1 || limit < 1 || limit > 100) {
       return new Response(
         JSON.stringify({
-          error: 'Invalid parameters',
-          message: 'Page must be >= 1 and limit must be between 1 and 100',
+          error: "Invalid parameters",
+          message: "Page must be >= 1 and limit must be between 1 and 100",
         }),
         {
           status: 400,
           headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
           },
         }
       );
@@ -67,30 +67,30 @@ serve(async (req: Request): Promise<Response> => {
         {
           status: 200,
           headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'max-age=300', // Allow browser caching for 5 minutes
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "max-age=300", // Allow browser caching for 5 minutes
           },
         }
       );
     }
 
     // Load env variables
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    // const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase env variables');
-    }
+    // if (!supabaseUrl || !supabaseServiceKey) {
+    //   throw new Error('Missing Supabase env variables');
+    // }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Pagination
     const offset = (page - 1) * limit;
     const { data, error, count } = await supabase
-      .from('users')
-      .select('id, username, points, rank', { count: 'exact' })
-      .order('points', { ascending: false })
+      .from("users")
+      .select("id, username, points, rank", { count: "exact" })
+      .order("points", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
@@ -130,23 +130,23 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(JSON.stringify(responseData), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'max-age=300', // Allow browser caching
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "max-age=300", // Allow browser caching
       },
     });
   } catch (err: any) {
-    console.error('Leaderboard error:', err.message);
+    console.error("Leaderboard error:", err.message);
     return new Response(
       JSON.stringify({
-        error: 'Failed to fetch leaderboard',
+        error: "Failed to fetch leaderboard",
         message: err.message,
       }),
       {
         status: 500,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
         },
       }
     );

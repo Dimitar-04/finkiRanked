@@ -21,114 +21,87 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export const AuthContext = createContext();
+function parseJwt(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = decodeURIComponent(
+      atob(base64Url)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(base64);
+  } catch (e) {
+    return null;
+  }
+}
 
+export const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  // Use refs for mutable values that shouldn't trigger re-renders
   const inactivityTimeoutRef = useRef(null);
+  const tokenExpiryTimeoutRef = useRef(null);
   const isActiveRef = useRef(false);
-  const userRef = useRef(null); // Store user ID in ref to avoid dependency cycle
+  const userRef = useRef(null);
   const navigate = useNavigate();
 
-  // 2 minutes timeout (in milliseconds)
-  const INACTIVITY_TIMEOUT = 7 * 60 * 1000;
+  const INACTIVITY_TIMEOUT = 120 * 60 * 1000;
 
-  // Update userRef when user changes
   useEffect(() => {
     userRef.current = user?.id || null;
+  }, [user]);
 
-    // Debug log only once when user changes
-    if (import.meta.env.DEV && user) {
-      console.log(
-        `Inactivity timeout set for ${INACTIVITY_TIMEOUT / 1000} seconds`
-      );
-    }
-  }, [user, INACTIVITY_TIMEOUT]);
-
-  // Function to logout - using userRef instead of user state
   const logout = useCallback(async () => {
     try {
-      console.log(
-        "Logging out user due to:",
-        isActiveRef.current ? "manual logout" : "inactivity"
-      );
       setIsLoggingOut(true);
 
-      // Clear the timeout to prevent duplicate logouts
+      // Clear both timers
       if (inactivityTimeoutRef.current) {
         clearTimeout(inactivityTimeoutRef.current);
         inactivityTimeoutRef.current = null;
       }
+      if (tokenExpiryTimeoutRef.current) {
+        clearTimeout(tokenExpiryTimeoutRef.current);
+        tokenExpiryTimeoutRef.current = null;
+      }
 
-      // Remove data first to prevent race conditions
-      localStorage.removeItem("jwt");
-      localStorage.removeItem("user");
       localStorage.removeItem("lastActivityTimestamp");
+      localStorage.removeItem("jwt");
+      localStorage.removeItem("token_exp");
+      localStorage.removeItem("user");
 
-      // Call signOut only once
       await supabase.auth.signOut();
-
-      // Update state
       setUser(null);
       userRef.current = null;
-
-      // Navigate to home page
       navigate("/");
 
-      // Reset logout flag after navigation
-      setTimeout(() => {
-        setIsLoggingOut(false);
-      }, 1000);
+      setTimeout(() => setIsLoggingOut(false), 1000);
     } catch (error) {
       console.error("Error during logout:", error);
       setIsLoggingOut(false);
     }
-  }, [navigate]); // Remove user dependency
+  }, [navigate]);
 
-  // Function to reset inactivity timer - using userRef instead of user state
   const resetInactivityTimer = useCallback(() => {
     isActiveRef.current = true;
+    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
 
-    // Clear existing timeout
     if (inactivityTimeoutRef.current) {
       clearTimeout(inactivityTimeoutRef.current);
-      inactivityTimeoutRef.current = null;
     }
 
-    // Only set new timeout if we have a user (using ref)
     if (userRef.current) {
-      // Update timestamp in localStorage, but limit frequency to avoid excessive writes
-      const now = Date.now();
-      const lastStoredTime = parseInt(
-        localStorage.getItem("lastActivityTimestamp") || "0"
-      );
-      if (now - lastStoredTime > 10000) {
-        // Only update every 10 seconds
-        localStorage.setItem("lastActivityTimestamp", now.toString());
-
-        // Debug log with reduced frequency
-        if (import.meta.env.DEV) {
-          const currentTime = new Date().toLocaleTimeString();
-          console.debug(
-            `[${currentTime}] Activity detected, resetting timeout`
-          );
-        }
-      }
-
       inactivityTimeoutRef.current = setTimeout(() => {
         isActiveRef.current = false;
-        console.warn("User inactive for 2 minutes, logging out...");
+        console.warn("User inactive, logging out");
         logout();
       }, INACTIVITY_TIMEOUT);
     }
-  }, [logout, INACTIVITY_TIMEOUT]); // Remove user dependency
-
-  // Initial session check
+  }, [logout]);
   useEffect(() => {
     const checkStaleSession = () => {
       const storedUser = localStorage.getItem("user");
@@ -138,84 +111,88 @@ export const AuthProvider = ({ children }) => {
         const inactiveTime = Date.now() - parseInt(lastActivity);
 
         if (inactiveTime > INACTIVITY_TIMEOUT) {
-          console.log("Found stale session - logging out");
-          localStorage.removeItem("user");
-          localStorage.removeItem("lastActivityTimestamp");
-          supabase.auth.signOut();
-          navigate("/");
+          logout();
         }
       }
     };
 
     checkStaleSession();
   }, [navigate, INACTIVITY_TIMEOUT]);
+  const setupTokenExpiryLogout = useCallback(
+    (accessToken) => {
+      if (!accessToken) return;
 
-  // Set up activity listeners - use a stable reference to avoid recreation
-  useEffect(() => {
-    if (!user) return; // ✅ Use `user` instead of `userRef.current`
+      const payload = parseJwt(accessToken);
+      if (!payload?.exp) return;
 
-    if (import.meta.env.DEV) {
-      console.log("Setting up activity listeners for inactivity timeout");
-    }
+      const now = Math.floor(Date.now() / 1000);
+      const expiresIn = payload.exp - now;
 
-    const activityEvents = [
-      "mousedown",
-      "mousemove",
-      "keypress",
-      "scroll",
-      "touchstart",
-      "click",
-    ];
+      if (expiresIn <= 0) {
+        console.warn("Token already expired, handling expiration");
 
-    let debounceTimeout;
-    const DEBOUNCE_DELAY = 1000;
+        const lastActivity = parseInt(
+          localStorage.getItem("lastActivityTimestamp") || "0",
+          10
+        );
+        const inactiveDuration = Date.now() - lastActivity;
 
-    const handleActivity = () => {
-      if (debounceTimeout) clearTimeout(debounceTimeout);
-      debounceTimeout = setTimeout(() => {
-        resetInactivityTimer();
-      }, DEBOUNCE_DELAY);
-    };
+        if (inactiveDuration > INACTIVITY_TIMEOUT) {
+          logout();
+        } else {
+          supabase.auth
+            .refreshSession()
+            .then(({ data, error }) => {
+              if (error) {
+                console.error("Token refresh failed:", error);
+                logout();
+              } else if (data?.session?.access_token) {
+                localStorage.setItem("jwt", data.session.access_token);
+                setupTokenExpiryLogout(data.session.access_token);
+              }
+            })
+            .catch((err) => {
+              console.error("Refresh failed:", err);
+              logout();
+            });
+        }
+      } else {
+        localStorage.setItem("token_exp", payload.exp.toString());
 
-    activityEvents.forEach((event) => {
-      document.addEventListener(event, handleActivity, { passive: true });
-    });
+        if (tokenExpiryTimeoutRef.current) {
+          clearTimeout(tokenExpiryTimeoutRef.current);
+        }
 
-    resetInactivityTimer(); // ✅ Ensure it's called when the user logs in
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        resetInactivityTimer();
+        tokenExpiryTimeoutRef.current = setTimeout(() => {
+          setupTokenExpiryLogout(accessToken);
+        }, expiresIn * 1000);
       }
-    };
+    },
+    [logout]
+  );
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      if (debounceTimeout) clearTimeout(debounceTimeout);
-
-      activityEvents.forEach((event) => {
-        document.removeEventListener(event, handleActivity);
-      });
-
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-
-      if (inactivityTimeoutRef.current) {
-        clearTimeout(inactivityTimeoutRef.current);
-        inactivityTimeoutRef.current = null;
-      }
-    };
-  }, [resetInactivityTimer, user]); // Only depend on the stable resetInactivityTimer
-
-  // Initial auth and auth listener setup
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        if (data?.session?.user) {
-          setUser(data.session.user);
-          localStorage.setItem("jwt", data.session.access_token);
-          // userRef will be updated via the user effect
+        const session = data?.session;
+        if (session?.user) {
+          setUser(session.user);
+          localStorage.setItem("jwt", session.access_token);
+          setupTokenExpiryLogout(session.access_token);
+        }
+        const tokenExp = localStorage.getItem("token_exp");
+        if (tokenExp) {
+          const now = Math.floor(Date.now() / 1000);
+          const expiresIn = parseInt(tokenExp) - now;
+
+          if (expiresIn <= 0) {
+            await logout();
+          } else {
+            tokenExpiryTimeoutRef.current = setTimeout(() => {
+              logout();
+            }, expiresIn * 1000);
+          }
         }
       } catch (error) {
         console.error("Error retrieving session:", error);
@@ -226,30 +203,27 @@ export const AuthProvider = ({ children }) => {
 
     initializeAuth();
 
-    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (import.meta.env.DEV && event !== "TOKEN_REFRESHED") {
-          console.log("Auth state changed:", event);
-        }
-
         if (event === "SIGNED_IN" && session?.user) {
           setUser(session.user);
           localStorage.setItem("jwt", session.access_token);
-          // userRef will be updated via the user effect
+          setupTokenExpiryLogout(session.access_token);
         } else if (event === "SIGNED_OUT") {
           setUser(null);
           localStorage.removeItem("jwt");
+
           if (inactivityTimeoutRef.current) {
             clearTimeout(inactivityTimeoutRef.current);
             inactivityTimeoutRef.current = null;
           }
+          if (tokenExpiryTimeoutRef.current) {
+            clearTimeout(tokenExpiryTimeoutRef.current);
+            tokenExpiryTimeoutRef.current = null;
+          }
         } else if (event === "TOKEN_REFRESHED" && session) {
           localStorage.setItem("jwt", session.access_token);
-          // Only reset timer if not logged out
-          if (userRef.current) {
-            resetInactivityTimer();
-          }
+          setupTokenExpiryLogout(session.access_token);
         }
       }
     );
@@ -259,15 +233,51 @@ export const AuthProvider = ({ children }) => {
         authListener.subscription.unsubscribe();
       }
     };
-  }, [resetInactivityTimer]);
+  }, [setupTokenExpiryLogout]);
 
-  const value = {
-    user,
-    loading,
-    logout,
-    resetInactivityTimer,
-    isLoggingOut,
-  };
+  useEffect(() => {
+    if (!user) return;
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    const activityEvents = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+
+    const handleActivity = () => {
+      resetInactivityTimer();
+    };
+
+    activityEvents.forEach((event) => {
+      document.addEventListener(event, handleActivity);
+    });
+
+    resetInactivityTimer();
+
+    return () => {
+      activityEvents.forEach((event) => {
+        document.removeEventListener(event, handleActivity);
+      });
+      if (inactivityTimeoutRef.current) {
+        clearTimeout(inactivityTimeoutRef.current);
+      }
+    };
+  }, [resetInactivityTimer, user]);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        logout,
+        resetInactivityTimer,
+        isLoggingOut,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
