@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import { useNavigate } from "react-router-dom";
-
+import {
+  getTaskForDate,
+  getTestCaseForTask,
+  evaluate,
+} from "@/services/taskService";
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const [task, setTask] = useState(null);
@@ -22,36 +26,12 @@ const Task = () => {
   }, [task]);
 
   async function fetchTaskForToday(date) {
-    console.log("Fetching task for date:", date);
-    console.log(token);
     try {
       const formattedDate = new Date(date).toISOString().split("T")[0];
-
-      const response = await fetch(`/task/${formattedDate}`, {
-        headers: {
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
-
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const responseText = await response.text();
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (error) {
-        throw new Error("Failed to parse server response as JSON" + error);
-      }
+      const data = await getTaskForDate(formattedDate);
 
       if (Array.isArray(data) && data.length > 0) {
         const taskData = data[0];
-        console.log("Processing task data:", taskData);
         let processedTitle = taskData.title
           .split("-")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -64,7 +44,6 @@ const Task = () => {
           examples: taskData.examples || [],
         });
       } else {
-        console.error("No tasks found for the date");
         setTask({
           title: "No Challenge Available",
           content: "There is no challenge available for today.",
@@ -93,20 +72,7 @@ const Task = () => {
 
   async function fetchTestCaseForToday(id) {
     try {
-      const response = await fetch(`/task/${id}/test-case`, {
-        headers: {
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Test case data:", data);
+      const data = await getTestCaseForTask(id);
 
       if (data && data.input) {
         setTestCase({
@@ -140,31 +106,10 @@ const Task = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/task/${task.id}/evaluate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userOutput: document.getElementById("userOutput").value,
-          testCaseId: testCase.id,
-          userId: user.id,
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        // Handle HTTP errors (e.g., 400, 404, 500)
-        // The 'result' might contain an error message from the backend
-        console.error("Server error:", result);
-        alert(
-          `Error: ${
-            result.message ||
-            "Failed to evaluate solution. Status: " + response.status
-          }`
-        );
-        return;
-      }
+      const userOutput = document.getElementById("userOutput").value;
+
+      const result = await evaluate(task.id, userOutput, testCase.id, user.id);
+
       if (result.success) {
         setEvalResult(
           `${result.message} You earned ${result.scoreAwarded} points. Your total points are now ${result.newTotalPoints}.`
@@ -176,12 +121,10 @@ const Task = () => {
         updatedUserFromStorage.points = result.newTotalPoints;
         updatedUserFromStorage.solvedDailyChallenge = true;
         updatedUserFromStorage.pointsAwarded = result.scoreAwarded;
+        updatedUserFromStorage.rank = result.rank;
 
         toggleSolvedDailyChallenge(user);
-        updatedUserFromStorage.rank = result.rank;
         localStorage.setItem("user", JSON.stringify(updatedUserFromStorage));
-
-        // navigate('/dashboard/forum');
       } else {
         setEvalResult(
           `${result.message} This was attempt: ${result.attemptsMade}.`
@@ -195,6 +138,7 @@ const Task = () => {
       }
     } catch (error) {
       console.error("Error evaluating solution:", error);
+      alert("Something went wrong. Try again later.");
     } finally {
       setIsSubmitting(false);
     }
