@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import doneAll from '../../assets/images/done-all.svg';
-import trashIcon from '../../assets/images/delete.svg'; // Add this import
-import Navbar from './Navbar';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import doneAll from "../../assets/images/done-all.svg";
+import trashIcon from "../../assets/images/delete.svg"; // Add this import
+import Navbar from "./Navbar";
+import { useCallback } from "react";
+import {
+  getReviewPosts,
+  deleteReviewPost,
+  approveReviewPost,
+} from "@/services/reviewService";
 
 const ManagePosts = () => {
   const navigate = useNavigate();
@@ -11,126 +17,135 @@ const ManagePosts = () => {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState(null);
+  const postsPerPage = 5;
+  const user = JSON.parse(localStorage.getItem("user"));
   const [modal, setModal] = useState({
     isOpen: false,
-    message: '',
-    type: '',
+    message: "",
+    type: "",
     postId: null,
     post: null,
   });
   const closeModal = () => {
     setModal({
       isOpen: false,
-      message: '',
-      type: '',
+      message: "",
+      type: "",
       postId: null,
       post: null,
     });
   };
 
   const confirmAction = () => {
-    if (modal.type === 'delete' && modal.postId) {
+    if (modal.type === "delete" && modal.postId) {
       handleDeletePost(modal.postId);
-    } else if (modal.type === 'approve' && modal.post) {
+    } else if (modal.type === "approve" && modal.post) {
       handleApprovePost(modal.post);
     }
     closeModal();
   };
-  const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem('user'));
-  const token = localStorage.getItem('jwt');
+  const fetchPostsData = useCallback(async () => {
+    // Renamed to avoid conflict with posts state variable
+    if (!user || !user.id) {
+      setError("User not found. Please log in.");
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
+
+    if (page === 0) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+    setError(null);
+
+    try {
+      const data = await getReviewPosts(page, postsPerPage, user.id);
+      console.log("Fetched posts data:", data);
+
+      setPosts((prevPosts) => (page === 0 ? data : [...prevPosts, ...data]));
+      setHasMore(data.length === postsPerPage);
+    } catch (err) {
+      console.error("Error fetching review posts:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to fetch posts for review."
+      );
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [page, user?.id]);
   useEffect(() => {
-    fetchPosts();
+    fetchPostsData();
   }, [page]);
 
-  const fetchPosts = async () => {
-    try {
-      if (page === 0) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const response = await fetch(
-        `/review/posts?page=${page}&limit=${postsPerPage}&userId=${user.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      console.log('Response status:', response.status);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Fetched posts data:', data);
-
-      if (page === 0) {
-        setPosts(data);
-      } else {
-        setPosts((prevPosts) => [...prevPosts, ...data]);
-      }
-
-      if (data.length < postsPerPage) {
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error('Error fetching forum posts:', error);
-    }
-  };
-
   const handleDeletePost = async (postId) => {
+    if (!user || !user.id) {
+      console.error("User ID not found for delete operation");
+      setError("Action cannot be performed without user authentication.");
+      return;
+    }
     try {
-      const response = await fetch(
-        `/review/posts/${postId}?userId=${user.id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await deleteReviewPost(postId, user.id);
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      console.log('Post deleted successfully');
-    } catch (error) {
-      console.error('Error deleting post:', error);
+      console.log("Post deleted successfully from review queue");
+    } catch (err) {
+      console.error("Error deleting review post:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to delete post."
+      );
     }
   };
 
-  const handleApprovePost = async (post) => {
+  const handleApprovePost = async (postToApprove) => {
+    if (!user || !user.id || !postToApprove) {
+      console.error("User ID or post data not found for approve operation");
+      setError("Action cannot be performed without user or post data.");
+      return;
+    }
     try {
-      const response = await fetch(
-        `/review/posts/${post.id}?userId=${user.id}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            authorId: user.id,
-            authorName: user.name,
-            title: post.title,
-            content: post.content,
-          }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const postDataForApproval = {
+        authorId: postToApprove.authorId,
+        authorName: postToApprove.authorName,
+        title: postToApprove.title,
+        content: postToApprove.content,
+      };
+
+      await approveReviewPost(postToApprove.id, postDataForApproval, user.id);
       setPosts((prevPosts) =>
-        prevPosts.filter((postce) => postce.id !== post.id)
+        prevPosts.filter((p) => p.id !== postToApprove.id)
       );
-      console.log('Post approved successfully');
-    } catch (error) {
-      console.error('Error approving post:', error);
+      console.log("Post approved successfully");
+    } catch (err) {
+      console.error("Error approving post:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to approve post."
+      );
+      // Optionally show an error modal/toast
+    }
+  };
+  const openConfirmationModal = (type, item) => {
+    // item can be postId (string) for delete, or post (object) for approve
+    if (type === "delete") {
+      setModal({
+        isOpen: true,
+        message: "Are you sure you want to delete this post permanently?",
+        type: "delete",
+        postId: item,
+        post: null,
+      });
+    } else if (type === "approve") {
+      setModal({
+        isOpen: true,
+        message: "Are you sure you want to approve this post?",
+        type: "approve",
+        postId: item.id, // Store postId for consistency if needed, but 'post' object is key
+        post: item,
+      });
     }
   };
 
@@ -143,91 +158,122 @@ const ManagePosts = () => {
       data-theme="luxury"
       className="dashboard h-screen flex bg-base-100 overflow-none"
     >
-      <Navbar></Navbar>
-      <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
-        <div className="flex-1 ml-8">
-          <h1 className="text-4xl font-bold mb-10">Posts that need approval</h1>
-          <div className="space-y-4" w-300>
+      <Navbar />
+      <div className="flex flex-col w-full h-full overflow-y-auto p-6">
+        <div className="flex-1 md:ml-8">
+          <h1 className="text-4xl font-bold mb-10">Posts to be reviewed:</h1>
+          {error && (
+            <div className="alert alert-error shadow-lg mb-4">
+              <div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="stroke-current flex-shrink-0 h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2 2m2-2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>{error}</span>
+                <button
+                  className="btn btn-xs btn-ghost"
+                  onClick={() => setError(null)}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
+          {posts.length === 0 && !loading && !loadingMore && !error && (
+            <div className="text-center text-gray-500 py-10">
+              No posts currently awaiting approval.
+            </div>
+          )}
+          <div className="space-y-4">
             {posts.map((post) => (
               <div
                 key={post.id}
-                className="p-4 border rounded-lg shadow-sm hover:shadow-md transition  relative"
+                className="p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative"
               >
-                <button
-                  className=" absolute top-2 right-20 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-
-                    if (
-                      window.confirm(
-                        'Are you sure you want to approve this post?'
-                      )
-                    ) {
-                      handleApprovePost(post);
-                    }
-                  }}
-                >
-                  <img src={doneAll} alt="Approve" className="w-10 h-10" />
-                </button>
-                <button
-                  className=" absolute top-2 right-8 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (
-                      window.confirm(
-                        'Are you sure you want to delete this post?'
-                      )
-                    ) {
-                      handleDeletePost(post.id);
-                    }
-                  }}
-                >
-                  <img src={trashIcon} alt="Delete" className="w-10 h-10" />
-                </button>
-
-                <div className="flex items-center gap-4 mt-2">
-                  <h2
-                    className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
-                    onClick={() => {
-                      console.log('Post clicked:', post);
-                      navigate(`/dashboard/forum-detail/${post.id}`, {
-                        state: { post },
-                      });
+                <h1>{post.title}</h1>
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button
+                    title="Approve Post"
+                    className="btn btn-sm btn-success btn-circle"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openConfirmationModal("approve", post);
                     }}
                   >
-                    {post.title}
-                  </h2>
+                    <img src={doneAll} alt="Approve" className="w-5 h-5" />
+                  </button>
+                  <button
+                    title="Delete Post"
+                    className="btn btn-sm btn-error btn-circle"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openConfirmationModal("delete", post.id);
+                    }}
+                  >
+                    <img src={trashIcon} alt="Delete" className="w-5 h-5" />
+                  </button>
                 </div>
 
-                <p className="text-m text-gray-500">
-                  By {post.authorName},{' '}
-                  <span>{post.dateCreated.split('T')[0]}</span>
+                <h2
+                  className="text-2xl font-semibold mb-1 cursor-pointer hover:underline text-primary"
+                  onClick={() => {
+                    // For review, direct navigation to detail might not be desired
+                    // unless you have a specific review detail view.
+                    // For now, clicking title does nothing or opens a modal with full content.
+                    console.log("Post title clicked (for review):", post.title);
+                  }}
+                >
+                  {post.title}
+                </h2>
+                <p className="text-sm text-base-content/70 mb-3">
+                  By {post.authorName} on{" "}
+                  <span>
+                    {post.dateCreated
+                      ? new Date(post.dateCreated).toLocaleDateString()
+                      : "N/A"}
+                  </span>
                 </p>
-                <p className="mt-2 text-gray-400 text-xl">
-                  {post.content && post.content.length > 300
-                    ? post.content.slice(0, 300) + '...'
-                    : post.content}
+                <p className="text-base-content/90 whitespace-pre-line break-words">
+                  {post.content}
                 </p>
               </div>
             ))}
           </div>
-          {hasMore && (
+          {hasMore && !loadingMore && (
             <div className="flex justify-center mt-6">
-              <button onClick={handleLoadMore} className="btn btn-outline">
+              <button
+                onClick={handleLoadMore}
+                className="btn btn-primary"
+                disabled={loadingMore}
+              >
                 Load More
               </button>
+            </div>
+          )}
+          {loadingMore && (
+            <div className="flex justify-center mt-6">
+              <span className="loading loading-spinner loading-md"></span>
             </div>
           )}
         </div>
       </div>
 
       {/* Modal */}
-      <div className={`modal ${modal.isOpen ? 'modal-open' : ''}`}>
+      <div className={`modal ${modal.isOpen ? "modal-open" : ""}`}>
         <div className="modal-box">
           <div className="flex items-center gap-3 mb-4">
-            {modal.type === 'approve' && (
+            {modal.type === "approve" && (
               <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
-                <svg
+                <svg /* SVG for approve */
                   className="w-5 h-5 text-success-content"
                   fill="none"
                   stroke="currentColor"
@@ -242,9 +288,9 @@ const ManagePosts = () => {
                 </svg>
               </div>
             )}
-            {modal.type === 'delete' && (
+            {modal.type === "delete" && (
               <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
-                <svg
+                <svg /* SVG for delete */
                   className="w-5 h-5 text-error-content"
                   fill="none"
                   stroke="currentColor"
@@ -260,8 +306,8 @@ const ManagePosts = () => {
               </div>
             )}
             <h3 className="font-bold text-lg">
-              {modal.type === 'approve' && 'Approve Post'}
-              {modal.type === 'delete' && 'Delete Post'}
+              {modal.type === "approve" && "Confirm Approval"}
+              {modal.type === "delete" && "Confirm Deletion"}
             </h3>
           </div>
           <p className="py-4">{modal.message}</p>
@@ -271,11 +317,11 @@ const ManagePosts = () => {
             </button>
             <button
               className={`btn ${
-                modal.type === 'approve' ? 'btn-success' : 'btn-error'
+                modal.type === "approve" ? "btn-success" : "btn-error"
               }`}
               onClick={confirmAction}
             >
-              {modal.type === 'approve' ? 'Approve' : 'Delete'}
+              {modal.type === "approve" ? "Approve" : "Delete"}
             </button>
           </div>
         </div>

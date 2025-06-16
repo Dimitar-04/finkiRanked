@@ -1,16 +1,17 @@
-const prisma = require('../lib/prisma');
-const ForumPost = require('../models/ForumPost');
-const Comment = require('../models/Comment');
-const filter = require('leo-profanity');
-const mkProfanity = require('../filters/macedonianProfanity');
+const prisma = require("../lib/prisma");
+const ForumPost = require("../models/ForumPost");
+const Comment = require("../models/Comment");
+const filter = require("leo-profanity");
+const mkProfanity = require("../filters/macedonianProfanity");
 filter.add(mkProfanity);
-const safeWords = require('../filters/safeWords');
-const { analyzePostContent } = require('../ai/processRequestAi');
-const { createReviewPost } = require('./reviewController');
-const verifyModeratorStatus = require('../services/checkModeratorStatus');
+const safeWords = require("../filters/safeWords");
+const { analyzePostContent } = require("../ai/processRequestAi");
+const { createReviewPost } = require("./reviewController");
+const verifyModeratorStatus = require("../services/checkModeratorStatus");
 
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
+  console.log(title);
 
   try {
     const user = await prisma.users.findUnique({
@@ -28,20 +29,33 @@ const createForumPost = async (req, res) => {
       const isProfane = filter.check(post.title);
 
       if (isProfane) {
-        console.log('Profanity detected!');
+        console.log("Profanity detected!");
         return res.status(400).json({
-          error: 'Content contains inappropriate language',
+          error: "Content contains inappropriate language",
         });
       } else if (filter.check(post.content)) {
-        console.log('Profanity detected in content!');
+        console.log("Profanity detected in content!");
         return res.status(400).json({
-          error: 'Content contains inappropriate language',
+          error: "Content contains inappropriate language",
         });
       } else if (post.content.length > 200) {
-        createReviewPost(req, res);
-        return res.status(401).json({
-          error: 'Content is too long. Wait for moderator approval',
-        });
+        try {
+          // Await the helper function
+          await createReviewPost(req);
+
+          return res.status(202).json({
+            message:
+              "Content is too long. Your post has been submitted for moderator approval.",
+          });
+        } catch (reviewError) {
+          // If submitPostForReview throws an error
+          console.error("Error submitting post for review:", reviewError);
+          return res.status(500).json({
+            error:
+              reviewError.message ||
+              "Failed to submit post for review due to an internal error.",
+          });
+        }
       } else if (
         !(
           safeWords.includes(post.content.toLowerCase()) ||
@@ -51,16 +65,16 @@ const createForumPost = async (req, res) => {
       ) {
         try {
           const aiResponse = await analyzePostContent(post.title, post.content);
-          if (aiResponse.aiResponse === 'INAPPROPRIATE') {
-            console.log('AI analysis says INAPPROPRIATE:', aiResponse.reason);
+          if (aiResponse.aiResponse === "INAPPROPRIATE") {
+            console.log("AI analysis says INAPPROPRIATE:", aiResponse.reason);
             return res.status(400).json({
-              error: 'Content is not appropriate for the forum',
+              error: "Content is not appropriate for the forum",
             });
           }
         } catch (error) {
-          console.error('AI analysis error:', error);
+          console.error("AI analysis error:", error);
           return res.status(500).json({
-            error: 'AI analysis failed, please try again later',
+            error: "AI analysis failed, please try again later",
           });
         }
       }
@@ -77,17 +91,17 @@ const createForumPost = async (req, res) => {
       await decrementPostCounter(authorId);
 
       res.status(201).json({
-        message: 'Forum post created successfully',
+        message: "Forum post created successfully",
         post: savedPost,
       });
     } else {
       return res.status(403).json({
-        error: 'You have reached your post limit for today',
+        error: "You have reached your post limit for today",
       });
     }
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -134,12 +148,12 @@ const createApprovedForumPost = async (req, res) => {
     await decrementPostCounter(authorId);
 
     res.status(201).json({
-      message: 'Approved post published successfully',
+      message: "Approved post published successfully",
       post: savedPost,
     });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -153,7 +167,7 @@ const getForumPosts = async (req, res) => {
       skip,
       take: limit,
       orderBy: {
-        date_created: 'desc',
+        date_created: "desc",
       },
     });
 
@@ -171,8 +185,8 @@ const getForumPosts = async (req, res) => {
 
     res.status(200).json(forumPosts);
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -189,7 +203,7 @@ const deleteForumPost = async (req, res) => {
     });
 
     if (!post) {
-      return res.status(404).json({ error: 'Forum post not found' });
+      return res.status(404).json({ error: "Forum post not found" });
     }
 
     if (post.author_id === userId) {
@@ -200,17 +214,17 @@ const deleteForumPost = async (req, res) => {
     const hasPermission = await verifyModeratorStatus(userId);
     if (!hasPermission) {
       return res.status(403).json({
-        error: 'You do not have permission to delete this post',
+        error: "You do not have permission to delete this post",
       });
     }
     await prisma.forum_posts.delete({ where: { id } });
     res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: 'Forum post not found' });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Forum post not found" });
     }
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -220,7 +234,7 @@ const createComment = async (req, res) => {
 
   if (!post_id || !content || !authorId || !authorName) {
     return res.status(400).json({
-      error: 'post_id, content, authorId, and authorName are required',
+      error: "post_id, content, authorId, and authorName are required",
     });
   }
 
@@ -232,9 +246,9 @@ const createComment = async (req, res) => {
     });
     const profane = filter.check(comment.content);
     if (profane) {
-      console.log('not safe words or profanity detected!');
+      console.log("not safe words or profanity detected!");
       return res.status(400).json({
-        error: 'Content contains inappropriate language or is not on topic',
+        error: "Content contains inappropriate language or is not on topic",
       });
     }
 
@@ -254,22 +268,22 @@ const createComment = async (req, res) => {
     comment.id = savedComment.id;
 
     res.status(201).json({
-      message: 'Comment created successfully',
+      message: "Comment created successfully",
       comment: savedComment,
     });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 const getComments = async (req, res) => {
   const postId = req.query.post_id;
-  console.log('Fetching comments for post_id:', postId);
+  console.log("Fetching comments for post_id:", postId);
   if (!postId) {
     return res
       .status(400)
-      .json({ error: 'post_id query parameter is required' });
+      .json({ error: "post_id query parameter is required" });
   }
 
   try {
@@ -278,7 +292,7 @@ const getComments = async (req, res) => {
         post_id: postId,
       },
       orderBy: {
-        dateCreated: 'desc',
+        dateCreated: "desc",
       },
     });
 
@@ -295,8 +309,8 @@ const getComments = async (req, res) => {
 
     res.status(200).json(comments);
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -311,7 +325,7 @@ const deleteComment = async (req, res) => {
     });
 
     if (!comment) {
-      return res.status(404).json({ error: 'Comment not found' });
+      return res.status(404).json({ error: "Comment not found" });
     }
     const user = await prisma.users.findUnique({
       where: { id: userId },
@@ -319,7 +333,7 @@ const deleteComment = async (req, res) => {
     });
     if (comment.author_id !== userId && !(user && user.isModerator)) {
       return res.status(403).json({
-        error: 'You do not have permission to delete this comment',
+        error: "You do not have permission to delete this comment",
       });
     }
 
@@ -338,11 +352,11 @@ const deleteComment = async (req, res) => {
 
     res.status(204).send();
   } catch (err) {
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: 'Comment not found' });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Comment not found" });
     }
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 

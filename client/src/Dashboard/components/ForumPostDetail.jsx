@@ -1,100 +1,86 @@
-import React, { useEffect, useState } from 'react';
-import trashIcon from '../../assets/images/delete.svg';
-import Navbar from './Navbar';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import trashIcon from "../../assets/images/delete.svg";
+import Navbar from "./Navbar";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import {
+  getCommentsForPost,
+  createComment,
+  deleteComment,
+} from "@/services/forumService";
+import { useCallback } from "react";
 
 const ForumPostDetail = () => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const location = useLocation();
   const statePost = useState(location.state?.post || {});
   const post = statePost[0];
   const [posting, setPosting] = useState(false);
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
   const { postId } = useParams();
-  const token = localStorage.getItem('jwt');
 
-  useEffect(() => {
+  const fetchComments = useCallback(async () => {
     if (!postId) return;
     setLoading(true);
     setError(null);
-    fetch(`/forum/comments?post_id=${postId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch comments');
-        return res.json();
-      })
-      .then((data) => {
-        setComments(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+    try {
+      const data = await getCommentsForPost(postId);
+      setComments(data);
+    } catch (err) {
+      setError(err.message || "Failed to fetch comments");
+      console.error("Error fetching comments:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [postId]);
+
+  useEffect(() => {
+    if (!post && postId) {
+      console.warn(
+        "Post details not available from location state. Consider fetching post by ID."
+      );
+    }
+  }, [post, postId]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
   const handleDeleteComment = async (commentId) => {
     try {
-      const response = await fetch(`/forum/comments/${commentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      // Remove the deleted post from the state
+      await deleteComment(commentId);
       setComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== commentId)
       );
-      console.log('Post deleted successfully');
+      console.log("Comment deleted successfully");
     } catch (error) {
-      console.error('Error deleting post:', error);
+      console.error("Error deleting comment:", error);
+      setError(error.message || "Failed to delete comment");
     }
   };
-  const handleSubmit = async (e) => {
+
+  const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !user || !postId) return;
     setPosting(true);
     setError(null);
-    const user = JSON.parse(localStorage.getItem('user'));
 
     try {
-      const response = await fetch('/forum/comments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          post_id: postId,
-          content: commentText,
-          authorId: user.id,
-          authorName: user.username,
-        }),
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Failed to post comment');
-      }
-      setCommentText('');
-      // Refresh comments
-      fetch(`/forum/comments?post_id=${post.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setComments(data));
+      const commentData = {
+        post_id: postId,
+        content: commentText,
+        authorId: user.id,
+        authorName: user.username,
+      };
+      await createComment(commentData);
+      setCommentText("");
+      fetchComments();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to post comment");
+      console.error("Error posting comment:", err);
     } finally {
       setPosting(false);
     }
@@ -112,7 +98,7 @@ const ForumPostDetail = () => {
         <div className="w-full h-full max-w-2xl">
           <button
             className="btn btn-ghost mb-4"
-            onClick={() => navigate('/dashboard/forum')}
+            onClick={() => navigate("/dashboard/forum")}
           >
             ← Back to Forum
           </button>
@@ -132,7 +118,7 @@ const ForumPostDetail = () => {
           </div>
 
           <div className="card bg-base-100 shadow-lg p-6 mb-8">
-            <form className="mt-6" onSubmit={handleSubmit}>
+            <form className="mt-6" onSubmit={handleSubmitComment}>
               <h3 className="text-2xl font-semibold mb-4">
                 Comments ({comments.length})
               </h3>
@@ -150,7 +136,7 @@ const ForumPostDetail = () => {
                   className="btn btn-tertiary"
                   disabled={posting || !commentText.trim()}
                 >
-                  {posting ? 'Posting...' : 'Post Comment'}
+                  {posting ? "Posting..." : "Post Comment"}
                 </button>
               </div>
             </form>
@@ -181,11 +167,11 @@ const ForumPostDetail = () => {
                                   // Here you would add the delete confirmation and logic
                                   if (
                                     window.confirm(
-                                      'Are you sure you want to delete this comment?'
+                                      "Are you sure you want to delete this comment?"
                                     )
                                   ) {
                                     // Call your delete comment function here
-                                    console.log('Delete comment:', comment.id);
+                                    console.log("Delete comment:", comment.id);
                                   }
                                   handleDeleteComment(comment.id);
                                 }}
@@ -203,7 +189,7 @@ const ForumPostDetail = () => {
                             <span className="text-xs text-base-content/60">
                               {comment.dateCreated
                                 ? new Date(comment.dateCreated).toLocaleString()
-                                : ''}
+                                : ""}
                             </span>
                           </div>
                           <div className="text-base-content/80 text-base break-words">

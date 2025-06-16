@@ -1,78 +1,80 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { createForumPost } from "@/services/forumService";
 
 const CreatePost = () => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [error, setError] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirectNeeded, setRedirectNeeded] = useState(false);
-  const [modal, setModal] = useState({ isOpen: false, message: '', type: '' });
+  const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
 
-  const showModal = (message, type = 'info') => {
+  const showModal = (message, type = "info") => {
     setModal({ isOpen: true, message, type });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, message: '', type: '' });
-    if (modal.type === 'success' || modal.type === 'pending') {
-      navigate('/dashboard/forum');
-    } else if (modal.type === 'auth') {
-      navigate('/login');
+    setModal({ isOpen: false, message: "", type: "" });
+    if (modal.type === "success" || modal.type === "pending") {
+      navigate("/dashboard/forum");
+    } else if (modal.type === "auth") {
+      navigate("/login");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    // setError('');
     setIsSubmitting(true);
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user || !user.id || !user.name) {
-      showModal('You must be logged in to create a post.', 'auth');
+      showModal("You must be logged in to create a post.", "auth");
       setIsSubmitting(false);
       return;
     }
-    const token = localStorage.getItem('jwt');
 
     try {
-      const response = await fetch('/forum/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          authorId: user.id,
-          authorName: user.username,
-        }),
-      });
-
-      if (response.status === 204) {
-        showModal('Post created successfully!', 'success');
-        return;
+      const postData = {
+        title,
+        content,
+        authorId: user.id,
+        authorName: user.username,
+      };
+      const res = await createForumPost(postData);
+      if (res.message.includes("moderator approval")) {
+        showModal(res.message, "pending");
+      } else {
+        showModal("Post created successfully!", "success");
       }
-      if (response.status === 401) {
-        showModal(
-          'Content is too long. Your post has been submitted for moderator approval.',
-          'pending'
-        );
-        return;
-      }
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
-
-      showModal('Post created successfully!', 'success');
     } catch (error) {
-      console.error('Error creating post:', error);
-      setError(error.message);
+      console.error("Error creating post:", error);
+      if (error.response) {
+        if (
+          error.response.status === 202 &&
+          error.response.data?.message?.includes("moderator approval")
+        ) {
+          showModal(
+            error.response.data.message ||
+              "Content is too long. Your post has been submitted for moderator approval.",
+            "pending"
+          );
+        } else if (error.response.status === 401) {
+          showModal("Authentication failed. Please log in again.", "auth");
+        } else {
+          showModal(
+            error.response.data?.error ||
+              error.response.data?.message ||
+              `Error: ${error.message}`,
+            "error"
+          );
+        }
+      } else {
+        showModal(`An unexpected error occurred: ${error.message}`, "error");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -81,7 +83,7 @@ const CreatePost = () => {
   return (
     <div
       data-theme="luxury"
-      className="h-screen overflow-y-auto bg-base-100 p-6"
+      className="h-screen overflo y-auto bg-base-100 p-6"
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex items-center justify-between mb-8">
@@ -89,7 +91,7 @@ const CreatePost = () => {
             Create a Post
           </h2>
           <button
-            onClick={() => navigate('/dashboard/forum')}
+            onClick={() => navigate("/dashboard/forum")}
             className="btn btn-outline gap-2"
           >
             <svg
@@ -213,16 +215,10 @@ const CreatePost = () => {
               </div>
             </div>
 
-            {error && (
-              <div className="text-red-500 text-  mt-4">
-                <span>{error}</span>
-              </div>
-            )}
-
             <div className="card-actions justify-end mt-8">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard/forum')}
+                onClick={() => navigate("/dashboard/forum")}
                 className="btn btn-ghost btn-lg"
                 disabled={isSubmitting}
               >
@@ -230,10 +226,17 @@ const CreatePost = () => {
               </button>
               <button
                 type="submit"
-                className="btn border-amber-400 btn-lg"
+                className="btn border-amber-400 btn-lg" // Consider btn-primary or similar for consistency
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Publishing...' : 'Publish Post'}
+                {isSubmitting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm mr-2"></span>
+                    Publishing...
+                  </>
+                ) : (
+                  "Publish Post"
+                )}
               </button>
             </div>
           </div>
@@ -241,10 +244,10 @@ const CreatePost = () => {
       </div>
 
       {/* Modal */}
-      <div className={`modal ${modal.isOpen ? 'modal-open' : ''}`}>
+      <div className={`modal ${modal.isOpen ? "modal-open" : ""}`}>
         <div className="modal-box">
           <div className="flex items-center gap-3 mb-4">
-            {modal.type === 'success' && (
+            {modal.type === "success" && (
               <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-success-content"
@@ -261,7 +264,7 @@ const CreatePost = () => {
                 </svg>
               </div>
             )}
-            {modal.type === 'pending' && (
+            {modal.type === "pending" && (
               <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-warning-content"
@@ -278,7 +281,8 @@ const CreatePost = () => {
                 </svg>
               </div>
             )}
-            {modal.type === 'auth' && (
+            {/* Added 'error' type for modal icon */}
+            {(modal.type === "auth" || modal.type === "error") && (
               <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-error-content"
@@ -286,19 +290,30 @@ const CreatePost = () => {
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  ></path>
+                  {modal.type === "auth" ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    ></path>
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    /> // Generic error icon
+                  )}
                 </svg>
               </div>
             )}
             <h3 className="font-bold text-lg">
-              {modal.type === 'success' && 'Success!'}
-              {modal.type === 'pending' && 'Pending Approval'}
-              {modal.type === 'auth' && 'Authentication Required'}
+              {modal.type === "success" && "Success!"}
+              {modal.type === "pending" && "Pending Approval"}
+              {modal.type === "auth" && "Authentication Required"}
+              {modal.type === "error" && "Error"}{" "}
+              {/* Title for generic error */}
             </h3>
           </div>
           <p className="py-4">{modal.message}</p>

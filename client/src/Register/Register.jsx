@@ -1,10 +1,11 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { supabase } from '../contexts/AuthContext';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "../contexts/AuthContext";
+import { registerUser } from "@/services/registerLoginService";
 
 const Register = () => {
-  const [error, setError] = React.useState('');
+  const [error, setError] = React.useState("");
   const nav = useNavigate();
   const [showPassword, setShowPassword] = useState({
     password: false,
@@ -20,14 +21,14 @@ const Register = () => {
   };
 
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    name: "",
   });
   function validateEmail(email) {
-    return email.endsWith('@students.finki.ukim.mk');
+    return email.endsWith("@students.finki.ukim.mk");
   }
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,97 +39,153 @@ const Register = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Start loader
-    setError('');
-    try {
-      if (!validateEmail(formData.email)) {
-        setError('Email must end with @students.finki.ukim.mk');
-        setLoading(false);
-        return;
-      }
-      if (formData.username === '') {
-        setError('Must enter username');
-        setLoading(false);
-        return;
-      }
-      if (formData.password === '') {
-        setError('Password is required');
-        setLoading(false);
-        return;
-      }
-      if (formData.confirmPassword === '') {
-        setError('Please confirm your password');
-        setLoading(false);
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
-        return;
-      }
-      if (formData.password.length < 8) {
-        setError('Password must be at least 8 characters long');
-        setLoading(false);
-        return;
-      }
-      if (!/[A-Z]/.test(formData.password)) {
-        setError('Password must contain at least one uppercase letter');
-        setLoading(false);
-        return;
-      }
-      if (!/[0-9]/.test(formData.password)) {
-        setError('Password must contain at least one number');
-        setLoading(false);
-        return;
-      }
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-        }),
-      });
+    setLoading(true);
+    setError("");
 
-      const data = await response.json();
+    if (!validateEmail(formData.email)) {
+      setError("Email must end with @students.finki.ukim.mk");
+      setLoading(false);
+      return;
+    }
+    if (formData.username === "") {
+      setError("Must enter username");
+      setLoading(false);
+      return;
+    }
+    if (formData.name === "") {
+      setError("Name is required");
+      setLoading(false);
+      return;
+    }
+    if (formData.password === "") {
+      setError("Password is required");
+      setLoading(false);
+      return;
+    }
+    if (formData.confirmPassword === "") {
+      setError("Please confirm your password");
+      setLoading(false);
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
+      setLoading(false);
+      return;
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError("Password must contain at least one uppercase letter");
+      setLoading(false);
+      return;
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      setError("Password must contain at least one number");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+      };
+
+      const data = await registerUser(userData);
+      let registrationAttemptError = "";
 
       if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem("user", JSON.stringify(data.user));
         try {
-          const { data: authData } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-          localStorage.setItem(
-            'jwt',
-            JSON.stringify(authData.session?.access_token)
-          );
-        } catch (supabaseError) {
-          console.error('Supabase auth error:', supabaseError);
+          const { data: authData, error: supabaseError } =
+            await supabase.auth.signInWithPassword({
+              email: formData.email,
+              password: formData.password,
+            });
+
+          if (supabaseError) {
+            console.error(
+              "Supabase sign-in error after registration:",
+              supabaseError
+            );
+            registrationAttemptError =
+              "Registration successful, but Supabase session could not be started. Please try logging in.";
+            setError(registrationAttemptError);
+          } else if (authData.session?.access_token) {
+            localStorage.setItem("jwt", authData.session.access_token);
+          } else {
+            console.warn(
+              "Supabase session or access token missing after sign-in."
+            );
+            registrationAttemptError =
+              "Registration successful, but session token is missing. Please try logging in.";
+            setError(registrationAttemptError);
+          }
+        } catch (supabaseCatchError) {
+          console.error("Supabase auth error (caught):", supabaseCatchError);
+          registrationAttemptError =
+            "Registration successful, but an error occurred starting your session. Please try logging in.";
+          setError(registrationAttemptError);
         }
-        nav('/dashboard');
+
+        if (registrationAttemptError === "") {
+          nav("/dashboard");
+        }
       } else {
-        console.error('Registration failed:', data.message);
-        if (data.message === 'Username already in use') {
-          setError('Username already in use');
-        } else if (
-          data.message.includes('Email address already registered') ||
-          data.message.includes('email address has already been registered')
+        console.error("Registration failed (backend):", data.message);
+        let backendErrorMessage =
+          data.message || "Registration failed. Please try again.";
+        if (
+          data.message &&
+          data.message.toLowerCase().includes("username already in use")
         ) {
-          setError('Email already in use');
-        } else {
-          setError(data.message || 'Registration failed');
+          backendErrorMessage = "Username already in use";
+        } else if (
+          data.message &&
+          (data.message
+            .toLowerCase()
+            .includes("email address already registered") ||
+            data.message.toLowerCase().includes("email already in use"))
+        ) {
+          backendErrorMessage = "Email already in use";
+        }
+        setError(backendErrorMessage);
+      }
+    } catch (apiError) {
+      console.error("Registration API error:", apiError);
+      let apiErrorMessage =
+        "Registration failed due to a network or server error. Please try again.";
+      if (
+        apiError.response &&
+        apiError.response.data &&
+        apiError.response.data.message
+      ) {
+        apiErrorMessage = apiError.response.data.message;
+        if (
+          apiError.response.data.message
+            .toLowerCase()
+            .includes("username already in use")
+        ) {
+          apiErrorMessage = "Username already in use";
+        } else if (
+          apiError.response.data.message
+            .toLowerCase()
+            .includes("email address already registered") ||
+          apiError.response.data.message
+            .toLowerCase()
+            .includes("email already in use")
+        ) {
+          apiErrorMessage = "Email already in use";
         }
       }
-    } catch (error) {
-      console.error('Registration error:', error);
-      setError('Registration failed');
+      setError(apiErrorMessage);
     } finally {
-      setLoading(false); // Stop loader
+      setLoading(false);
     }
   };
 
@@ -199,7 +256,7 @@ const Register = () => {
               <input
                 id="password"
                 name="password"
-                type={showPassword.password ? 'text' : 'password'}
+                type={showPassword.password ? "text" : "password"}
                 className="input input-lg w-full pr-14"
                 placeholder="Password"
                 value={formData.password}
@@ -210,7 +267,7 @@ const Register = () => {
               <button
                 type="button"
                 className="absolute top-0 right-0 h-full px-3 flex items-center z-10"
-                onClick={() => togglePasswordVisibility('password')}
+                onClick={() => togglePasswordVisibility("password")}
                 tabIndex="-1"
                 disabled={loading}
               >
@@ -261,7 +318,7 @@ const Register = () => {
             <div className="relative w-full">
               <input
                 id="confirmPassword"
-                type={showPassword.confirmPassword ? 'text' : 'password'}
+                type={showPassword.confirmPassword ? "text" : "password"}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
@@ -272,7 +329,7 @@ const Register = () => {
               <button
                 type="button"
                 className="absolute top-0 right-0 h-full px-3 flex items-center z-10"
-                onClick={() => togglePasswordVisibility('confirmPassword')}
+                onClick={() => togglePasswordVisibility("confirmPassword")}
                 tabIndex="-1"
                 disabled={loading}
               >

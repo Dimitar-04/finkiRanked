@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import commentIcon from '../../assets/images/comment.svg';
-import trashIcon from '../../assets/images/delete.svg'; // Add this import
-import Navbar from './Navbar';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import commentIcon from "../../assets/images/comment.svg";
+import trashIcon from "../../assets/images/delete.svg"; // Add this import
+import Navbar from "./Navbar";
+import { getForumPosts, deleteForumPost } from "@/services/forumService";
 const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -11,34 +12,21 @@ const Forum = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchPosts();
   }, [page]);
 
   const fetchPosts = async () => {
-    const token = localStorage.getItem('jwt');
-    console.log(token);
     try {
       if (page === 0) {
         setLoading(true);
       } else {
         setLoadingMore(true);
       }
-      
-      const response = await fetch(
-        `/forum/posts?page=${page}&limit=${postsPerPage}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+
+      const data = await getForumPosts(page, postsPerPage);
       if (page === 0) {
         setPosts(data);
       } else {
@@ -48,7 +36,7 @@ const Forum = () => {
         setHasMore(false);
       }
     } catch (error) {
-      console.error('Error fetching forum posts:', error);
+      console.error("Error fetching forum posts:", error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -56,25 +44,14 @@ const Forum = () => {
   };
 
   const handleDeletePost = async (postId) => {
-    const token = localStorage.getItem('jwt');
     try {
-      const response = await fetch(`/forum/posts/${postId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await deleteForumPost(postId);
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      console.log('Post deleted successfully');
+      console.log("Post deleted successfully");
     } catch (error) {
-      console.error('Error deleting post:', error);
+      console.error("Error deleting post:", error);
     }
   };
-
   const handleLoadMore = () => {
     setPage((prevPage) => prevPage + 1);
   };
@@ -88,7 +65,7 @@ const Forum = () => {
       <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
         <div className="flex-1 ml-8 mb-6">
           <h1 className="text-4xl font-bold mb-10">Forum Posts</h1>
-          
+
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <span className="loading loading-spinner loading-lg"></span>
@@ -110,7 +87,7 @@ const Forum = () => {
                           e.stopPropagation();
                           if (
                             window.confirm(
-                              'Are you sure you want to delete this post?'
+                              "Are you sure you want to delete this post?"
                             )
                           ) {
                             handleDeletePost(post.id);
@@ -125,7 +102,7 @@ const Forum = () => {
                       <h2
                         className="text-3xl font-semibold mb-2 cursor-pointer hover:underline"
                         onClick={() => {
-                          console.log('Post clicked:', post);
+                          console.log("Post clicked:", post);
                           navigate(`/dashboard/forum-detail/${post.id}`, {
                             state: { post },
                           });
@@ -136,12 +113,12 @@ const Forum = () => {
                     </div>
 
                     <p className="text-m text-gray-500">
-                      By {post.authorName},{' '}
-                      <span>{post.dateCreated.split('T')[0]}</span>
+                      By {post.authorName},{" "}
+                      <span>{post.dateCreated.split("T")[0]}</span>
                     </p>
                     <p className="mt-2 text-gray-400 text-xl">
                       {post.content && post.content.length > 300
-                        ? post.content.slice(0, 300) + '...'
+                        ? post.content.slice(0, 300) + "..."
                         : post.content}
                     </p>
                     <div
@@ -165,9 +142,11 @@ const Forum = () => {
               </div>
               {hasMore && (
                 <div className="flex justify-center mt-6">
-                  <button 
-                    onClick={handleLoadMore} 
-                    className={`btn btn-outline mb-6 ${loadingMore ? 'btn-disabled' : ''}`}
+                  <button
+                    onClick={handleLoadMore}
+                    className={`btn btn-outline mb-6 ${
+                      loadingMore ? "btn-disabled" : ""
+                    }`}
                     disabled={loadingMore}
                   >
                     {loadingMore ? (
@@ -176,7 +155,7 @@ const Forum = () => {
                         Loading...
                       </>
                     ) : (
-                      'Load More'
+                      "Load More"
                     )}
                   </button>
                 </div>
@@ -190,7 +169,7 @@ const Forum = () => {
           <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
             <button
               onClick={() => {
-                navigate('/dashboard/create-post');
+                navigate("/dashboard/create-post");
               }}
               className="cursor-pointer px-6 py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600"
             >

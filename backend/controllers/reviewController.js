@@ -1,12 +1,12 @@
-const prisma = require('../lib/prisma');
-const ForumPost = require('../models/ForumPost');
-const ForumController = require('./forumController');
-const filter = require('leo-profanity');
-const safeWords = require('../filters/safeWords');
-const verifyModeratorStatus = require('../services/checkModeratorStatus');
+const prisma = require("../lib/prisma");
+const ForumPost = require("../models/ForumPost");
+const ForumController = require("./forumController");
+const filter = require("leo-profanity");
+const safeWords = require("../filters/safeWords");
+const verifyModeratorStatus = require("../services/checkModeratorStatus");
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
-
+  console.log(title);
   try {
     const post = new ForumPost({
       title,
@@ -22,23 +22,23 @@ const createReviewPost = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 const getReviewPosts = async (req, res) => {
   try {
-    console.log('Fetching to be reviewed posts');
+    console.log("Fetching to be reviewed posts");
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
     const skip = page * limit;
     const userId = req.query.userId;
     const hasModeratorStatus = await verifyModeratorStatus(userId);
     if (!hasModeratorStatus) {
-      console.log('Access denied: User is not a moderator');
+      console.log("Access denied: User is not a moderator");
       return res.status(403).json({
-        error: 'Access denied. Only moderators can access review posts.',
+        error: "Access denied. Only moderators can access review posts.",
       });
     }
     try {
@@ -46,11 +46,11 @@ const getReviewPosts = async (req, res) => {
         skip,
         take: limit,
         orderBy: {
-          created_at: 'desc',
+          created_at: "desc",
         },
       });
 
-      console.log('Found review posts:', posts.length);
+      console.log("Found review posts:", posts.length);
 
       const forumPosts = posts.map(
         (post) =>
@@ -64,16 +64,16 @@ const getReviewPosts = async (req, res) => {
           })
       );
 
-      console.log('Formatted posts:', forumPosts.length);
+      console.log("Formatted posts:", forumPosts.length);
 
       res.status(200).json(forumPosts);
     } catch (dbError) {
-      console.error('Database query error:', dbError);
-      res.status(500).json({ error: 'Error fetching posts from database' });
+      console.error("Database query error:", dbError);
+      res.status(500).json({ error: "Error fetching posts from database" });
     }
   } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -82,9 +82,9 @@ const deleteReviewPost = async (req, res) => {
   const userId = req.query.userId;
   const hasModeratorStatus = await verifyModeratorStatus(userId);
   if (!hasModeratorStatus) {
-    console.log('Access denied: User is not a moderator');
+    console.log("Access denied: User is not a moderator");
     return res.status(403).json({
-      error: 'Access denied. Only moderators can access review posts.',
+      error: "Access denied. Only moderators can access review posts.",
     });
   }
   try {
@@ -96,26 +96,26 @@ const deleteReviewPost = async (req, res) => {
     res.status(204).send();
   } catch (err) {
     // Prisma throws when record not found
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: 'Forum post not found' });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Forum post not found" });
     }
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 const approveReviewPost = async (req, res) => {
   try {
-    console.log('Approving review post', req.params.id);
+    console.log("Approving review post", req.params.id);
     const { id } = req.params;
     const userId = req.query.userId;
 
     const hasModeratorStatus = await verifyModeratorStatus(userId);
 
     if (!hasModeratorStatus) {
-      console.log('Access denied: User is not a moderator');
+      console.log("Access denied: User is not a moderator");
       return res.status(403).json({
-        error: 'Access denied. Only moderators can access review posts.',
+        error: "Access denied. Only moderators can access review posts.",
       });
     }
 
@@ -124,7 +124,7 @@ const approveReviewPost = async (req, res) => {
     });
 
     if (!postToApprove) {
-      return res.status(404).json({ error: 'Post not found' });
+      return res.status(404).json({ error: "Post not found" });
     }
 
     const newForumPost = await prisma.forum_posts.create({
@@ -141,12 +141,12 @@ const approveReviewPost = async (req, res) => {
     });
 
     res.status(200).json({
-      message: 'Post approved and published successfully',
+      message: "Post approved and published successfully",
       post: newForumPost,
     });
   } catch (err) {
-    console.error('Error approving post:', err);
-    res.status(500).json({ error: 'Failed to approve post' });
+    console.error("Error approving post:", err);
+    res.status(500).json({ error: "Failed to approve post" });
   }
 };
 

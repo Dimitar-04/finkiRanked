@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../contexts/AuthContext';
-
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../contexts/AuthContext";
+import { loginUser } from "@/services/registerLoginService";
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -16,44 +16,51 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } =
+      const { data: supabaseAuthData, error: supabaseAuthError } =
         await supabase.auth.signInWithPassword({
           email,
           password,
         });
-      localStorage.setItem('jwt', authData.session?.access_token);
-      if (authError) {
-        setError(authError.message);
+
+      if (supabaseAuthError) {
+        setError(supabaseAuthError.message);
+        setLoading(false);
         return;
       }
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
 
-      const data = await response.json();
+      if (!supabaseAuthData.session?.access_token) {
+        setError("Failed to retrieve session token from Supabase.");
+        setLoading(false);
+        return;
+      }
 
-      if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem("jwt", supabaseAuthData.session.access_token);
+      const backendLoginData = await loginUser({ email, password });
 
-        navigate('/dashboard');
+      if (backendLoginData.success) {
+        localStorage.setItem("user", JSON.stringify(backendLoginData.user));
+        navigate("/dashboard");
       } else {
-        setError(data.message || 'Login failed');
+        localStorage.removeItem("jwt");
+        setError(backendLoginData.message || "Login failed on backend.");
       }
     } catch (err) {
-      setError('An error occurred during login.');
+      console.error("Login error caught in component:", err);
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError("An unexpected error occurred during login.");
+      }
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div
       data-theme="luxury"
@@ -88,7 +95,7 @@ const Login = () => {
           <div className="relative w-full">
             <input
               id="password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               className="input input-lg w-full pr-14"
               placeholder="Password"
               value={password}
@@ -154,7 +161,7 @@ const Login = () => {
               Logging in...
             </span>
           ) : (
-            'Log in'
+            "Log in"
           )}
         </button>
       </form>
