@@ -52,13 +52,13 @@ model users {
   solved_problems      BigInt?          @default(0)
   rank                 String?          @default("Novice")
   points               BigInt?          @default(0)
-  commentCounter       Int?             @default(3) @db.SmallInt
-  commentCheckCounter  Int?             @default(0) @db.SmallInt
   postCounter          Int?             @default(3) @db.SmallInt
   postCheckCounter     Int?             @default(0) @db.SmallInt
   isModerator          Boolean          @default(false)
   attempts             Int?             @default(0) @db.SmallInt
   solvedDailyChallenge Boolean?
+  daily_test_case_id   String?          @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  daily_points         Int?             @default(0) @db.SmallInt
   comments             comments[]
   forum_posts          forum_posts[]
   to_be_reviewed       to_be_reviewed[]
