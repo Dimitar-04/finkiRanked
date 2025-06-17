@@ -1,5 +1,5 @@
-const { get } = require('http');
-const prisma = require('../lib/prisma');
+const { get } = require("http");
+const prisma = require("../lib/prisma");
 
 const getTaskByDate = async (req, res) => {
   const { date } = req.params;
@@ -10,7 +10,7 @@ const getTaskByDate = async (req, res) => {
 
     let effectiveDate;
 
-    const localDate = now.toLocaleDateString('en-CA');
+    const localDate = now.toLocaleDateString("en-CA");
 
     if (date === localDate) {
       if (now.getHours() < 7) {
@@ -22,7 +22,7 @@ const getTaskByDate = async (req, res) => {
     } else {
       return res
         .status(404)
-        .json({ message: 'Cannot fetch task for different date!' });
+        .json({ message: "Cannot fetch task for different date!" });
     }
 
     const taskDate = new Date(
@@ -44,7 +44,7 @@ const getTaskByDate = async (req, res) => {
     });
 
     if (tasks.length === 0) {
-      return res.status(404).json({ message: 'No tasks found for this date' });
+      return res.status(404).json({ message: "No tasks found for this date" });
     }
 
     const safeSerialize = (data) => {
@@ -53,7 +53,7 @@ const getTaskByDate = async (req, res) => {
           if (value instanceof Date) {
             return value.toISOString();
           }
-          if (typeof value === 'bigint') {
+          if (typeof value === "bigint") {
             return value.toString();
           }
           return value;
@@ -67,8 +67,8 @@ const getTaskByDate = async (req, res) => {
       if (safeTask.test_cases) {
         safeTask.test_cases = safeTask.test_cases.map((testCase) => ({
           id: testCase.id,
-          input: testCase.input || '',
-          output: testCase.output || '',
+          input: testCase.input || "",
+          output: testCase.output || "",
           challenge_id: testCase.challenge_id,
         }));
       }
@@ -76,15 +76,15 @@ const getTaskByDate = async (req, res) => {
       return safeTask;
     });
 
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json(processedTasks);
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error("Error fetching tasks:", error);
 
     res.status(500).json({
-      message: 'Internal server error',
+      message: "Internal server error",
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
@@ -106,32 +106,85 @@ const fetchTestCaseForToday = async (req, res) => {
     });
 
     if (testCases.length === 0) {
-      return res.status(404).json({ message: 'No test cases found for today' });
+      return res.status(404).json({ message: "No test cases found for today" });
     }
 
     const randomTestCase =
       testCases[Math.floor(Math.random() * testCases.length)];
 
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader("Content-Type", "application/json");
     res.status(200).json(randomTestCase);
   } catch (error) {
-    console.error('Error fetching test cases:', error);
+    console.error("Error fetching test cases:", error);
     res
       .status(500)
-      .json({ message: 'Internal server error', error: error.message });
+      .json({ message: "Internal server error", error: error.message });
   }
 };
+
+const getSpecificTestCaseById = async (req, res) => {
+  const { testCaseId } = req.params;
+
+  try {
+    const testCase = await prisma.test_cases.findUnique({
+      where: { id: testCaseId },
+      select: {
+        id: true,
+        input: true,
+
+        challenge_id: true,
+      },
+    });
+    if (!testCase) {
+      return res.status(404).json({ message: "Test case not found" });
+    }
+    res.status(200).json(testCase);
+  } catch (error) {
+    console.error("Error fetching specific test case by ID:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const updateUserDailyChallengeId = async (req, res) => {
+  const { userId } = req.params;
+  const { testCaseId } = req.body;
+  console.log("Updating user daily challenge ID:", userId, testCaseId);
+
+  if (!testCaseId) {
+    return res.status(400).json({ message: "testCaseId is required" });
+  }
+
+  try {
+    const updatedUser = await prisma.users.update({
+      where: { id: userId },
+      data: { daily_test_case_id: testCaseId },
+      select: { id: true, daily_test_case_id: true },
+    });
+    res.status(200).json({ user: updatedUser });
+  } catch (error) {
+    console.error("Error updating user daily test case ID:", error);
+    if (error.code === "P2025") {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
 const RANK_DATA = {
-  Novice: { id: 1, title: 'Novice', requiredPoints: 0 },
-  Learner: { id: 2, title: 'Learner', requiredPoints: 300 },
-  Coder: { id: 3, title: 'Coder', requiredPoints: 800 },
-  'Problem Solver': { id: 4, title: 'Problem Solver', requiredPoints: 1500 },
-  Algorithmist: { id: 5, title: 'Algorithmist', requiredPoints: 2500 },
-  'Hacker Mage': { id: 6, title: 'Hacker Mage', requiredPoints: 4000 },
-  Challenger: { id: 7, title: 'Challenger', requiredPoints: 6000 },
-  'Code Master': { id: 8, title: 'Code Master', requiredPoints: 8500 },
-  'FINKI Royalty': { id: 9, title: 'FINKI Royalty', requiredPoints: 11000 },
-  'FINKI Legend': { id: 10, title: 'FINKI Legend', requiredPoints: 16000 },
+  Novice: { id: 1, title: "Novice", requiredPoints: 0 },
+  Learner: { id: 2, title: "Learner", requiredPoints: 300 },
+  Coder: { id: 3, title: "Coder", requiredPoints: 800 },
+  "Problem Solver": { id: 4, title: "Problem Solver", requiredPoints: 1500 },
+  Algorithmist: { id: 5, title: "Algorithmist", requiredPoints: 2500 },
+  "Hacker Mage": { id: 6, title: "Hacker Mage", requiredPoints: 4000 },
+  Challenger: { id: 7, title: "Challenger", requiredPoints: 6000 },
+  "Code Master": { id: 8, title: "Code Master", requiredPoints: 8500 },
+  "FINKI Royalty": { id: 9, title: "FINKI Royalty", requiredPoints: 11000 },
+  "FINKI Legend": { id: 10, title: "FINKI Legend", requiredPoints: 16000 },
 };
 
 function getRankByPoints(points) {
@@ -143,7 +196,7 @@ function getRankByPoints(points) {
       return rank;
     }
   }
-  return RANK_DATA['Novice'];
+  return RANK_DATA["Novice"];
 }
 
 function getMinutesSinceSevenAM() {
@@ -159,7 +212,7 @@ function getMinutesSinceSevenAM() {
 
 function getTimeBonus() {
   const minutes = getMinutesSinceSevenAM();
-  console.log('Minutes since 7 AM:', minutes);
+  console.log("Minutes since 7 AM:", minutes);
   return Math.max(0, 60 - Math.floor(minutes * 0.0833));
 }
 
@@ -174,24 +227,37 @@ function getAttemptScore(attempts) {
 
 function isOutputCorrect(userOutput, expectedOutput, outputType) {
   const normalizeString = (str) =>
-    str.toLowerCase().replace(/[,"']/g, '').replace(/\s+/g, ' ').trim();
+    str
+      .toString()
+      .replace(/[^\w.-]/g, "") // keep only word chars, dot and hyphen
+      .trim()
+      .toLowerCase();
 
   const normalizeArray = (str) => {
-    const cleaned = str.replace(/[\[\]]/g, '');
+    const cleaned = str.replace(/[\[\]]/g, "");
     return cleaned
       .split(/[\s,]+/)
-      .filter((val) => val !== '')
+      .filter((val) => val !== "")
       .map((val) => val.trim());
   };
 
-  if (outputType === 'integer') {
-    return parseInt(userOutput) === parseInt(expectedOutput);
+  if (outputType === "integer") {
+    const cleanedUserOutput = normalizeString(userOutput);
+    const cleanedExpectedOutput = normalizeString(expectedOutput);
+    return parseInt(cleanedUserOutput) === parseInt(cleanedExpectedOutput);
   }
 
-  if (outputType === 'float') {
-    return Math.abs(parseFloat(userOutput) - parseFloat(expectedOutput)) < 1e-6;
+  if (outputType === "float") {
+    const cleanedUserOutput = normalizeString(userOutput);
+    const cleanedExpectedOutput = normalizeString(expectedOutput);
+    return (
+      Math.abs(
+        parseFloat(cleanedUserOutput) - parseFloat(cleanedExpectedOutput)
+      ) < 1e-6
+    );
   }
-  if (outputType === 'array') {
+
+  if (outputType === "array") {
     const userArr = normalizeArray(userOutput);
     const expectedArr = normalizeArray(expectedOutput);
     if (userArr.length !== expectedArr.length) return false;
@@ -211,7 +277,7 @@ const evaluateTask = async (req, res) => {
   console.log(userOutput, testCaseId, userId);
   try {
     if (!testCaseId || !userOutput || !userId) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return res.status(400).json({ message: "Missing required fields" });
     }
     const testCase = await prisma.test_cases.findUnique({
       where: {
@@ -222,12 +288,12 @@ const evaluateTask = async (req, res) => {
     if (testCase.challenge_id !== taskId) {
       return res
         .status(400)
-        .json({ message: 'Test case does not belong to the task' });
+        .json({ message: "Test case does not belong to the task" });
     }
     let user = await prisma.users.findUnique({ where: { id: userId } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
     let attempts = user.attempts || 0;
     await prisma.challenges.update({
@@ -249,9 +315,9 @@ const evaluateTask = async (req, res) => {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);
       const difficultyScore =
-        task.difficulty === 'Easy'
+        task.difficulty === "Easy"
           ? 10
-          : task.difficulty === 'Medium'
+          : task.difficulty === "Medium"
           ? 20
           : 30;
       const totalScore = timeBonus + attemptScore + difficultyScore;
@@ -266,15 +332,16 @@ const evaluateTask = async (req, res) => {
           solvedDailyChallenge: true,
           solved_problems: { increment: 1 },
           rank: userRank.title,
+          daily_points: totalScore,
         },
       });
       const responseUser = { ...updatedUser };
 
-      if (typeof responseUser.points === 'bigint') {
+      if (typeof responseUser.points === "bigint") {
         responseUser.points = responseUser.points.toString();
       }
 
-      console.log('User Rank:', userRank);
+      console.log("User Rank:", userRank);
       await prisma.challenges.update({
         where: { id: taskId },
         data: { solved_by: { increment: 1 } },
@@ -282,7 +349,7 @@ const evaluateTask = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: 'Task solved successfully!',
+        message: "Task solved successfully!",
         scoreAwarded: totalScore,
         newTotalPoints: responseUser.points,
         rank: userRank.title,
@@ -298,24 +365,25 @@ const evaluateTask = async (req, res) => {
       });
       return res.status(200).json({
         success: false,
-        message: 'Incorrect solution. Try again!',
+        message: "Incorrect solution. Try again!",
         attemptsMade:
-          typeof newAttempts === 'bigint'
+          typeof newAttempts === "bigint"
             ? newAttempts.toString()
             : newAttempts,
       });
     }
   } catch (error) {
-    console.error('Error evaluating task:', error);
+    console.error("Error evaluating task:", error);
     return res.status(500).json({
-      message: 'Internal server error during evaluation.',
+      message: "Internal server error during evaluation.",
       error: error.message,
     });
   }
 };
 module.exports = {
   getTaskByDate,
-
+  getSpecificTestCaseById,
+  updateUserDailyChallengeId,
   fetchTestCaseForToday,
   evaluateTask,
 };

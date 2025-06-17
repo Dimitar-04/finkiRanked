@@ -5,6 +5,8 @@ import {
   getTaskForDate,
   getTestCaseForTask,
   evaluate,
+  getSpecificTestCase,
+  updateUserDailyTestCaseId,
 } from "@/services/taskService";
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
@@ -13,17 +15,33 @@ const Task = () => {
   const [evalResult, setEvalResult] = useState("");
   const [isCorrect, setIsCorrect] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const token = localStorage.getItem("jwt");
 
   const today = new Date().toLocaleDateString();
-  const user = JSON.parse(localStorage.getItem("user")) || { attempts: 0 };
+  const [currentUser, setCurrentUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    const initialUser = storedUser ? JSON.parse(storedUser) : {};
+    return {
+      attempts: 0,
+      daily_test_case_id: null,
+      solvedDailyChallenge: false,
+      points: 0,
+      id: null,
+      ...initialUser,
+    };
+  });
+
+  useEffect(() => {
+    if (currentUser && currentUser.id) {
+      localStorage.setItem("user", JSON.stringify(currentUser));
+    }
+  }, [currentUser]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (task && task.id) {
-      fetchTestCaseForToday(task.id);
+    if (task && task.id && showTask) {
+      fetchTestCaseLogic(task.id);
     }
-  }, [task]);
+  }, [task, showTask]);
 
   async function fetchTaskForToday(date) {
     try {
@@ -61,30 +79,84 @@ const Task = () => {
     }
   }
 
-  function toggleSolvedDailyChallenge(user) {
-    const updatedUser = {
-      ...user,
-      solvedDailyChallenge: true,
-    };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    return updatedUser;
-  }
-
-  async function fetchTestCaseForToday(id) {
+  async function fetchTestCaseLogic(challengeId) {
     try {
-      const data = await getTestCaseForTask(id);
+      let fetchedApiTestCaseData;
+      let finalTestCaseIdToStore = null;
 
-      if (data && data.input) {
+      if (currentUser.daily_test_case_id) {
+        try {
+          fetchedApiTestCaseData = await getSpecificTestCase(
+            currentUser.daily_test_case_id
+          );
+          if (fetchedApiTestCaseData && fetchedApiTestCaseData.id) {
+            finalTestCaseIdToStore = fetchedApiTestCaseData.id;
+          } else {
+            setCurrentUser((prev) => ({ ...prev, daily_test_case_id: null }));
+          }
+        } catch (specificFetchError) {
+          console.warn(
+            `Error fetching specific test case ${currentUser.daily_test_case_id}:`,
+            specificFetchError
+          );
+
+          if (
+            specificFetchError.response &&
+            specificFetchError.response.status === 404
+          ) {
+            setCurrentUser((prev) => ({ ...prev, daily_test_case_id: null }));
+          }
+        }
+      }
+
+      if (!finalTestCaseIdToStore) {
+        console.log("Fetching random test case for challenge:", challengeId);
+
+        fetchedApiTestCaseData = await getTestCaseForTask(challengeId);
+        if (fetchedApiTestCaseData && fetchedApiTestCaseData.id) {
+          finalTestCaseIdToStore = fetchedApiTestCaseData.id;
+
+          setCurrentUser((prev) => ({
+            ...prev,
+            daily_test_case_id: finalTestCaseIdToStore,
+          }));
+
+          if (currentUser.id) {
+            try {
+              await updateUserDailyTestCaseId(
+                currentUser.id,
+                finalTestCaseIdToStore
+              );
+              console.log(
+                "Successfully updated daily_test_case_id on backend."
+              );
+            } catch (error) {
+              console.error(
+                "Failed to update daily_test_case_id on backend:",
+                error
+              );
+            }
+          } else {
+            console.warn(
+              "User ID not available, cannot update daily_test_case_id on backend."
+            );
+          }
+        } else {
+          console.warn("No random test case found for the task:", challengeId);
+        }
+      }
+
+      if (fetchedApiTestCaseData && fetchedApiTestCaseData.input) {
         setTestCase({
-          id: data.id,
-          input: data.input,
+          id: fetchedApiTestCaseData.id,
+          input: fetchedApiTestCaseData.input,
         });
       } else {
-        console.error("No test case found for the task");
+        console.error("No valid test case data to set after fetch attempts.");
         setTestCase(null);
       }
     } catch (error) {
-      console.error("Error fetching test case:", error);
+      console.error("Error in fetchTestCaseLogic (outer try):", error);
       setTestCase(null);
     }
   }
@@ -92,8 +164,6 @@ const Task = () => {
   const handleStart = () => {
     const today = new Date();
     fetchTaskForToday(today);
-
-    // toggleSolvedDailyChallenge(user);
 
     setShowTask(true);
   };
@@ -108,7 +178,12 @@ const Task = () => {
     try {
       const userOutput = document.getElementById("userOutput").value;
 
-      const result = await evaluate(task.id, userOutput, testCase.id, user.id);
+      const result = await evaluate(
+        task.id,
+        userOutput,
+        testCase.id,
+        currentUser.id
+      );
 
       if (result.success) {
         setEvalResult(
@@ -116,25 +191,23 @@ const Task = () => {
         );
         setIsCorrect(true);
 
-        const updatedUserFromStorage =
-          JSON.parse(localStorage.getItem("user")) || {};
-        updatedUserFromStorage.points = result.newTotalPoints;
-        updatedUserFromStorage.solvedDailyChallenge = true;
-        updatedUserFromStorage.pointsAwarded = result.scoreAwarded;
-        updatedUserFromStorage.rank = result.rank;
-
-        toggleSolvedDailyChallenge(user);
-        localStorage.setItem("user", JSON.stringify(updatedUserFromStorage));
+        setCurrentUser((prev) => ({
+          ...prev,
+          points: result.newTotalPoints,
+          solvedDailyChallenge: true,
+          daily_points: result.scoreAwarded,
+          rank: result.rank,
+        }));
       } else {
         setEvalResult(
           `${result.message} This was attempt: ${result.attemptsMade}.`
         );
         setIsCorrect(false);
 
-        const updatedUserFromStorage =
-          JSON.parse(localStorage.getItem("user")) || {};
-        updatedUserFromStorage.attempts = result.attemptsMade;
-        localStorage.setItem("user", JSON.stringify(updatedUserFromStorage));
+        setCurrentUser((prev) => ({
+          ...prev,
+          attempts: result.attemptsMade,
+        }));
       }
     } catch (error) {
       console.error("Error evaluating solution:", error);
@@ -213,7 +286,7 @@ const Task = () => {
                     >
                       <path d="M5 3l14 9-14 9V3z" />
                     </svg>
-                    {user.solvedDailyChallenge
+                    {currentUser.solvedDailyChallenge
                       ? "View Challenge"
                       : "Start Challenge"}
                   </button>
@@ -229,7 +302,7 @@ const Task = () => {
                   </h1>
                 </div>
 
-                {user.solvedDailyChallenge && (
+                {currentUser.solvedDailyChallenge && (
                   <div className="alert alert-info mb-4">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -314,7 +387,7 @@ const Task = () => {
                       id="userOutput"
                       type="text"
                       placeholder={
-                        user.solvedDailyChallenge
+                        currentUser.solvedDailyChallenge
                           ? "Challenge already completed"
                           : "Enter your output here..."
                       }
@@ -326,11 +399,13 @@ const Task = () => {
                           : "border-red-500"
                       }`}
                       rows="6"
-                      disabled={user.solvedDailyChallenge || isSubmitting}
+                      disabled={
+                        currentUser.solvedDailyChallenge || isSubmitting
+                      }
                     />
-                    {user.solvedDailyChallenge && (
+                    {currentUser.solvedDailyChallenge && (
                       <p className="text-lg text-success">
-                        You earned: {user.pointsAwarded} for today's task
+                        You earned: {currentUser.daily_points} for today's task
                       </p>
                     )}
 
@@ -366,15 +441,17 @@ const Task = () => {
                       <button
                         onClick={() => handleSubmitSolution()}
                         className={`btn btn-lg ${
-                          user.solvedDailyChallenge || isSubmitting
+                          currentUser.solvedDailyChallenge || isSubmitting
                             ? "btn-disabled"
                             : "border-amber-400"
                         }`}
-                        disabled={user.solvedDailyChallenge || isSubmitting}
+                        disabled={
+                          currentUser.solvedDailyChallenge || isSubmitting
+                        }
                       >
                         {isSubmitting ? (
                           <span className="loading loading-spinner"></span>
-                        ) : user.solvedDailyChallenge ? (
+                        ) : currentUser.solvedDailyChallenge ? (
                           "Already Completed"
                         ) : (
                           "Submit Solution"
