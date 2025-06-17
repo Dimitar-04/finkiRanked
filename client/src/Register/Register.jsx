@@ -5,7 +5,8 @@ import { supabase } from "../contexts/AuthContext";
 import { registerUser } from "@/services/registerLoginService";
 
 const Register = () => {
-  const [error, setError] = React.useState("");
+  const [formErrors, setFormErrors] = useState({});
+  const [generalError, setGeneralError] = useState("");
   const nav = useNavigate();
   const [showPassword, setShowPassword] = useState({
     password: false,
@@ -27,8 +28,8 @@ const Register = () => {
     confirmPassword: "",
     name: "",
   });
-  function validateEmail(email) {
-    return email.endsWith("@students.finki.ukim.mk");
+  function validateLocalEmailFormat(email) {
+    return email.includes("@") && email.includes(".");
   }
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,54 +37,41 @@ const Register = () => {
       ...formData,
       [name]: value,
     });
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+    setGeneralError("");
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setGeneralError("");
+    setFormErrors({});
 
-    if (!validateEmail(formData.email)) {
-      setError("Email must end with @students.finki.ukim.mk");
-      setLoading(false);
-      return;
-    }
-    if (formData.username === "") {
-      setError("Must enter username");
-      setLoading(false);
-      return;
-    }
-    if (formData.name === "") {
-      setError("Name is required");
-      setLoading(false);
-      return;
-    }
-    if (formData.password === "") {
-      setError("Password is required");
-      setLoading(false);
-      return;
-    }
-    if (formData.confirmPassword === "") {
-      setError("Please confirm your password");
+    if (!validateLocalEmailFormat(formData.email)) {
+      setFormErrors((prev) => ({
+        ...prev,
+        email: "Please enter a valid email format.",
+      }));
       setLoading(false);
       return;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setFormErrors((prev) => ({
+        ...prev,
+        passwordMatch: "Passwords do not match",
+      }));
       setLoading(false);
       return;
     }
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long");
-      setLoading(false);
-      return;
-    }
-    if (!/[A-Z]/.test(formData.password)) {
-      setError("Password must contain at least one uppercase letter");
-      setLoading(false);
-      return;
-    }
-    if (!/[0-9]/.test(formData.password)) {
-      setError("Password must contain at least one number");
+    if (
+      !formData.username ||
+      !formData.email ||
+      !formData.password ||
+      !formData.name ||
+      !formData.confirmPassword
+    ) {
+      setGeneralError("Please fill in all required fields.");
       setLoading(false);
       return;
     }
@@ -93,97 +81,72 @@ const Register = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        confirmPassword: formData.confirmPassword,
         name: formData.name,
       };
 
       const data = await registerUser(userData);
+
+      localStorage.setItem("user", JSON.stringify(data.user));
       let registrationAttemptError = "";
 
-      if (data.success) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        try {
-          const { data: authData, error: supabaseError } =
-            await supabase.auth.signInWithPassword({
-              email: formData.email,
-              password: formData.password,
-            });
+      try {
+        registrationAttemptError = "";
+        const { data: authData, error: supabaseError } =
+          await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
 
-          if (supabaseError) {
-            console.error(
-              "Supabase sign-in error after registration:",
-              supabaseError
-            );
-            registrationAttemptError =
-              "Registration successful, but Supabase session could not be started. Please try logging in.";
-            setError(registrationAttemptError);
-          } else if (authData.session?.access_token) {
-            localStorage.setItem("jwt", authData.session.access_token);
-          } else {
-            console.warn(
-              "Supabase session or access token missing after sign-in."
-            );
-            registrationAttemptError =
-              "Registration successful, but session token is missing. Please try logging in.";
-            setError(registrationAttemptError);
-          }
-        } catch (supabaseCatchError) {
-          console.error("Supabase auth error (caught):", supabaseCatchError);
+        if (supabaseError) {
+          console.error(
+            "Supabase sign-in error after registration:",
+            supabaseError
+          );
           registrationAttemptError =
-            "Registration successful, but an error occurred starting your session. Please try logging in.";
-          setError(registrationAttemptError);
+            "Registration successful, but Supabase session could not be started. Please try logging in.";
+          setGeneralError(registrationAttemptError);
+        } else if (authData.session?.access_token) {
+          localStorage.setItem("jwt", authData.session.access_token);
+        } else {
+          console.warn(
+            "Supabase session or access token missing after sign-in."
+          );
+          registrationAttemptError =
+            "Registration successful, but session token is missing. Please try logging in.";
+          setGeneralError(registrationAttemptError);
         }
+      } catch (supabaseCatchError) {
+        console.error("Supabase auth error (caught):", supabaseCatchError);
+        registrationAttemptError =
+          "Registration successful, but an error occurred starting your session. Please try logging in.";
+        setGeneralError(registrationAttemptError);
+      }
 
-        if (registrationAttemptError === "") {
-          nav("/dashboard");
-        }
-      } else {
-        console.error("Registration failed (backend):", data.message);
-        let backendErrorMessage =
-          data.message || "Registration failed. Please try again.";
-        if (
-          data.message &&
-          data.message.toLowerCase().includes("username already in use")
-        ) {
-          backendErrorMessage = "Username already in use";
-        } else if (
-          data.message &&
-          (data.message
-            .toLowerCase()
-            .includes("email address already registered") ||
-            data.message.toLowerCase().includes("email already in use"))
-        ) {
-          backendErrorMessage = "Email already in use";
-        }
-        setError(backendErrorMessage);
+      if (registrationAttemptError === "") {
+        const user = localStorage.getItem("user");
+
+        nav("/dashboard");
       }
     } catch (apiError) {
       console.error("Registration API error:", apiError);
-      let apiErrorMessage =
-        "Registration failed due to a network or server error. Please try again.";
-      if (
-        apiError.response &&
-        apiError.response.data &&
-        apiError.response.data.message
-      ) {
-        apiErrorMessage = apiError.response.data.message;
-        if (
-          apiError.response.data.message
-            .toLowerCase()
-            .includes("username already in use")
-        ) {
-          apiErrorMessage = "Username already in use";
-        } else if (
-          apiError.response.data.message
-            .toLowerCase()
-            .includes("email address already registered") ||
-          apiError.response.data.message
-            .toLowerCase()
-            .includes("email already in use")
-        ) {
-          apiErrorMessage = "Email already in use";
+      if (apiError.response && apiError.response.data) {
+        const responseData = apiError.response.data;
+        if (responseData.errors) {
+          setFormErrors(responseData.errors);
+          setGeneralError(
+            responseData.message || "Please correct the highlighted errors."
+          );
+        } else {
+          setGeneralError(
+            responseData.message || "Registration failed. Please try again."
+          );
         }
+      } else {
+        setGeneralError(
+          "Registration failed due to a network or server error. Please try again."
+        );
       }
-      setError(apiErrorMessage);
     } finally {
       setLoading(false);
     }
@@ -214,6 +177,9 @@ const Register = () => {
               placeholder="John Doe"
               disabled={loading}
             />
+            {formErrors.name && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>
+            )}
           </div>
 
           <div>
@@ -230,6 +196,9 @@ const Register = () => {
               placeholder="User123"
               disabled={loading}
             />
+            {formErrors.username && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.username}</p>
+            )}
           </div>
 
           <div>
@@ -246,6 +215,9 @@ const Register = () => {
               placeholder="user123@students.finki.ukim.mk"
               disabled={loading}
             />
+            {formErrors.email && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -261,7 +233,6 @@ const Register = () => {
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleInputChange}
-                required
                 disabled={loading}
               />
               <button
@@ -309,10 +280,29 @@ const Register = () => {
                 )}
               </button>
             </div>
+            {formErrors.password && (
+              <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>
+            )}
+            {formErrors.passwordLength && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.passwordLength}
+              </p>
+            )}
+            {formErrors.passwordUppercase && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.passwordUppercase}
+              </p>
+            )}
+            {formErrors.passwordNumber && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.passwordNumber}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="label text-lg" htmlFor="password">
+            <label className="label text-lg" htmlFor="confirmPassword">
+              {" "}
               Confirm Password
             </label>
             <div className="relative w-full">
@@ -371,11 +361,21 @@ const Register = () => {
                 )}
               </button>
             </div>
+            {formErrors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.confirmPassword}
+              </p>
+            )}
+            {formErrors.passwordMatch && (
+              <p className="text-red-500 text-xs mt-1">
+                {formErrors.passwordMatch}
+              </p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="btn bg-black btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl flex items-center justify-center"
+            className="btn bg-black btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl w-full flex items-center justify-center" // Added w-full for consistency
             disabled={loading}
           >
             {loading ? (
@@ -383,11 +383,11 @@ const Register = () => {
             ) : null}
             Register
           </button>
-          {error ? (
-            <p className="text-red-500 text-sm mt-1">{error}</p>
-          ) : (
-            <p className="text-sm mt-1">
-              *Must register with your students address
+
+          {!generalError && Object.keys(formErrors).length === 0 && (
+            <p className="text-sm mt-1 text-center">
+              {" "}
+              *Must register with your FINKI student email address.
             </p>
           )}
         </form>
