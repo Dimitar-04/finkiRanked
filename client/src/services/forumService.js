@@ -14,7 +14,7 @@ export const createForumPost = (postData) => {
 //Comment functions
 
 export const getCommentsForPost = (postId) => {
-  return apiClient.get(`/forum/comments?post_id=${postId}`);
+  return apiClient.get(`/forum/comments/${postId}`);
 };
 export const createComment = (commentData) => {
   return apiClient.post("/forum/comments", commentData);

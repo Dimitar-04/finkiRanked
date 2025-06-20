@@ -229,7 +229,7 @@ function isOutputCorrect(userOutput, expectedOutput, outputType) {
   const normalizeString = (str) =>
     str
       .toString()
-      .replace(/[^\w.-]/g, "") // keep only word chars, dot and hyphen
+      .replace(/[^\w.-]/g, "")
       .trim()
       .toLowerCase();
 
@@ -274,7 +274,7 @@ function isOutputCorrect(userOutput, expectedOutput, outputType) {
 const evaluateTask = async (req, res) => {
   const { id: taskId } = req.params;
   const { userOutput, testCaseId, userId } = req.body;
-  console.log(userOutput, testCaseId, userId);
+
   try {
     if (!testCaseId || !userOutput || !userId) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -310,7 +310,7 @@ const evaluateTask = async (req, res) => {
         id: taskId,
       },
     });
-    console.log(task.difficulty);
+
     if (isOutputCorrect(userOutput, testCase.output, task.output_type)) {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);
@@ -321,7 +321,7 @@ const evaluateTask = async (req, res) => {
           ? 20
           : 30;
       const totalScore = timeBonus + attemptScore + difficultyScore;
-      const userRank = getRankByPoints(totalScore);
+      const userRank = getRankByPoints(totalScore + user.points);
       const updatedUser = await prisma.users.update({
         where: {
           id: userId,
@@ -341,7 +341,6 @@ const evaluateTask = async (req, res) => {
         responseUser.points = responseUser.points.toString();
       }
 
-      console.log("User Rank:", userRank);
       await prisma.challenges.update({
         where: { id: taskId },
         data: { solved_by: { increment: 1 } },

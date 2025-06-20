@@ -1,12 +1,12 @@
 class ForumPost {
-  constructor(data = {}) {
-    this.id = data.id;
-    this.title = data.title;
-    this.content = data.content;
-    this.authorName = data.authorName;
-    this.dateCreated = data.dateCreated || new Date();
-    this.comments = [];
-    this.comment_count = data.commentCount || 0;
+  constructor({ title, content, authorId, authorName, id, commentCount }) {
+    this.id = id;
+    this.title = title;
+    this.content = content;
+    this.date_created = new Date().toISOString(); // Set current date as default
+    this.comment_count = commentCount;
+    this.author_id = authorId;
+    this.author_name = authorName;
   }
 }
 

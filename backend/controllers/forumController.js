@@ -11,7 +11,11 @@ const verifyModeratorStatus = require("../services/checkModeratorStatus");
 
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
-  console.log(title);
+  if (!title || !content || !authorId || !authorName) {
+    return res.status(400).json({
+      error: "Title, content, authorId, and authorName are required",
+    });
+  }
 
   try {
     const user = await prisma.users.findUnique({
@@ -23,24 +27,22 @@ const createForumPost = async (req, res) => {
       const post = new ForumPost({
         title,
         content,
+        authorId,
         authorName,
       });
 
       const isProfane = filter.check(post.title);
 
       if (isProfane) {
-        console.log("Profanity detected!");
         return res.status(400).json({
           error: "Content contains inappropriate language",
         });
       } else if (filter.check(post.content)) {
-        console.log("Profanity detected in content!");
         return res.status(400).json({
           error: "Content contains inappropriate language",
         });
       } else if (post.content.length > 200) {
         try {
-          // Await the helper function
           await createReviewPost(req);
 
           return res.status(202).json({
@@ -48,7 +50,6 @@ const createForumPost = async (req, res) => {
               "Content is too long. Your post has been submitted for moderator approval.",
           });
         } catch (reviewError) {
-          // If submitPostForReview throws an error
           console.error("Error submitting post for review:", reviewError);
           return res.status(500).json({
             error:
@@ -79,12 +80,7 @@ const createForumPost = async (req, res) => {
         }
       }
       const savedPost = await prisma.forum_posts.create({
-        data: {
-          title: post.title,
-          content: post.content,
-          author_id: authorId,
-          author_name: post.authorName,
-        },
+        data: post,
       });
 
       post.id = savedPost.id;
@@ -93,10 +89,6 @@ const createForumPost = async (req, res) => {
       res.status(201).json({
         message: "Forum post created successfully",
         post: savedPost,
-      });
-    } else {
-      return res.status(403).json({
-        error: "You have reached your post limit for today",
       });
     }
   } catch (err) {
@@ -121,41 +113,41 @@ async function decrementPostCounter(userId) {
   }
 }
 //Dali treba?
-const createApprovedForumPost = async (req, res) => {
-  const { title, content, authorId, authorName } = req.body;
+// const createApprovedForumPost = async (req, res) => {
+//   const { title, content, authorId, authorName } = req.body;
 
-  try {
-    const user = await prisma.users.findUnique({
-      where: { id: authorId },
-    });
+//   try {
+//     const user = await prisma.users.findUnique({
+//       where: { id: authorId },
+//     });
 
-    const post = new ForumPost({
-      title,
-      content,
-      authorName,
-    });
+//     const post = new ForumPost({
+//       title,
+//       content,
+//       authorName,
+//     });
 
-    const savedPost = await prisma.forum_posts.create({
-      data: {
-        title: post.title,
-        content: post.content,
-        author_id: authorId,
-        author_name: post.authorName,
-      },
-    });
+//     const savedPost = await prisma.forum_posts.create({
+//       data: {
+//         title: post.title,
+//         content: post.content,
+//         author_id: authorId,
+//         author_name: post.authorName,
+//       },
+//     });
 
-    post.id = savedPost.id;
-    await decrementPostCounter(authorId);
+//     post.id = savedPost.id;
+//     await decrementPostCounter(authorId);
 
-    res.status(201).json({
-      message: "Approved post published successfully",
-      post: savedPost,
-    });
-  } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+//     res.status(201).json({
+//       message: "Approved post published successfully",
+//       post: savedPost,
+//     });
+//   } catch (err) {
+//     console.error("Server error:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
 
 const getForumPosts = async (req, res) => {
   try {
@@ -178,6 +170,7 @@ const getForumPosts = async (req, res) => {
           title: post.title,
           content: post.content,
           authorName: post.author_name,
+          authorId: post.author_id,
           dateCreated: post.date_created,
           commentCount: post.comment_count,
         })
@@ -243,6 +236,7 @@ const createComment = async (req, res) => {
       content: content,
       authorName: authorName,
       authorId: authorId,
+      postId: post_id,
     });
     const profane = filter.check(comment.content);
     if (profane) {
@@ -253,12 +247,7 @@ const createComment = async (req, res) => {
     }
 
     const savedComment = await prisma.comments.create({
-      data: {
-        post_id: post_id,
-        content: comment.content,
-        author_id: authorId,
-        author_name: comment.authorName,
-      },
+      data: comment,
     });
     await prisma.forum_posts.update({
       where: { id: post_id },
@@ -278,8 +267,8 @@ const createComment = async (req, res) => {
 };
 
 const getComments = async (req, res) => {
-  const postId = req.query.post_id;
-  console.log("Fetching comments for post_id:", postId);
+  const { postId } = req.params;
+
   if (!postId) {
     return res
       .status(400)
@@ -369,5 +358,5 @@ module.exports = {
   getComments,
 
   deleteComment,
-  createApprovedForumPost,
+  // createApprovedForumPost,
 };

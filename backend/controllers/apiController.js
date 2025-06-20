@@ -13,7 +13,7 @@ const registerPOST = async (req, res) => {
     if (valErrors) {
       return res.status(400).json({
         message: "Validation failed",
-        errors: valErrors, // Send back the specific errors
+        errors: valErrors,
         success: false,
       });
     }
@@ -42,12 +42,13 @@ const registerPOST = async (req, res) => {
     }
 
     try {
+      //Check if you can store isModerator in metadata to be refreneced in delete functions!
       const { data: authUser, error: authError } =
         await supabase.auth.admin.createUser({
           email,
           password,
           user_metadata: { username, name },
-          email_confirm: true,
+          // email_confirm: true,
         });
 
       if (authError) {
@@ -74,11 +75,11 @@ const registerPOST = async (req, res) => {
         studentForDb
       );
       if (error && error.field) {
-        fieldErrors[error.field] = error.message; // fieldErrors becomes { username: "Username already in use" }
+        fieldErrors[error.field] = error.message;
         errorMessage = "Registration failed. Please check the details.";
         res.status(400).json({
           message: errorMessage,
-          errors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined, // Sends errors: { username: "..." }
+          errors: Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined,
           success: false,
         });
       }
@@ -110,23 +111,7 @@ const registerPOST = async (req, res) => {
 async function createUserInSupabase(studentInstance) {
   try {
     const newUser = await prisma.users.create({
-      data: {
-        id: studentInstance.id,
-        username: studentInstance.username,
-        email: studentInstance.email,
-        name: studentInstance.name,
-        solved_problems: studentInstance.solvedProblems || 0,
-        points: studentInstance.points || 0,
-        rank: studentInstance.rank || "Novice",
-
-        postCounter: studentInstance.postCounter || 3,
-        postCheckCounter: studentInstance.postCheckCounter || 0,
-        isModerator: studentInstance.isModerator || false,
-        attempts: studentInstance.attempts || 0,
-        solvedDailyChallenge: studentInstance.solvedDailyChallenge || false,
-        daily_points: studentInstance.dailyPoints || 0,
-        daily_test_case_id: studentInstance.testCaseId || null,
-      },
+      data: studentInstance,
     });
     return { createdStudent: newUser, error: null };
   } catch (error) {

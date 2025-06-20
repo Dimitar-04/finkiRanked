@@ -27,6 +27,7 @@ const Forum = () => {
       }
 
       const data = await getForumPosts(page, postsPerPage);
+      console.log(data);
       if (page === 0) {
         setPosts(data);
       } else {
@@ -78,8 +79,8 @@ const Forum = () => {
                     key={post.id}
                     className="p-4 border rounded-lg shadow-sm hover:shadow-md transition  relative"
                   >
-                    {(post.authorName === user.name ||
-                      post.authorName === user.username ||
+                    {(post.author_name === user.name ||
+                      post.author_name === user.username ||
                       user.isModerator) && (
                       <button
                         className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
@@ -113,8 +114,8 @@ const Forum = () => {
                     </div>
 
                     <p className="text-m text-gray-500">
-                      By {post.authorName},{" "}
-                      <span>{post.dateCreated.split("T")[0]}</span>
+                      By {post.author_name},{" "}
+                      <span>{post.date_created?.split("T")[0]}</span>
                     </p>
                     <p className="mt-2 text-gray-400 text-xl">
                       {post.content && post.content.length > 300

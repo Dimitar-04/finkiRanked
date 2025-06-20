@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
 import doneAll from "../../assets/images/done-all.svg";
-import trashIcon from "../../assets/images/delete.svg"; // Add this import
+import trashIcon from "../../assets/images/delete.svg";
 import Navbar from "./Navbar";
 import { useCallback } from "react";
 import {
@@ -11,7 +11,6 @@ import {
 } from "@/services/reviewService";
 
 const ManagePosts = () => {
-  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -46,7 +45,6 @@ const ManagePosts = () => {
     closeModal();
   };
   const fetchPostsData = useCallback(async () => {
-    // Renamed to avoid conflict with posts state variable
     if (!user || !user.id) {
       setError("User not found. Please log in.");
       setLoading(false);
@@ -125,11 +123,9 @@ const ManagePosts = () => {
       setError(
         err.response?.data?.message || err.message || "Failed to approve post."
       );
-      // Optionally show an error modal/toast
     }
   };
   const openConfirmationModal = (type, item) => {
-    // item can be postId (string) for delete, or post (object) for approve
     if (type === "delete") {
       setModal({
         isOpen: true,
@@ -143,7 +139,7 @@ const ManagePosts = () => {
         isOpen: true,
         message: "Are you sure you want to approve this post?",
         type: "approve",
-        postId: item.id, // Store postId for consistency if needed, but 'post' object is key
+        postId: item.id,
         post: item,
       });
     }
@@ -199,7 +195,7 @@ const ManagePosts = () => {
                 key={post.id}
                 className="p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative"
               >
-                <h1>{post.title}</h1>
+                <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
                 <div className="absolute top-4 right-4 flex gap-2">
                   <button
                     title="Approve Post"
@@ -223,22 +219,11 @@ const ManagePosts = () => {
                   </button>
                 </div>
 
-                <h2
-                  className="text-2xl font-semibold mb-1 cursor-pointer hover:underline text-primary"
-                  onClick={() => {
-                    // For review, direct navigation to detail might not be desired
-                    // unless you have a specific review detail view.
-                    // For now, clicking title does nothing or opens a modal with full content.
-                    console.log("Post title clicked (for review):", post.title);
-                  }}
-                >
-                  {post.title}
-                </h2>
                 <p className="text-sm text-base-content/70 mb-3">
-                  By {post.authorName} on{" "}
+                  By {post.author_name} on{" "}
                   <span>
-                    {post.dateCreated
-                      ? new Date(post.dateCreated).toLocaleDateString()
+                    {post.date_created
+                      ? new Date(post.date_created).toLocaleDateString()
                       : "N/A"}
                   </span>
                 </p>
@@ -273,7 +258,7 @@ const ManagePosts = () => {
           <div className="flex items-center gap-3 mb-4">
             {modal.type === "approve" && (
               <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
-                <svg /* SVG for approve */
+                <svg
                   className="w-5 h-5 text-success-content"
                   fill="none"
                   stroke="currentColor"
@@ -290,7 +275,7 @@ const ManagePosts = () => {
             )}
             {modal.type === "delete" && (
               <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
-                <svg /* SVG for delete */
+                <svg
                   className="w-5 h-5 text-error-content"
                   fill="none"
                   stroke="currentColor"

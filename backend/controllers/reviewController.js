@@ -18,7 +18,7 @@ const createReviewPost = async (req, res) => {
         title: post.title,
         content: post.content,
         author_id: authorId,
-        author_name: post.authorName,
+        author_name: post.author_name,
       },
     });
   } catch (err) {
@@ -29,7 +29,6 @@ const createReviewPost = async (req, res) => {
 
 const getReviewPosts = async (req, res) => {
   try {
-    console.log("Fetching to be reviewed posts");
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
     const skip = page * limit;
@@ -50,8 +49,6 @@ const getReviewPosts = async (req, res) => {
         },
       });
 
-      console.log("Found review posts:", posts.length);
-
       const forumPosts = posts.map(
         (post) =>
           new ForumPost({
@@ -63,8 +60,6 @@ const getReviewPosts = async (req, res) => {
             commentCount: post.comment_count || 0,
           })
       );
-
-      console.log("Formatted posts:", forumPosts.length);
 
       res.status(200).json(forumPosts);
     } catch (dbError) {
@@ -88,14 +83,12 @@ const deleteReviewPost = async (req, res) => {
     });
   }
   try {
-    // Delete using Prisma
     await prisma.to_be_reviewed.delete({
       where: { id },
     });
 
     res.status(204).send();
   } catch (err) {
-    // Prisma throws when record not found
     if (err.code === "P2025") {
       return res.status(404).json({ error: "Forum post not found" });
     }
@@ -106,7 +99,6 @@ const deleteReviewPost = async (req, res) => {
 
 const approveReviewPost = async (req, res) => {
   try {
-    console.log("Approving review post", req.params.id);
     const { id } = req.params;
     const userId = req.query.userId;
 

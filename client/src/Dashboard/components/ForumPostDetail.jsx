@@ -108,7 +108,7 @@ const ForumPostDetail = () => {
 
               <div className="flex items-center gap-2 mt-2 md:mt-0">
                 <span className="badge badge-tertiary text-xs p-4 ">
-                  By {post.authorName}
+                  By {post.author_name}
                 </span>
               </div>
             </div>
@@ -164,13 +164,12 @@ const ForumPostDetail = () => {
                                 className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Here you would add the delete confirmation and logic
+
                                   if (
                                     window.confirm(
                                       "Are you sure you want to delete this comment?"
                                     )
                                   ) {
-                                    // Call your delete comment function here
                                     console.log("Delete comment:", comment.id);
                                   }
                                   handleDeleteComment(comment.id);
@@ -184,7 +183,7 @@ const ForumPostDetail = () => {
                               </button>
                             )}
                             <span className="font-semibold text-base-content">
-                              {comment.authorName}
+                              {comment.author_name}
                             </span>
                             <span className="text-xs text-base-content/60">
                               {comment.dateCreated

@@ -2,7 +2,7 @@ const prisma = require("../lib/prisma");
 const schedule = require("node-schedule");
 
 async function dailyResets() {
-  const scriptExecutionTime = new Date(); // Time when the script actually runs
+  const scriptExecutionTime = new Date();
   console.log(
     `[${scriptExecutionTime.toISOString()}] Starting daily reset process (executed at local server time).`
   );

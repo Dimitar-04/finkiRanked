@@ -6,8 +6,10 @@ class User {
     this.isModerator = data.isModerator || false;
     this.email = data.email;
     this.attempts = data.attempts || 0;
-    this.dailyPoints = data.dailyPoints || 0;
-    this.testCaseId = data.testCaseId || null;
+    this.solvedDailyChallenge = data.solvedDailyChallenge || false;
+
+    this.daily_points = data.daily_points || 0;
+    this.daily_test_case_id = data.daily_test_case_id || null;
   }
 
   validate(password, confirmPassword) {
@@ -57,16 +59,6 @@ class User {
 
     return Object.keys(errors).length > 0 ? errors : null;
   }
-
-  // toJSON() {
-  //   return {
-  //     id: this.id,
-  //     username: this.username,
-  //     email: this.email,
-  //     isModerator: this.isModerator,
-
-  //   };
-  // }
 }
 
 module.exports = User;

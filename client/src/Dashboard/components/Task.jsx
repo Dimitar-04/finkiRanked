@@ -8,6 +8,7 @@ import {
   getSpecificTestCase,
   updateUserDailyTestCaseId,
 } from "@/services/taskService";
+
 const Task = () => {
   const [showTask, setShowTask] = useState(false);
   const [task, setTask] = useState(null);
@@ -15,6 +16,7 @@ const Task = () => {
   const [evalResult, setEvalResult] = useState("");
   const [isCorrect, setIsCorrect] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUserOutputEmpty, setIsUserOutputEmpty] = useState(true);
 
   const today = new Date().toLocaleDateString();
   const [currentUser, setCurrentUser] = useState(() => {
@@ -35,13 +37,12 @@ const Task = () => {
       localStorage.setItem("user", JSON.stringify(currentUser));
     }
   }, [currentUser]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (task && task.id && showTask) {
       fetchTestCaseLogic(task.id);
     }
-  }, [task, showTask]);
+  }, [task]);
 
   async function fetchTaskForToday(date) {
     try {
@@ -162,8 +163,10 @@ const Task = () => {
   }
 
   const handleStart = () => {
-    const today = new Date();
-    fetchTaskForToday(today);
+    if (!task) {
+      const today = new Date();
+      fetchTaskForToday(today);
+    }
 
     setShowTask(true);
   };
@@ -177,7 +180,9 @@ const Task = () => {
 
     try {
       const userOutput = document.getElementById("userOutput").value;
-
+      if (userOutput.trim() === "") {
+        return;
+      }
       const result = await evaluate(
         task.id,
         userOutput,
@@ -217,6 +222,9 @@ const Task = () => {
     }
   }
 
+  const handleGoBack = () => {
+    setShowTask(false);
+  };
   return (
     <div data-theme="luxury" className="dashboard h-screen flex bg-base-100">
       <Navbar />
@@ -391,6 +399,10 @@ const Task = () => {
                           ? "Challenge already completed"
                           : "Enter your output here..."
                       }
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setIsUserOutputEmpty(value.trim() === "");
+                      }}
                       className={`textarea textarea-bordered textarea-lg w-full mb-4 ${
                         isCorrect === null
                           ? ""
@@ -431,7 +443,7 @@ const Task = () => {
                     <div className="card-actions justify-end gap-4">
                       <button
                         onClick={() => {
-                          navigate("/dashboard/forum");
+                          handleGoBack();
                         }}
                         className="btn border-amber-400 btn-lg"
                         disabled={isSubmitting}
@@ -446,7 +458,9 @@ const Task = () => {
                             : "border-amber-400"
                         }`}
                         disabled={
-                          currentUser.solvedDailyChallenge || isSubmitting
+                          currentUser.solvedDailyChallenge ||
+                          isSubmitting ||
+                          isUserOutputEmpty
                         }
                       >
                         {isSubmitting ? (

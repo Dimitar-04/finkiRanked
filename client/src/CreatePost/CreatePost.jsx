@@ -6,9 +6,9 @@ import { createForumPost } from "@/services/forumService";
 const CreatePost = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [error, setError] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [redirectNeeded, setRedirectNeeded] = useState(false);
+
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
 
