@@ -47,10 +47,18 @@ const Forum = () => {
   const handleDeletePost = async (postId) => {
     try {
       await deleteForumPost(postId);
-      setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
       console.log("Post deleted successfully");
+
+      setLoading(true);
+      const data = await getForumPosts(0, postsPerPage);
+      setPosts(data);
+      setPage(0);
+      setHasMore(data.length >= postsPerPage);
+      setLoading(false);
     } catch (error) {
       console.error("Error deleting post:", error);
+
+      setLoading(false);
     }
   };
   const handleLoadMore = () => {
@@ -125,7 +133,6 @@ const Forum = () => {
                     <div
                       className="mt-4 flex justify-end"
                       onClick={(e) => {
-                        // Prevent clicking the post if the delete button was clicked
                         navigate(`/dashboard/forum-detail/${post.id}`, {
                           state: { post },
                         });

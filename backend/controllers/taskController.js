@@ -321,7 +321,7 @@ const evaluateTask = async (req, res) => {
           ? 20
           : 30;
       const totalScore = timeBonus + attemptScore + difficultyScore;
-      const userRank = getRankByPoints(totalScore + user.points);
+      const userRank = getRankByPoints(BigInt(totalScore) + user.points);
       const updatedUser = await prisma.users.update({
         where: {
           id: userId,

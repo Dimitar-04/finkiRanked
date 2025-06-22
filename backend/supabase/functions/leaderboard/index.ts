@@ -1,19 +1,16 @@
-// Supabase Edge Function - leaderboard.ts
 import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 import supabase from "../../../supabaseClient";
-// Cache constants
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const CACHE_DURATION = 5 * 60 * 1000;
 const PAGE_SIZE = 20;
 
-// Type for stored data
 type CacheEntry = {
   data: any;
   timestamp: number;
 };
 
 serve(async (req: Request): Promise<Response> => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 200,
@@ -51,7 +48,6 @@ serve(async (req: Request): Promise<Response> => {
     const now = Date.now();
     const cacheKey = `leaderboard:${page}-${limit}`;
 
-    // Open KV store
     const kv = await Deno.openKv();
 
     // Check cache in KV
@@ -62,6 +58,7 @@ serve(async (req: Request): Promise<Response> => {
       cacheResult.value &&
       now - cacheResult.value.timestamp < CACHE_DURATION
     ) {
+      console.log("entered");
       return new Response(
         JSON.stringify({ ...cacheResult.value.data, cached: true }),
         {
@@ -69,23 +66,12 @@ serve(async (req: Request): Promise<Response> => {
           headers: {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "max-age=300", // Allow browser caching for 5 minutes
+            "Cache-Control": "max-age=300",
           },
         }
       );
     }
-
-    // Load env variables
-    // const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    // const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-    // if (!supabaseUrl || !supabaseServiceKey) {
-    //   throw new Error('Missing Supabase env variables');
-    // }
-
-    // const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Pagination
+    console.log("not entered");
     const offset = (page - 1) * limit;
     const { data, error, count } = await supabase
       .from("users")

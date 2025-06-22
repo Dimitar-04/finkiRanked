@@ -246,7 +246,7 @@ const Task = () => {
                   </svg>
                 </div>
                 <h1 className="card-title text-4xl font-bold mb-6">
-                  Task for {today}
+                  Challenge for {today}
                 </h1>
                 <div className="divider"></div>
                 <div className="space-y-6 text-lg">
@@ -275,7 +275,7 @@ const Task = () => {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       ></path>
                     </svg>
-                    <span>The task will be available for 24 hours</span>
+                    <span>The challenge will be available for 24 hours</span>
                   </div>
                 </div>
 

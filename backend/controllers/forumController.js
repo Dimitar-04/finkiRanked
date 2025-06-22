@@ -29,6 +29,7 @@ const createForumPost = async (req, res) => {
         content,
         authorId,
         authorName,
+        dateCreated: new Date(),
       });
 
       const isProfane = filter.check(post.title);
@@ -307,7 +308,6 @@ const deleteComment = async (req, res) => {
   const { commentId } = req.params;
   const userId = req.user.sub;
   try {
-    // First get the comment to find its post_id
     const comment = await prisma.comments.findUnique({
       where: { id: commentId },
       select: { post_id: true, author_id: true },
@@ -326,12 +326,10 @@ const deleteComment = async (req, res) => {
       });
     }
 
-    // Delete the comment
     await prisma.comments.delete({
       where: { id: commentId },
     });
 
-    // Update comment count if post_id exists
     if (comment.post_id) {
       await prisma.forum_posts.update({
         where: { id: comment.post_id },

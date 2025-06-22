@@ -468,7 +468,7 @@
   },
   {
     "title": "frequency-deviation",
-    "description": "Given a string consisting of lowercase English letters, we define the frequency deviation of a substring as the difference between the maximum and the minimum frequencies of the characters in that substring.\n\nA substring of a string is formed by any contiguous segment of the string. For example, given \"bbacccc\", the character appearing most frequently is 'c' with $4$ occurrences. The character that appears the fewest times is 'a' with $1$ occurrence. The frequency deviation of the entire string is $4 - 1 = 3$.\n\nGiven a string, $s$, representing the input string, find the maximum possible frequency deviation of any of its substrings.",
+    "description": "Given a string consisting of lowercase English letters, we define the frequency deviation of a substring as the difference between the maximum and the minimum frequencies of the characters in that substring.\n\nA substring of a string is formed by any contiguous segment of the string. For example, given \"bbacccc\", the character appearing most frequently is 'c' with 4 occurrences. The character that appears the fewest times is 'a' with 1 occurrence. The frequency deviation of the entire string is 4 - 1 = 3.\n\nGiven a string, s, representing the input string, find the maximum possible frequency deviation of any of its substrings.",
     "examples": [
       {
         "input": "bbacccc",

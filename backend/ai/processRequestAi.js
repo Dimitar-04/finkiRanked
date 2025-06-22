@@ -1,4 +1,4 @@
-const openai = require('./openaiClient');
+const openai = require("./openaiClient");
 
 /**
  * @param {string} title
@@ -11,7 +11,7 @@ async function analyzePostContent(title, content) {
     
     IMPORTANT INSTRUCTIONS:
     - The forum allows content in both English and Macedonian languages
-    - Content in Macedonian about programming IS appropriate
+    - Content in Macedonian about programming excercises IS appropriate
     - The post should not contain offensive language, slurs or cussing in any language
     - The post MUST be related to programming, coding, or computer science topics
     - Posts about other topics are inappropriate
@@ -27,27 +27,27 @@ async function analyzePostContent(title, content) {
     or "INAPPROPRIATE" if the content is either off-topic or contains inappropriate language.`;
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
+      model: "gpt-4",
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.2, // Even lower temperature for more consistent responses
     });
 
     const aiResponse = response.choices[0].message.content.trim();
-    const isAppropriate = aiResponse === 'APPROPRIATE';
+    const isAppropriate = aiResponse === "APPROPRIATE";
 
     return {
       aiResponse,
       isAppropriate,
       reason: isAppropriate
-        ? 'Content is appropriate'
-        : 'Content is not appropriate for a programming forum',
+        ? "Content is appropriate"
+        : "Content is not appropriate for a programming forum",
     };
   } catch (error) {
-    console.error('AI analysis error:', error);
+    console.error("AI analysis error:", error);
     return {
-      aiResponse: 'ERROR',
+      aiResponse: "ERROR",
       isAppropriate: true,
-      reason: 'AI analysis unavailable',
+      reason: "AI analysis unavailable",
     };
   }
 }
