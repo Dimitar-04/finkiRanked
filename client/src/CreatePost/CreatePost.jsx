@@ -112,7 +112,6 @@ const CreatePost = () => {
           onSubmit={handleSubmit}
           className="card bg-base-200 shadow-xl w-full relative"
         >
-          {/* Info icon positioned at top-right of form */}
           <div className="absolute top-6 right-6 z-10">
             <div className="dropdown dropdown-hover dropdown-end">
               <div
@@ -226,7 +225,7 @@ const CreatePost = () => {
               </button>
               <button
                 type="submit"
-                className="btn border-amber-400 btn-lg" // Consider btn-primary or similar for consistency
+                className="btn border-amber-400 btn-lg"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
