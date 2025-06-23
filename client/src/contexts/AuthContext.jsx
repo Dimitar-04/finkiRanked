@@ -118,6 +118,7 @@ export const AuthProvider = ({ children }) => {
 
     checkStaleSession();
   }, [navigate, INACTIVITY_TIMEOUT]);
+
   const setupTokenExpiryLogout = useCallback(
     (accessToken) => {
       if (!accessToken) return;
@@ -127,7 +128,7 @@ export const AuthProvider = ({ children }) => {
 
       const now = Math.floor(Date.now() / 1000);
       const expiresIn = payload.exp - now;
-      console.log("Token expires in:", expiresIn, "seconds");
+
       if (expiresIn <= 0) {
         console.warn("Token already expired, handling expiration");
 
@@ -182,20 +183,6 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem("jwt", session.access_token);
           setupTokenExpiryLogout(session.access_token);
         }
-        //check if this is needed
-        // const tokenExp = localStorage.getItem("token_exp");
-        // if (tokenExp) {
-        //   const now = Math.floor(Date.now() / 1000);
-        //   const expiresIn = parseInt(tokenExp) - now;
-
-        //   if (expiresIn <= 0) {
-        //     await logout();
-        //   } else {
-        //     tokenExpiryTimeoutRef.current = setTimeout(() => {
-        //       logout();
-        //     }, expiresIn * 1000);
-        //   }
-        // }
       } catch (error) {
         console.error("Error retrieving session:", error);
       } finally {
@@ -209,6 +196,7 @@ export const AuthProvider = ({ children }) => {
       (event, session) => {
         if (event === "SIGNED_IN" && session?.user) {
           setUser(session.user);
+
           localStorage.setItem("jwt", session.access_token);
           setupTokenExpiryLogout(session.access_token);
         } else if (event === "SIGNED_OUT") {

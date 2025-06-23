@@ -89,3 +89,9 @@ model test_cases {
   output       String?
   challenges   challenges @relation(fields: [challenge_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
+
+model leaderboard_cache {
+  cache_key String  @id
+  data      Json?
+  timestamp BigInt?
+}

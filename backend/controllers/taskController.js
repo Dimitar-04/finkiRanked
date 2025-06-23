@@ -295,6 +295,10 @@ const evaluateTask = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    if (user.solvedDailyChallenge) {
+      alert("You have already solved today's challenge!");
+      return;
+    }
     let attempts = user.attempts || 0;
     await prisma.challenges.update({
       where: {

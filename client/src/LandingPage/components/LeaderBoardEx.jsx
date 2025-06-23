@@ -21,7 +21,6 @@ const LeaderBoardEx = () => {
     }
   }, [location.pathname]);
 
-  // Function to fetch leaderboard data
   const fetchLeaderboard = async (page = 1, append = false) => {
     console.log("entered from leaderboard.jsx");
     try {
@@ -32,11 +31,10 @@ const LeaderBoardEx = () => {
         setError(null);
       }
 
-      // Fix: Use the correct Supabase function URL
       const response = await fetch(
         `${
           import.meta.env.VITE_SUPABASE_URL
-        }/functions/v1/leaderboard?page=${page}&limit=20`,
+        }functions/v1/leaderboard?page=${page}&limit=20`,
         {
           method: "GET",
           headers: {

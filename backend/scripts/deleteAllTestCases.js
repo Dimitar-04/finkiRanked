@@ -9,7 +9,7 @@ async function deleteAllTestCases() {
     console.log(` Successfully deleted ${result.count} test cases`);
     return result.count;
   } catch (error) {
-    console.error("❌ Error deleting test cases:", error);
+    console.error("Error deleting test cases:", error);
     throw error;
   } finally {
     console.log("Disconnecting from database...");

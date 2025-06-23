@@ -48,7 +48,7 @@ const registerPOST = async (req, res) => {
           email,
           password,
           user_metadata: { username, name },
-          // email_confirm: true,
+          email_confirm: true,
         });
 
       if (authError) {

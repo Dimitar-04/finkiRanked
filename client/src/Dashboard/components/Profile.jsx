@@ -1,24 +1,24 @@
 // Example for Profile.jsx
-import React from 'react';
-import pp from '../../assets/images/pp.svg';
-import Navbar from './Navbar';
-import RankBadge from '@/utils/RankBadge.jsx';
-import { useAuth } from '../../contexts/AuthContext.jsx';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import React from "react";
+import pp from "../../assets/images/pp.svg";
+import Navbar from "./Navbar";
+import RankBadge from "@/utils/RankBadge.jsx";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 const Profile = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem("user"));
   useEffect(() => {
     if (!user) {
-      navigate('/');
+      navigate("/");
     }
   }, [user, navigate]);
 
   const handleSignOut = async () => {
     await logout();
-    navigate('/');
+    navigate("/");
   };
 
   if (!user) {
@@ -54,9 +54,9 @@ const Profile = () => {
             <h2 className="card-title mt-4">{user.name}</h2>
             <p className="text-gray-500">{user.email}</p>
             <div className="mt-4">
-              <p className="text-lg">
+              <div className="text-lg">
                 <RankBadge rankName={user.rank} size="lg" />
-              </p>
+              </div>
               <p className="text-lg mt-5">
                 <span className="font-bold">Points:</span> {user.points}
               </p>

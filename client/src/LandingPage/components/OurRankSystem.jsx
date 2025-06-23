@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { RANK_DATA } from "../../utils/rankUtils";
 
 export const OurRankSystem = () => {
-  // Convert RANK_DATA object to array and sort by id
   const rankData = Object.values(RANK_DATA).sort((a, b) => a.id - b.id);
 
   return (
