@@ -70,22 +70,18 @@ const LeaderBoardEx = () => {
       setLoadingMore(false);
     }
   };
-  // Load initial data
+
   useEffect(() => {
     fetchLeaderboard(1, false);
   }, []);
 
-  // Handle load more button click
   const handleLoadMore = () => {
     if (pagination && pagination.hasNextPage) {
       fetchLeaderboard(pagination.nextPage, true);
     }
   };
 
-  // Calculate position based on current page and index - FIXED
   const getPosition = (index) => {
-    // For load more functionality, we need to track total loaded items
-    // since we're appending data, the index represents the actual position
     return index + 1;
   };
 
@@ -134,12 +130,16 @@ const LeaderBoardEx = () => {
             <div className="stat">
               <div className="stat-title">Total Users</div>
 
-              <div className=" text-3xl">{pagination.totalUsers}</div>
+              <div className="text-3xl flex justify-center items-center">
+                {pagination.totalUsers}
+              </div>
             </div>
             <div className="stat">
               <div className="stat-title">Showing</div>
 
-              <div className="text-3xl">{leaderboard.length}</div>
+              <div className="text-3xl flex justify-center items-center">
+                {leaderboard.length}
+              </div>
             </div>
           </div>
         )}

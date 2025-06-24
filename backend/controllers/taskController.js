@@ -212,7 +212,6 @@ function getMinutesSinceSevenAM() {
 
 function getTimeBonus() {
   const minutes = getMinutesSinceSevenAM();
-  console.log("Minutes since 7 AM:", minutes);
   return Math.max(0, 60 - Math.floor(minutes * 0.0833));
 }
 

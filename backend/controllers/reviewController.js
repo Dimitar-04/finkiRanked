@@ -1,4 +1,5 @@
 const prisma = require("../lib/prisma");
+const ToBeReviewedPost = require("../models/ToBeReviewedPost");
 const ForumPost = require("../models/ForumPost");
 const ForumController = require("./forumController");
 const filter = require("leo-profanity");
@@ -6,20 +7,17 @@ const safeWords = require("../filters/safeWords");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
-  console.log(title);
+
   try {
-    const post = new ForumPost({
+    const post = new ToBeReviewedPost({
       title,
       content,
+      authorId,
       authorName,
+      dateCreated: new Date(),
     });
     const savedPost = await prisma.to_be_reviewed.create({
-      data: {
-        title: post.title,
-        content: post.content,
-        author_id: authorId,
-        author_name: post.author_name,
-      },
+      data: post,
     });
   } catch (err) {
     console.error("Server error:", err);

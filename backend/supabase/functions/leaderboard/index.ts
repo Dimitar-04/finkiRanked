@@ -4,8 +4,6 @@ import supabase from "../../../supabaseEdgeClient.js";
 const CACHE_DURATION = 5 * 60 * 1000;
 const PAGE_SIZE = 20;
 
-console.log("Starting leaderboard function...");
-
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -51,7 +49,6 @@ serve(async (req: Request): Promise<Response> => {
       .single();
 
     if (cacheData && now - cacheData.timestamp < CACHE_DURATION) {
-      console.log("Cache hit");
       return new Response(JSON.stringify({ ...cacheData.data, cached: true }), {
         status: 200,
         headers: {
@@ -62,7 +59,6 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log("Cache miss — fetching leaderboard");
     const offset = (page - 1) * limit;
     const { data, error, count } = await supabase
       .from("users")
