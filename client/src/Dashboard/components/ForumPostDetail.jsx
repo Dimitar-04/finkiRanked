@@ -158,7 +158,7 @@ const ForumPostDetail = () => {
                           className="p-4 rounded-lg bg-base-200 border border-base-300"
                         >
                           <div className="flex relative items-center gap-2 mb-1">
-                            {(comment.authorId === user.id ||
+                            {(comment.author_id === user.id ||
                               user.isModerator) && (
                               <button
                                 className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
