@@ -4,11 +4,12 @@ import logoIcon from "../../assets/images/logoIcon.png";
 import logoText from "../../assets/images/logoText.png";
 import pp from "../../assets/images/pp.svg";
 import RankBadge from "@/utils/RankBadge";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
-  const user = JSON.parse(localStorage.getItem("user"));
-
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   return (
     <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content">
       <div className="p-4 border-b border-base-content/10">

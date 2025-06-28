@@ -3,8 +3,10 @@ const prisma = require("../lib/prisma");
 
 const getTaskByDate = async (req, res) => {
   const { date } = req.params;
-  console.log(date);
-
+  const user = await prisma.users.findUnique({
+    where: { id: "af582629-8385-47b9-9f01-3267652f693c" },
+  });
+  console.log(user);
   try {
     const now = new Date();
 
@@ -295,8 +297,7 @@ const evaluateTask = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
     if (user.solvedDailyChallenge) {
-      alert("You have already solved today's challenge!");
-      return;
+      return res.status(404).json({ message: "User daily challenge solved" });
     }
     let attempts = user.attempts || 0;
     await prisma.challenges.update({

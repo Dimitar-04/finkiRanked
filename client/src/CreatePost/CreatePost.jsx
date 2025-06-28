@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { createForumPost } from "@/services/forumService";
-
+import { useAuth } from "@/contexts/AuthContext";
 const CreatePost = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
@@ -27,9 +27,8 @@ const CreatePost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // setError('');
+
     setIsSubmitting(true);
-    const user = JSON.parse(localStorage.getItem("user"));
 
     if (!user || !user.id || !user.name) {
       showModal("You must be logged in to create a post.", "auth");

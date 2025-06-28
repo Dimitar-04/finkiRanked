@@ -144,55 +144,31 @@ function convertBigIntToString(obj) {
 }
 const loginPOST = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
 
-    if (!email || !password) {
+    if (!email) {
       return res
         .status(400)
-        .json({ message: "Email and password are required", success: false });
+        .json({ message: "Email is required", success: false });
     }
+
     const userData = await prisma.users.findUnique({
       where: { email: email },
     });
+
     if (!userData) {
       return res
         .status(404)
         .json({ message: "User not found in database", success: false });
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const safeUserData = convertBigIntToString(userData);
+
+    res.status(200).json({
+      message: "User data retrieved successfully",
+      success: true,
+      user: safeUserData,
     });
-
-    if (error) {
-      return res.status(401).json({ message: error.message, success: false });
-    }
-
-    try {
-      const userData = await prisma.users.findUnique({
-        where: { email: email },
-      });
-
-      if (!userData) {
-        return res
-          .status(404)
-          .json({ message: "User not found in database", success: false });
-      }
-
-      const safeUserData = convertBigIntToString(userData);
-
-      res.status(200).json({
-        message: "User data retrieved",
-        success: true,
-        user: safeUserData,
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      res
-        .status(500)
-        .json({ message: "An error occurred during login", success: false });
-    }
   } catch (error) {
     console.error("Login error:", error);
     res

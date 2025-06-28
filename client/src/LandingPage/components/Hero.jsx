@@ -1,9 +1,10 @@
 import React from "react";
 import hero from "../../assets/images/hero-bg.jpg";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user } = useAuth();
   const navigate = useNavigate();
   return (
     <div

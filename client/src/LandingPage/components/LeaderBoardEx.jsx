@@ -22,7 +22,6 @@ const LeaderBoardEx = () => {
   }, [location.pathname]);
 
   const fetchLeaderboard = async (page = 1, append = false) => {
-    console.log("entered from leaderboard.jsx");
     try {
       if (append) {
         setLoadingMore(true);
@@ -88,7 +87,7 @@ const LeaderBoardEx = () => {
   if (loading && leaderboard.length === 0) {
     return (
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        {!landing ? <Navbar /> : null}
+        {/* {!landing ? <Navbar /> : null} */}
         <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
           <h1 className="text-4xl font-bold">Leaderboard</h1>
           <div className="loading loading-spinner loading-lg"></div>
@@ -100,7 +99,7 @@ const LeaderBoardEx = () => {
   if (error && leaderboard.length === 0) {
     return (
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        {!landing ? <Navbar /> : null}
+        {/* {!landing ? <Navbar /> : null} */}
         <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
           <h1 className="text-4xl font-bold">Leaderboard</h1>
           <div className="alert alert-error">
@@ -119,7 +118,7 @@ const LeaderBoardEx = () => {
 
   return (
     <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-      {!landing ? <Navbar /> : null}
+      {/* {!landing ? <Navbar /> : null} */}
 
       <div className="flex w-full flex-col items-center p-20 gap-10">
         <h1 className="text-4xl font-bold">Leaderboard</h1>

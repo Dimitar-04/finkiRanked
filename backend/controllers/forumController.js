@@ -113,42 +113,6 @@ async function decrementPostCounter(userId) {
     );
   }
 }
-//Dali treba?
-// const createApprovedForumPost = async (req, res) => {
-//   const { title, content, authorId, authorName } = req.body;
-
-//   try {
-//     const user = await prisma.users.findUnique({
-//       where: { id: authorId },
-//     });
-
-//     const post = new ForumPost({
-//       title,
-//       content,
-//       authorName,
-//     });
-
-//     const savedPost = await prisma.forum_posts.create({
-//       data: {
-//         title: post.title,
-//         content: post.content,
-//         author_id: authorId,
-//         author_name: post.authorName,
-//       },
-//     });
-
-//     post.id = savedPost.id;
-//     await decrementPostCounter(authorId);
-
-//     res.status(201).json({
-//       message: "Approved post published successfully",
-//       post: savedPost,
-//     });
-//   } catch (err) {
-//     console.error("Server error:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
 
 const getForumPosts = async (req, res) => {
   try {

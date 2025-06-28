@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../contexts/AuthContext";
-import { loginUser } from "@/services/registerLoginService";
+import { useAuth } from "../contexts/AuthContext";
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -19,47 +20,15 @@ const Login = () => {
     setError("");
     setLoading(true);
 
-    try {
-      const { data: supabaseAuthData, error: supabaseAuthError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+    const result = await login(email, password);
 
-      if (supabaseAuthError) {
-        setError(supabaseAuthError.message);
-        setLoading(false);
-        return;
-      }
-
-      if (!supabaseAuthData.session?.access_token) {
-        setError("Failed to retrieve session token from Supabase.");
-        setLoading(false);
-        return;
-      }
-
-      localStorage.setItem("jwt", supabaseAuthData.session.access_token);
-      const backendLoginData = await loginUser({ email, password });
-
-      if (backendLoginData.success) {
-        localStorage.setItem("user", JSON.stringify(backendLoginData.user));
-        navigate("/dashboard");
-      } else {
-        localStorage.removeItem("jwt");
-        setError(backendLoginData.message || "Login failed on backend.");
-      }
-    } catch (err) {
-      console.error("Login error caught in component:", err);
-      if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message);
-      } else if (err.message) {
-        setError(err.message);
-      } else {
-        setError("An unexpected error occurred during login.");
-      }
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      navigate("/dashboard");
+    } else {
+      setError(result.error);
     }
+
+    setLoading(false);
   };
   return (
     <div

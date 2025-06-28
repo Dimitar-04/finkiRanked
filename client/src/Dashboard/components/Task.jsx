@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "./Navbar";
+
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getTaskForDate,
   getTestCaseForTask,
@@ -19,24 +20,7 @@ const Task = () => {
   const [isUserOutputEmpty, setIsUserOutputEmpty] = useState(true);
 
   const today = new Date().toLocaleDateString();
-  const [currentUser, setCurrentUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    const initialUser = storedUser ? JSON.parse(storedUser) : {};
-    return {
-      attempts: 0,
-      daily_test_case_id: null,
-      solvedDailyChallenge: false,
-      points: 0,
-      id: null,
-      ...initialUser,
-    };
-  });
-
-  useEffect(() => {
-    if (currentUser && currentUser.id) {
-      localStorage.setItem("user", JSON.stringify(currentUser));
-    }
-  }, [currentUser]);
+  const { user, updateUser, loading } = useAuth();
 
   useEffect(() => {
     if (task && task.id && showTask) {
@@ -85,19 +69,19 @@ const Task = () => {
       let fetchedApiTestCaseData;
       let finalTestCaseIdToStore = null;
 
-      if (currentUser.daily_test_case_id) {
+      if (user.daily_test_case_id) {
         try {
           fetchedApiTestCaseData = await getSpecificTestCase(
-            currentUser.daily_test_case_id
+            user.daily_test_case_id
           );
           if (fetchedApiTestCaseData && fetchedApiTestCaseData.id) {
             finalTestCaseIdToStore = fetchedApiTestCaseData.id;
           } else {
-            setCurrentUser((prev) => ({ ...prev, daily_test_case_id: null }));
+            updateUser({ ...user, daily_test_case_id: null });
           }
         } catch (specificFetchError) {
           console.warn(
-            `Error fetching specific test case ${currentUser.daily_test_case_id}:`,
+            `Error fetching specific test case ${user.daily_test_case_id}:`,
             specificFetchError
           );
 
@@ -105,29 +89,21 @@ const Task = () => {
             specificFetchError.response &&
             specificFetchError.response.status === 404
           ) {
-            setCurrentUser((prev) => ({ ...prev, daily_test_case_id: null }));
+            updateUser({ ...user, daily_test_case_id: null });
           }
         }
       }
 
       if (!finalTestCaseIdToStore) {
-        console.log("Fetching random test case for challenge:", challengeId);
-
         fetchedApiTestCaseData = await getTestCaseForTask(challengeId);
         if (fetchedApiTestCaseData && fetchedApiTestCaseData.id) {
           finalTestCaseIdToStore = fetchedApiTestCaseData.id;
 
-          setCurrentUser((prev) => ({
-            ...prev,
-            daily_test_case_id: finalTestCaseIdToStore,
-          }));
+          updateUser({ ...user, daily_test_case_id: finalTestCaseIdToStore });
 
-          if (currentUser.id) {
+          if (user.id) {
             try {
-              await updateUserDailyTestCaseId(
-                currentUser.id,
-                finalTestCaseIdToStore
-              );
+              await updateUserDailyTestCaseId(user.id, finalTestCaseIdToStore);
               console.log(
                 "Successfully updated daily_test_case_id on backend."
               );
@@ -183,12 +159,7 @@ const Task = () => {
       if (userOutput.trim() === "") {
         return;
       }
-      const result = await evaluate(
-        task.id,
-        userOutput,
-        testCase.id,
-        currentUser.id
-      );
+      const result = await evaluate(task.id, userOutput, testCase.id, user.id);
 
       if (result.success) {
         setEvalResult(
@@ -196,23 +167,23 @@ const Task = () => {
         );
         setIsCorrect(true);
 
-        setCurrentUser((prev) => ({
-          ...prev,
+        updateUser({
+          ...user,
           points: result.newTotalPoints,
           solvedDailyChallenge: true,
           daily_points: result.scoreAwarded,
           rank: result.rank,
-        }));
+        });
       } else {
         setEvalResult(
           `${result.message} This was attempt: ${result.attemptsMade}.`
         );
         setIsCorrect(false);
 
-        setCurrentUser((prev) => ({
-          ...prev,
+        updateUser({
+          ...user,
           attempts: result.attemptsMade,
-        }));
+        });
       }
     } catch (error) {
       console.error("Error evaluating solution:", error);
@@ -225,9 +196,19 @@ const Task = () => {
   const handleGoBack = () => {
     setShowTask(false);
   };
+
+  if (loading) {
+    return (
+      <div data-theme="luxury" className="dashboard h-screen flex bg-base-100">
+        <div className="flex-1 flex justify-center items-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div data-theme="luxury" className="dashboard h-screen flex bg-base-100">
-      <Navbar />
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
           {!showTask ? (
@@ -294,7 +275,7 @@ const Task = () => {
                     >
                       <path d="M5 3l14 9-14 9V3z" />
                     </svg>
-                    {currentUser.solvedDailyChallenge
+                    {user.solvedDailyChallenge
                       ? "View Challenge"
                       : "Start Challenge"}
                   </button>
@@ -310,7 +291,7 @@ const Task = () => {
                   </h1>
                 </div>
 
-                {currentUser.solvedDailyChallenge && (
+                {user.solvedDailyChallenge && (
                   <div className="alert alert-info mb-4">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -395,7 +376,7 @@ const Task = () => {
                       id="userOutput"
                       type="text"
                       placeholder={
-                        currentUser.solvedDailyChallenge
+                        user.solvedDailyChallenge
                           ? "Challenge already completed"
                           : "Enter your output here..."
                       }
@@ -411,13 +392,11 @@ const Task = () => {
                           : "border-red-500"
                       }`}
                       rows="6"
-                      disabled={
-                        currentUser.solvedDailyChallenge || isSubmitting
-                      }
+                      disabled={user.solvedDailyChallenge || isSubmitting}
                     />
-                    {currentUser.solvedDailyChallenge && (
+                    {user.solvedDailyChallenge && (
                       <p className="text-lg text-success">
-                        You earned: {currentUser.daily_points} for today's task
+                        You earned: {user.daily_points} for today's task
                       </p>
                     )}
 
@@ -453,19 +432,19 @@ const Task = () => {
                       <button
                         onClick={() => handleSubmitSolution()}
                         className={`btn btn-lg ${
-                          currentUser.solvedDailyChallenge || isSubmitting
+                          user.solvedDailyChallenge || isSubmitting
                             ? "btn-disabled"
                             : "border-amber-400"
                         }`}
                         disabled={
-                          currentUser.solvedDailyChallenge ||
+                          user.solvedDailyChallenge ||
                           isSubmitting ||
                           isUserOutputEmpty
                         }
                       >
                         {isSubmitting ? (
                           <span className="loading loading-spinner"></span>
-                        ) : currentUser.solvedDailyChallenge ? (
+                        ) : user.solvedDailyChallenge ? (
                           "Already Completed"
                         ) : (
                           "Submit Solution"

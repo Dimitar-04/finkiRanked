@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import trashIcon from "../../assets/images/delete.svg";
 import Navbar from "./Navbar";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getCommentsForPost,
   createComment,
@@ -18,7 +19,7 @@ const ForumPostDetail = () => {
   const statePost = useState(location.state?.post || {});
   const post = statePost[0];
   const [posting, setPosting] = useState(false);
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { postId } = useParams();
 

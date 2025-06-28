@@ -1,26 +1,22 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import React from 'react';
+import { useAuth } from "../contexts/AuthContext";
+import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, isLoggingOut } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
+  // if (loading) {
+  //   return (
+  //     <div
+  //       data-theme="luxury"
+  //       className="h-screen flex items-center justify-center"
+  //     >
+  //       <span className="loading loading-spinner loading-lg"></span>
+  //     </div>
+  //   );
+  // }
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (!user && !isLoggingOut) {
-    return (
-      <Navigate
-        to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
-        replace
-      />
-    );
+  if (!user && !loading) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;

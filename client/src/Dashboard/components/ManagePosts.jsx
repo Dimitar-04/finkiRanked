@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 import doneAll from "../../assets/images/done-all.svg";
 import trashIcon from "../../assets/images/delete.svg";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "./Navbar";
 import { useCallback } from "react";
 import {
@@ -18,7 +19,7 @@ const ManagePosts = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user } = useAuth();
   const [modal, setModal] = useState({
     isOpen: false,
     message: "",
@@ -61,7 +62,6 @@ const ManagePosts = () => {
 
     try {
       const data = await getReviewPosts(page, postsPerPage, user.id);
-      console.log("Fetched posts data:", data);
 
       setPosts((prevPosts) => (page === 0 ? data : [...prevPosts, ...data]));
       setHasMore(data.length === postsPerPage);
@@ -154,7 +154,6 @@ const ManagePosts = () => {
       data-theme="luxury"
       className="dashboard h-screen flex bg-base-100 overflow-none"
     >
-      <Navbar />
       <div className="flex flex-col w-full h-full overflow-y-auto p-6">
         <div className="flex-1 md:ml-8">
           <h1 className="text-4xl font-bold mb-10">Posts to be reviewed:</h1>

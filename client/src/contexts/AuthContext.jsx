@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
+import { loginUser } from "@/services/registerLoginService";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -38,6 +39,7 @@ function parseJwt(token) {
 
 export const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
+const INACTIVITY_TIMEOUT = 120 * 60 * 1000;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -49,11 +51,51 @@ export const AuthProvider = ({ children }) => {
   const userRef = useRef(null);
   const navigate = useNavigate();
 
-  const INACTIVITY_TIMEOUT = 120 * 60 * 1000;
-
   useEffect(() => {
     userRef.current = user?.id || null;
   }, [user]);
+
+  const login = useCallback(async (email, password) => {
+    try {
+      const { data: supabaseAuthData, error: supabaseAuthError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+      if (supabaseAuthError) {
+        return { success: false, error: supabaseAuthError.message };
+      }
+
+      if (!supabaseAuthData.session?.access_token) {
+        return {
+          success: false,
+          error: "Failed to retrieve session token from Supabase.",
+        };
+      }
+
+      const backendLoginData = await loginUser({ email });
+
+      if (backendLoginData.success) {
+        setUser(backendLoginData.user);
+
+        return { success: true };
+      } else {
+        await supabase.auth.signOut();
+        return {
+          success: false,
+          error: backendLoginData.message || "Login failed on backend.",
+        };
+      }
+    } catch (err) {
+      console.error("Login error caught in AuthContext:", err);
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "An unexpected error occurred during login.";
+      return { success: false, error: message };
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -67,23 +109,26 @@ export const AuthProvider = ({ children }) => {
         clearTimeout(tokenExpiryTimeoutRef.current);
         tokenExpiryTimeoutRef.current = null;
       }
-
       localStorage.removeItem("lastActivityTimestamp");
       localStorage.removeItem("jwt");
       localStorage.removeItem("token_exp");
+      localStorage.removeItem("lastResetDate");
       localStorage.removeItem("user");
 
       await supabase.auth.signOut();
+
+      localStorage.setItem("logout", "true");
+      setTimeout(() => localStorage.removeItem("logout"), 1000);
+
       setUser(null);
       userRef.current = null;
-      navigate("/");
 
-      setTimeout(() => setIsLoggingOut(false), 1000);
+      setTimeout(() => setIsLoggingOut(false), 500);
     } catch (error) {
       console.error("Error during logout:", error);
       setIsLoggingOut(false);
     }
-  }, [navigate]);
+  }, []);
 
   const resetInactivityTimer = useCallback(() => {
     isActiveRef.current = true;
@@ -101,6 +146,12 @@ export const AuthProvider = ({ children }) => {
       }, INACTIVITY_TIMEOUT);
     }
   }, [logout]);
+
+  const updateUser = useCallback((newUserData) => {
+    setUser(newUserData);
+
+    localStorage.setItem("user", JSON.stringify(newUserData));
+  }, []);
 
   useEffect(() => {
     const checkStaleSession = () => {
@@ -173,57 +224,75 @@ export const AuthProvider = ({ children }) => {
   );
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    console.log("AuthContext mounted");
+    const initializeAndVerifyAuth = async () => {
       try {
+        setLoading(true);
+
+        const storedUserJson = localStorage.getItem("user");
+        if (storedUserJson) {
+          setUser(JSON.parse(storedUserJson));
+        }
+
         const { data } = await supabase.auth.getSession();
         const session = data?.session;
 
         if (session?.user) {
-          setUser(session.user);
+          const backendLoginData = await loginUser({
+            email: session.user.email,
+          });
+
+          if (backendLoginData.success) {
+            setUser(backendLoginData.user);
+            localStorage.setItem("user", JSON.stringify(backendLoginData.user));
+          } else {
+            logout();
+            return;
+          }
+
           localStorage.setItem("jwt", session.access_token);
           setupTokenExpiryLogout(session.access_token);
+        } else if (storedUserJson) {
+          logout();
         }
       } catch (error) {
-        console.error("Error retrieving session:", error);
+        console.error("Error initializing/verifying auth:", error);
+        logout();
       } finally {
         setLoading(false);
       }
     };
 
-    initializeAuth();
+    initializeAndVerifyAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          setUser(session.user);
-
-          localStorage.setItem("jwt", session.access_token);
-          setupTokenExpiryLogout(session.access_token);
-        } else if (event === "SIGNED_OUT") {
-          setUser(null);
-          localStorage.removeItem("jwt");
-
-          if (inactivityTimeoutRef.current) {
-            clearTimeout(inactivityTimeoutRef.current);
-            inactivityTimeoutRef.current = null;
+        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          if (session?.user) {
+            initializeAndVerifyAuth();
           }
-          if (tokenExpiryTimeoutRef.current) {
-            clearTimeout(tokenExpiryTimeoutRef.current);
-            tokenExpiryTimeoutRef.current = null;
-          }
-        } else if (event === "TOKEN_REFRESHED" && session) {
-          localStorage.setItem("jwt", session.access_token);
-          setupTokenExpiryLogout(session.access_token);
         }
+        // } else if (event === "SIGNED_OUT") {
+        //   logout();
+        // }
       }
     );
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        initializeAndVerifyAuth();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
       }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [setupTokenExpiryLogout]);
+  }, [logout, setupTokenExpiryLogout]);
 
   useEffect(() => {
     if (!user) return;
@@ -257,14 +326,31 @@ export const AuthProvider = ({ children }) => {
     };
   }, [resetInactivityTimer, user]);
 
+  //Sync actions between tabs
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === "logout" && event.newValue === "true") {
+        logout();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [logout]);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
+        login,
         logout,
         resetInactivityTimer,
         isLoggingOut,
+        updateUser,
       }}
     >
       {children}

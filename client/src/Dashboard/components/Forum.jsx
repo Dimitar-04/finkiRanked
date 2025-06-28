@@ -4,6 +4,7 @@ import commentIcon from "../../assets/images/comment.svg";
 import trashIcon from "../../assets/images/delete.svg"; // Add this import
 import Navbar from "./Navbar";
 import { getForumPosts, deleteForumPost } from "@/services/forumService";
+import { useAuth } from "@/contexts/AuthContext";
 const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -12,7 +13,7 @@ const Forum = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const postsPerPage = 5;
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchPosts();
@@ -27,7 +28,7 @@ const Forum = () => {
       }
 
       const data = await getForumPosts(page, postsPerPage);
-      console.log(data);
+
       if (page === 0) {
         setPosts(data);
       } else {
@@ -70,7 +71,6 @@ const Forum = () => {
       data-theme="luxury"
       className="dashboard h-screen flex bg-base-100 overflow-hidden"
     >
-      <Navbar></Navbar>
       <div className="flex flex-col md:flex-row gap-6 p-6 h-full overflow-y-auto w-full">
         <div className="flex-1 ml-8 mb-6">
           <h1 className="text-4xl font-bold mb-10">Forum Posts</h1>
@@ -172,7 +172,6 @@ const Forum = () => {
           )}
         </div>
 
-        {/* Create a Post Button */}
         <div className="w-full md:w-1/4">
           <div className="flex flex-row justify-end p-6 rounded-lg shadow-md">
             <button
