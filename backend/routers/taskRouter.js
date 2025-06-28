@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const taskController = require("../controllers/taskController");
 
-router.get("/:date", taskController.getTaskByDate);
+router.get("/", taskController.getTaskByDate);
 router.get("/:id/test-case", taskController.fetchTestCaseForToday);
 router.get("/test-cases/:testCaseId", taskController.getSpecificTestCaseById);
 router.put(

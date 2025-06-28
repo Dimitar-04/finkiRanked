@@ -26,12 +26,18 @@ const Task = () => {
     if (task && task.id && showTask) {
       fetchTestCaseLogic(task.id);
     }
-  }, [task]);
+  }, [task, user]);
+  useEffect(() => {
+    if (user && !user.solvedDailyChallenge) {
+      setIsCorrect(null);
+      setEvalResult("");
+      setIsUserOutputEmpty(true);
+    }
+  }, [user?.solvedDailyChallenge]);
 
-  async function fetchTaskForToday(date) {
+  async function fetchTaskForToday() {
     try {
-      const formattedDate = new Date(date).toISOString().split("T")[0];
-      const data = await getTaskForDate(formattedDate);
+      const data = await getTaskForDate();
 
       if (Array.isArray(data) && data.length > 0) {
         const taskData = data[0];
@@ -140,7 +146,6 @@ const Task = () => {
 
   const handleStart = () => {
     if (!task) {
-      const today = new Date();
       fetchTaskForToday(today);
     }
 

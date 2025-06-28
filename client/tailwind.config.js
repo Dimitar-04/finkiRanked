@@ -6,6 +6,6 @@ export default {
   },
   plugins: [require("daisyui")],
   daisyui: {
-    themes: ["sunset"], // 👈 enables the sunset theme
+    themes: ["sunset"],
   },
 };

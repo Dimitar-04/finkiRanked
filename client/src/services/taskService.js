@@ -1,7 +1,7 @@
 import apiClient from "./apiClient";
 
-export const getTaskForDate = async (date) => {
-  return await apiClient.get(`/task/${date}`);
+export const getTaskForDate = async () => {
+  return await apiClient.get(`/task`);
 };
 
 export const getTestCaseForTask = async (taskId) => {

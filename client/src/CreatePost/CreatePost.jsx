@@ -1,14 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { createForumPost } from "@/services/forumService";
 import { useAuth } from "@/contexts/AuthContext";
+
 const CreatePost = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
 
@@ -27,10 +26,9 @@ const CreatePost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setIsSubmitting(true);
 
-    if (!user || !user.id || !user.name) {
+    if (!user || !user.id || !user.username) {
       showModal("You must be logged in to create a post.", "auth");
       setIsSubmitting(false);
       return;
@@ -80,10 +78,7 @@ const CreatePost = () => {
   };
 
   return (
-    <div
-      data-theme="luxury"
-      className="h-screen overflo y-auto bg-base-100 p-6"
-    >
+    <div data-theme="luxury" className="min-h-screen bg-base-100 p-6">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold text-base-content">
@@ -241,87 +236,87 @@ const CreatePost = () => {
         </form>
       </div>
 
-      {/* Modal */}
-      <div className={`modal ${modal.isOpen ? "modal-open" : ""}`}>
-        <div className="modal-box">
-          <div className="flex items-center gap-3 mb-4">
-            {modal.type === "success" && (
-              <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-success-content"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  ></path>
-                </svg>
-              </div>
-            )}
-            {modal.type === "pending" && (
-              <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-warning-content"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  ></path>
-                </svg>
-              </div>
-            )}
-            {/* Added 'error' type for modal icon */}
-            {(modal.type === "auth" || modal.type === "error") && (
-              <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-error-content"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  {modal.type === "auth" ? (
+      {/* Modal using standard DaisyUI classes */}
+      {modal.isOpen && (
+        <div className="modal modal-open">
+          <div className="modal-box ">
+            <div className="flex items-center gap-3 mb-4">
+              {modal.type === "success" && (
+                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-success-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      d="M5 13l4 4L19 7"
                     ></path>
-                  ) : (
+                  </svg>
+                </div>
+              )}
+              {modal.type === "pending" && (
+                <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-warning-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    /> // Generic error icon
-                  )}
-                </svg>
-              </div>
-            )}
-            <h3 className="font-bold text-lg">
-              {modal.type === "success" && "Success!"}
-              {modal.type === "pending" && "Pending Approval"}
-              {modal.type === "auth" && "Authentication Required"}
-              {modal.type === "error" && "Error"}{" "}
-              {/* Title for generic error */}
-            </h3>
-          </div>
-          <p className="py-4">{modal.message}</p>
-          <div className="modal-action">
-            <button className="btn btn-primary" onClick={closeModal}>
-              OK
-            </button>
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    ></path>
+                  </svg>
+                </div>
+              )}
+              {(modal.type === "auth" || modal.type === "error") && (
+                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-error-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    {modal.type === "auth" ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      ></path>
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    )}
+                  </svg>
+                </div>
+              )}
+              <h3 className="font-bold text-lg">
+                {modal.type === "success" && "Success!"}
+                {modal.type === "pending" && "Pending Approval"}
+                {modal.type === "auth" && "Authentication Required"}
+                {modal.type === "error" && "Error"}
+              </h3>
+            </div>
+            <p className="py-4">{modal.message}</p>
+            <div className="modal-action">
+              <button className="btn btn-primary" onClick={closeModal}>
+                OK
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

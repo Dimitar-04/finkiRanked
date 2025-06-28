@@ -92,11 +92,10 @@ const ForumPostDetail = () => {
   return (
     <div
       data-theme="luxury"
-      className="dashboard h-screen flex bg-base-100 overflow-none"
+      className="dashboard h-screen flex bg-base-100 overflow-hidden"
     >
-      <Navbar></Navbar>
-      <div className="flex flex-col w-full items-center justify-center h-full overflow-y-auto bg-base-200 px-2 py-8">
-        <div className="w-full h-full max-w-2xl">
+      <div className="flex flex-col w-full items-center h-full overflow-y-auto bg-base-200 px-2 py-8">
+        <div className="w-full  max-w-2xl">
           <button
             className="btn btn-ghost mb-4"
             onClick={() => navigate("/dashboard/forum")}

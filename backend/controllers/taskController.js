@@ -2,49 +2,51 @@ const { get } = require("http");
 const prisma = require("../lib/prisma");
 
 const getTaskByDate = async (req, res) => {
-  const { date } = req.params;
-  const user = await prisma.users.findUnique({
-    where: { id: "af582629-8385-47b9-9f01-3267652f693c" },
-  });
-  console.log(user);
+  // const { date } = req.params;
+
   try {
     const now = new Date();
 
-    let effectiveDate;
+    // Get the current date parts from UTC
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth();
+    const day = now.getUTCDate();
 
-    const localDate = now.toLocaleDateString("en-CA");
-
-    if (date === localDate) {
-      if (now.getHours() < 7) {
-        effectiveDate = new Date(now);
-        effectiveDate.setDate(now.getDate() - 1);
-      } else {
-        effectiveDate = now;
-      }
-    } else {
-      return res
-        .status(404)
-        .json({ message: "Cannot fetch task for different date!" });
+    // Determine the effective day in UTC
+    let effectiveDay = day;
+    if (now.getUTCHours() < 7) {
+      // If it's before 7 AM UTC, use yesterday's UTC date
+      effectiveDay = day - 1;
     }
 
-    const taskDate = new Date(
-      Date.UTC(
-        effectiveDate.getUTCFullYear(),
-        effectiveDate.getUTCMonth(),
-        effectiveDate.getUTCDate()
-      )
+    // Create the start date object directly from UTC parts
+    const startOfEffectiveDay = new Date(
+      Date.UTC(year, month, effectiveDay, 0, 0, 0, 0)
+    );
+
+    // Create the end date object
+    const startOfNextDay = new Date(startOfEffectiveDay);
+    startOfNextDay.setUTCDate(startOfEffectiveDay.getUTCDate() + 1);
+
+    console.log(
+      "Querying between (UTC dates):",
+      startOfEffectiveDay.toISOString(),
+      "and",
+      startOfNextDay.toISOString()
     );
 
     let tasks = await prisma.challenges.findMany({
       where: {
-        solving_date: taskDate,
-        expired: false,
+        solving_date: {
+          gte: startOfEffectiveDay,
+          lt: startOfNextDay,
+        },
+        // expired: false,
       },
       include: {
         test_cases: true,
       },
     });
-
     if (tasks.length === 0) {
       return res.status(404).json({ message: "No tasks found for this date" });
     }
