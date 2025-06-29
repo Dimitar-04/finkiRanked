@@ -20,7 +20,7 @@ const Task = () => {
   const [isUserOutputEmpty, setIsUserOutputEmpty] = useState(true);
 
   const today = new Date().toLocaleDateString();
-  const { user, updateUser, loading } = useAuth();
+  const { user, updateUser, loading, isVerifying } = useAuth();
 
   useEffect(() => {
     if (task && task.id && showTask) {

@@ -3,8 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "../contexts/AuthContext";
 import { registerUser } from "@/services/registerLoginService";
+import { useAuth } from "../contexts/AuthContext";
 
 const Register = () => {
+  const { register } = useAuth();
   const [formErrors, setFormErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const nav = useNavigate();
@@ -85,68 +87,22 @@ const Register = () => {
         name: formData.name,
       };
 
-      const data = await registerUser(userData);
+      const result = await register(userData);
 
-      localStorage.setItem("user", JSON.stringify(data.user));
-      let registrationAttemptError = "";
-
-      try {
-        registrationAttemptError = "";
-        const { data: authData, error: supabaseError } =
-          await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-
-        if (supabaseError) {
-          console.error(
-            "Supabase sign-in error after registration:",
-            supabaseError
-          );
-          registrationAttemptError =
-            "Registration successful, but Supabase session could not be started. Please try logging in.";
-          setGeneralError(registrationAttemptError);
-        } else if (authData.session?.access_token) {
-          localStorage.setItem("jwt", authData.session.access_token);
-        } else {
-          console.warn(
-            "Supabase session or access token missing after sign-in."
-          );
-          registrationAttemptError =
-            "Registration successful, but session token is missing. Please try logging in.";
-          setGeneralError(registrationAttemptError);
-        }
-      } catch (supabaseCatchError) {
-        console.error("Supabase auth error (caught):", supabaseCatchError);
-        registrationAttemptError =
-          "Registration successful, but an error occurred starting your session. Please try logging in.";
-        setGeneralError(registrationAttemptError);
-      }
-
-      if (registrationAttemptError === "") {
-        const user = localStorage.getItem("user");
-
+      if (result.success) {
         nav("/dashboard");
-      }
-    } catch (apiError) {
-      console.error("Registration API error:", apiError);
-      if (apiError.response && apiError.response.data) {
-        const responseData = apiError.response.data;
-        if (responseData.errors) {
-          setFormErrors(responseData.errors);
-          setGeneralError(
-            responseData.message || "Please correct the highlighted errors."
-          );
-        } else {
-          setGeneralError(
-            responseData.message || "Registration failed. Please try again."
-          );
-        }
       } else {
+        if (result.errors) {
+          setFormErrors(result.errors);
+        }
         setGeneralError(
-          "Registration failed due to a network or server error. Please try again."
+          result.error || "Registration failed. Please try again."
         );
       }
+    } catch (error) {
+      s;
+      console.error("Unexpected error in Register handleSubmit:", error);
+      setGeneralError("A client-side error occurred. Please try again.");
     } finally {
       setLoading(false);
     }

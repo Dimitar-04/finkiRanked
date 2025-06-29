@@ -33,7 +33,6 @@ const getReviewPosts = async (req, res) => {
     const userId = req.query.userId;
     const hasModeratorStatus = await verifyModeratorStatus(userId);
     if (!hasModeratorStatus) {
-      console.log("Access denied: User is not a moderator");
       return res.status(403).json({
         error: "Access denied. Only moderators can access review posts.",
       });

@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import doneAll from "../../assets/images/done-all.svg";
 import trashIcon from "../../assets/images/delete.svg";
 import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "./Navbar";
-import { useCallback } from "react";
 import {
   getReviewPosts,
   deleteReviewPost,
@@ -15,11 +13,11 @@ const ManagePosts = () => {
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const postsPerPage = 5;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [modal, setModal] = useState({
     isOpen: false,
     message: "",
@@ -27,6 +25,7 @@ const ManagePosts = () => {
     postId: null,
     post: null,
   });
+
   const closeModal = () => {
     setModal({
       isOpen: false,
@@ -45,16 +44,17 @@ const ManagePosts = () => {
     }
     closeModal();
   };
+
   const fetchPostsData = useCallback(async () => {
+    if (authLoading) return;
+
     if (!user || !user.id) {
       setError("User not found. Please log in.");
-      setLoading(false);
-      setLoadingMore(false);
       return;
     }
 
     if (page === 0) {
-      setLoading(true);
+      setIsFetching(true);
     } else {
       setLoadingMore(true);
     }
@@ -62,7 +62,6 @@ const ManagePosts = () => {
 
     try {
       const data = await getReviewPosts(page, postsPerPage, user.id);
-
       setPosts((prevPosts) => (page === 0 ? data : [...prevPosts, ...data]));
       setHasMore(data.length === postsPerPage);
     } catch (err) {
@@ -73,13 +72,14 @@ const ManagePosts = () => {
           "Failed to fetch posts for review."
       );
     } finally {
-      setLoading(false);
+      setIsFetching(false);
       setLoadingMore(false);
     }
-  }, [page, user?.id]);
+  }, [page, user, authLoading]);
+
   useEffect(() => {
     fetchPostsData();
-  }, [page]);
+  }, [fetchPostsData]);
 
   const handleDeletePost = async (postId) => {
     if (!user || !user.id) {
@@ -125,6 +125,7 @@ const ManagePosts = () => {
       );
     }
   };
+
   const openConfirmationModal = (type, item) => {
     if (type === "delete") {
       setModal({
@@ -148,6 +149,8 @@ const ManagePosts = () => {
   const handleLoadMore = () => {
     setPage((prevPage) => prevPage + 1);
   };
+
+  const isLoading = authLoading || isFetching;
 
   return (
     <div
@@ -183,56 +186,63 @@ const ManagePosts = () => {
               </div>
             </div>
           )}
-          {posts.length === 0 && !loading && !loadingMore && !error && (
+          {isLoading && (
+            <div className="flex justify-center mt-6">
+              <span className="loading loading-spinner loading-lg"></span>
+            </div>
+          )}
+          {posts.length === 0 && !isLoading && !loadingMore && !error && (
             <div className="text-center text-gray-500 py-10">
               No posts currently awaiting approval.
             </div>
           )}
-          <div className="space-y-4">
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative"
-              >
-                <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button
-                    title="Approve Post"
-                    className="btn btn-sm btn-success btn-circle"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openConfirmationModal("approve", post);
-                    }}
-                  >
-                    <img src={doneAll} alt="Approve" className="w-5 h-5" />
-                  </button>
-                  <button
-                    title="Delete Post"
-                    className="btn btn-sm btn-error btn-circle"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openConfirmationModal("delete", post.id);
-                    }}
-                  >
-                    <img src={trashIcon} alt="Delete" className="w-5 h-5" />
-                  </button>
-                </div>
+          {!isLoading && (
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative"
+                >
+                  <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button
+                      title="Approve Post"
+                      className="btn btn-sm btn-success btn-circle"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openConfirmationModal("approve", post);
+                      }}
+                    >
+                      <img src={doneAll} alt="Approve" className="w-5 h-5" />
+                    </button>
+                    <button
+                      title="Delete Post"
+                      className="btn btn-sm btn-error btn-circle"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openConfirmationModal("delete", post.id);
+                      }}
+                    >
+                      <img src={trashIcon} alt="Delete" className="w-5 h-5" />
+                    </button>
+                  </div>
 
-                <p className="text-sm text-base-content/70 mb-3">
-                  By {post.author_name} on{" "}
-                  <span>
-                    {post.date_created
-                      ? new Date(post.date_created).toLocaleDateString()
-                      : "N/A"}
-                  </span>
-                </p>
-                <p className="text-base-content/90 whitespace-pre-line break-words">
-                  {post.content}
-                </p>
-              </div>
-            ))}
-          </div>
-          {hasMore && !loadingMore && (
+                  <p className="text-sm text-base-content/70 mb-3">
+                    By {post.author_name} on{" "}
+                    <span>
+                      {post.date_created
+                        ? new Date(post.date_created).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </p>
+                  <p className="text-base-content/90 whitespace-pre-line break-words">
+                    {post.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+          {hasMore && !loadingMore && !isLoading && (
             <div className="flex justify-center mt-6">
               <button
                 onClick={handleLoadMore}

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
-import { loginUser } from "@/services/registerLoginService";
+import { loginUser, registerUser } from "@/services/registerLoginService";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -44,6 +44,7 @@ const INACTIVITY_TIMEOUT = 120 * 60 * 1000;
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const inactivityTimeoutRef = useRef(null);
   const tokenExpiryTimeoutRef = useRef(null);
@@ -129,47 +130,6 @@ export const AuthProvider = ({ children }) => {
       setIsLoggingOut(false);
     }
   }, []);
-
-  const resetInactivityTimer = useCallback(() => {
-    isActiveRef.current = true;
-    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
-
-    if (inactivityTimeoutRef.current) {
-      clearTimeout(inactivityTimeoutRef.current);
-    }
-
-    if (userRef.current) {
-      inactivityTimeoutRef.current = setTimeout(() => {
-        isActiveRef.current = false;
-        console.warn("User inactive, logging out");
-        logout();
-      }, INACTIVITY_TIMEOUT);
-    }
-  }, [logout]);
-
-  const updateUser = useCallback((newUserData) => {
-    setUser(newUserData);
-
-    localStorage.setItem("user", JSON.stringify(newUserData));
-  }, []);
-
-  useEffect(() => {
-    const checkStaleSession = () => {
-      const storedUser = localStorage.getItem("user");
-      const lastActivity = localStorage.getItem("lastActivityTimestamp");
-
-      if (storedUser && lastActivity) {
-        const inactiveTime = Date.now() - parseInt(lastActivity);
-
-        if (inactiveTime > INACTIVITY_TIMEOUT) {
-          logout();
-        }
-      }
-    };
-
-    checkStaleSession();
-  }, [navigate, INACTIVITY_TIMEOUT]);
-
   const setupTokenExpiryLogout = useCallback(
     (accessToken) => {
       if (!accessToken) return;
@@ -223,11 +183,95 @@ export const AuthProvider = ({ children }) => {
     [logout]
   );
 
+  const register = useCallback(
+    async (userData) => {
+      try {
+        const backendRegisterData = await registerUser(userData);
+        if (!backendRegisterData.success) {
+          return {
+            success: false,
+            error: backendRegisterData.message,
+            errors: backendRegisterData.errors,
+          };
+        }
+        const { data: supabaseAuthData, error: supabaseAuthError } =
+          await supabase.auth.signInWithPassword({
+            email: userData.email,
+            password: userData.password,
+          });
+        if (supabaseAuthError) {
+          console.error(
+            "Supabase sign-in failed after registration:",
+            supabaseAuthError
+          );
+          return {
+            success: false,
+            error:
+              "Registration successful, but failed to create a session. Please try logging in.",
+          };
+        }
+        setUser(backendRegisterData.user);
+        localStorage.setItem("user", JSON.stringify(backendRegisterData.user));
+        localStorage.setItem("jwt", supabaseAuthData.session.access_token);
+        setupTokenExpiryLogout(supabaseAuthData.session.access_token);
+        return { success: true };
+      } catch (apiError) {
+        console.error("Registration error caught in AuthContext:", apiError);
+        const message =
+          apiError.response?.data?.message ||
+          "An unexpected error occurred during registration.";
+        const errors = apiError.response?.data?.errors || null;
+        return { success: false, error: message, errors: errors };
+      }
+    },
+    [setupTokenExpiryLogout]
+  );
+
+  const resetInactivityTimer = useCallback(() => {
+    isActiveRef.current = true;
+    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
+
+    if (inactivityTimeoutRef.current) {
+      clearTimeout(inactivityTimeoutRef.current);
+    }
+
+    if (userRef.current) {
+      inactivityTimeoutRef.current = setTimeout(() => {
+        isActiveRef.current = false;
+        console.warn("User inactive, logging out");
+        logout();
+      }, INACTIVITY_TIMEOUT);
+    }
+  }, [logout]);
+
+  const updateUser = useCallback((newUserData) => {
+    setUser(newUserData);
+
+    localStorage.setItem("user", JSON.stringify(newUserData));
+  }, []);
+
+  useEffect(() => {
+    const checkStaleSession = () => {
+      const storedUser = localStorage.getItem("user");
+      const lastActivity = localStorage.getItem("lastActivityTimestamp");
+
+      if (storedUser && lastActivity) {
+        const inactiveTime = Date.now() - parseInt(lastActivity);
+
+        if (inactiveTime > INACTIVITY_TIMEOUT) {
+          logout();
+        }
+      }
+    };
+
+    checkStaleSession();
+  }, [navigate, INACTIVITY_TIMEOUT]);
+
   useEffect(() => {
     console.log("AuthContext mounted");
     const initializeAndVerifyAuth = async () => {
       try {
-        setLoading(true);
+        setIsVerifying(true);
 
         const storedUserJson = localStorage.getItem("user");
         if (storedUserJson) {
@@ -259,7 +303,10 @@ export const AuthProvider = ({ children }) => {
         console.error("Error initializing/verifying auth:", error);
         logout();
       } finally {
-        setLoading(false);
+        if (loading) {
+          setLoading(false);
+        }
+        setIsVerifying(false);
       }
     };
 
@@ -346,10 +393,12 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         loading,
+        register,
         login,
         logout,
         resetInactivityTimer,
         isLoggingOut,
+        isVerifying,
         updateUser,
       }}
     >
