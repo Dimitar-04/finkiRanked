@@ -10,6 +10,17 @@ const CreatePost = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
+  useEffect(() => {
+    if (modal.isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    // Cleanup on component unmount
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [modal.isOpen]);
 
   const showModal = (message, type = "info") => {
     setModal({ isOpen: true, message, type });
@@ -236,13 +247,18 @@ const CreatePost = () => {
         </form>
       </div>
 
-      {/* Modal using standard DaisyUI classes */}
+      {/* Modal element */}
       {modal.isOpen && (
-        <div className="modal modal-open">
-          <div className="modal-box ">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-xs"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-base-200 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               {modal.type === "success" && (
-                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-success-content"
                     fill="none"
@@ -259,7 +275,7 @@ const CreatePost = () => {
                 </div>
               )}
               {modal.type === "pending" && (
-                <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-warning-content"
                     fill="none"
@@ -276,7 +292,7 @@ const CreatePost = () => {
                 </div>
               )}
               {(modal.type === "auth" || modal.type === "error") && (
-                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-error-content"
                     fill="none"
@@ -301,7 +317,7 @@ const CreatePost = () => {
                   </svg>
                 </div>
               )}
-              <h3 className="font-bold text-lg">
+              <h3 className="font-bold text-lg" id="modal-title">
                 {modal.type === "success" && "Success!"}
                 {modal.type === "pending" && "Pending Approval"}
                 {modal.type === "auth" && "Authentication Required"}
@@ -309,7 +325,7 @@ const CreatePost = () => {
               </h3>
             </div>
             <p className="py-4">{modal.message}</p>
-            <div className="modal-action">
+            <div className="flex justify-end mt-4">
               <button className="btn btn-primary" onClick={closeModal}>
                 OK
               </button>
