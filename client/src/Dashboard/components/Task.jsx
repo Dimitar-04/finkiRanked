@@ -110,9 +110,6 @@ const Task = () => {
           if (user.id) {
             try {
               await updateUserDailyTestCaseId(user.id, finalTestCaseIdToStore);
-              console.log(
-                "Successfully updated daily_test_case_id on backend."
-              );
             } catch (error) {
               console.error(
                 "Failed to update daily_test_case_id on backend:",

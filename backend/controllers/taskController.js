@@ -2,38 +2,31 @@ const { get } = require("http");
 const prisma = require("../lib/prisma");
 
 const getTaskByDate = async (req, res) => {
-  // const { date } = req.params;
-
   try {
     const now = new Date();
 
-    // Get the current date parts from UTC
     const year = now.getUTCFullYear();
     const month = now.getUTCMonth();
     const day = now.getUTCDate();
 
-    // Determine the effective day in UTC
     let effectiveDay = day;
     if (now.getUTCHours() < 7) {
-      // If it's before 7 AM UTC, use yesterday's UTC date
       effectiveDay = day - 1;
     }
 
-    // Create the start date object directly from UTC parts
     const startOfEffectiveDay = new Date(
       Date.UTC(year, month, effectiveDay, 0, 0, 0, 0)
     );
 
-    // Create the end date object
     const startOfNextDay = new Date(startOfEffectiveDay);
     startOfNextDay.setUTCDate(startOfEffectiveDay.getUTCDate() + 1);
 
-    console.log(
-      "Querying between (UTC dates):",
-      startOfEffectiveDay.toISOString(),
-      "and",
-      startOfNextDay.toISOString()
-    );
+    // console.log(
+    //   "Querying between (UTC dates):",
+    //   startOfEffectiveDay.toISOString(),
+    //   "and",
+    //   startOfNextDay.toISOString()
+    // );
 
     let tasks = await prisma.challenges.findMany({
       where: {
@@ -41,7 +34,7 @@ const getTaskByDate = async (req, res) => {
           gte: startOfEffectiveDay,
           lt: startOfNextDay,
         },
-        // expired: false,
+        expired: false,
       },
       include: {
         test_cases: true,
@@ -354,7 +347,7 @@ const evaluateTask = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Task solved successfully!",
+        message: "Challenge solved successfully!",
         scoreAwarded: totalScore,
         newTotalPoints: responseUser.points,
         rank: userRank.title,
