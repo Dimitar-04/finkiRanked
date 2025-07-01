@@ -18,6 +18,7 @@ const Forum = () => {
     type: "",
     postId: null,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
   const postsPerPage = 5;
   const { user } = useAuth();
 
@@ -31,7 +32,9 @@ const Forum = () => {
 
   const confirmDelete = async () => {
     if (modal.postId) {
+      setIsDeleting(true);
       await handleDeletePost(modal.postId);
+      setIsDeleting(false);
     }
     closeModal();
   };
@@ -236,11 +239,26 @@ const Forum = () => {
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end gap-3 mt-4">
-              <button className="btn btn-ghost" onClick={closeModal}>
+              <button
+                className="btn btn-ghost"
+                onClick={closeModal}
+                disabled={isDeleting}
+              >
                 Cancel
               </button>
-              <button className="btn btn-error" onClick={confirmDelete}>
-                Delete
+              <button
+                className="btn btn-error"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm mr-2"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>

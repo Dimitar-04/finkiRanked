@@ -21,6 +21,7 @@ const ForumPostDetail = () => {
     type: "",
     commentId: null,
   });
+  const [isDeleting, setIsDeleting] = useState(false);
   const location = useLocation();
   const statePost = useState(location.state?.post || {});
   const post = statePost[0];
@@ -39,7 +40,9 @@ const ForumPostDetail = () => {
 
   const confirmDelete = async () => {
     if (modal.commentId) {
+      setIsDeleting(true);
       await handleDeleteComment(modal.commentId);
+      setIsDeleting(false);
     }
     closeModal();
   };
@@ -255,11 +258,26 @@ const ForumPostDetail = () => {
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end gap-3 mt-4">
-              <button className="btn btn-ghost" onClick={closeModal}>
+              <button
+                className="btn btn-ghost"
+                onClick={closeModal}
+                disabled={isDeleting}
+              >
                 Cancel
               </button>
-              <button className="btn btn-error" onClick={confirmDelete}>
-                Delete
+              <button
+                className="btn btn-error"
+                onClick={confirmDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm mr-2"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>

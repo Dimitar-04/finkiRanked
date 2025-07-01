@@ -25,6 +25,7 @@ const ManagePosts = () => {
     postId: null,
     post: null,
   });
+  const [isActionLoading, setIsActionLoading] = useState(false);
 
   const showModal = (message, type, postId = null, post = null) => {
     setModal({ isOpen: true, message, type, postId, post });
@@ -40,12 +41,14 @@ const ManagePosts = () => {
     });
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
+    setIsActionLoading(true);
     if (modal.type === "delete" && modal.postId) {
-      handleDeletePost(modal.postId);
+      await handleDeletePost(modal.postId);
     } else if (modal.type === "approve" && modal.post) {
-      handleApprovePost(modal.post);
+      await handleApprovePost(modal.post);
     }
+    setIsActionLoading(false);
     closeModal();
   };
 
@@ -313,7 +316,11 @@ const ManagePosts = () => {
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end gap-3 mt-4">
-              <button className="btn btn-ghost" onClick={closeModal}>
+              <button
+                className="btn btn-ghost"
+                onClick={closeModal}
+                disabled={isActionLoading}
+              >
                 Cancel
               </button>
               <button
@@ -321,8 +328,18 @@ const ManagePosts = () => {
                   modal.type === "approve" ? "btn-success" : "btn-error"
                 }`}
                 onClick={confirmAction}
+                disabled={isActionLoading}
               >
-                {modal.type === "approve" ? "Approve" : "Delete"}
+                {isActionLoading ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm mr-2"></span>
+                    {modal.type === "approve" ? "Approving..." : "Deleting..."}
+                  </>
+                ) : modal.type === "approve" ? (
+                  "Approve"
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>
