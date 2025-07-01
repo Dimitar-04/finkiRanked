@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createForumPost } from "@/services/forumService";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { createApprovalForumPost } from "@/services/reviewService";
 const CreatePost = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingModerator, setPendingModerator] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
   useEffect(() => {
@@ -16,7 +17,7 @@ const CreatePost = () => {
     } else {
       document.body.style.overflow = "unset";
     }
-    // Cleanup on component unmount
+
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -55,6 +56,12 @@ const CreatePost = () => {
       const res = await createForumPost(postData);
       if (res.message.includes("moderator approval")) {
         showModal(res.message, "pending");
+      } else if (
+        res.message ===
+        "Would you like to send this post to moderator for approval?"
+      ) {
+        setPendingModerator(true);
+        showModal(res.message, "moderatorPrompt");
       } else {
         showModal("Post created successfully!", "success");
       }
@@ -85,6 +92,33 @@ const CreatePost = () => {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  const handleModeratorDecision = async (decision) => {
+    setPendingModerator(false);
+    if (decision === "yes") {
+      try {
+        const postData = {
+          title,
+          content,
+          authorId: user.id,
+          authorName: user.username,
+        };
+        const res = await createApprovalForumPost(postData);
+        console.log(res);
+        showModal(
+          res.message || "Your post has been submitted for moderator approval.",
+          "pending"
+        );
+      } catch (error) {
+        showModal(
+          error.response?.data?.error ||
+            "Failed to submit post for moderator approval.",
+          "error"
+        );
+      }
+    } else {
+      setModal({ isOpen: false, message: "", type: "" });
     }
   };
 
@@ -324,11 +358,47 @@ const CreatePost = () => {
                 {modal.type === "error" && "Error"}
               </h3>
             </div>
-            <p className="py-4">{modal.message}</p>
-            <div className="flex justify-end mt-4">
-              <button className="btn btn-tertiary" onClick={closeModal}>
-                OK
-              </button>
+            <p className="py-4 flex items-center gap-3">
+              {modal.type === "moderatorPrompt" && (
+                <span className="inline-flex items-center justify-center w-8 h-8 aspect-square rounded-full text-warning">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <circle cx="12" cy="17" r="1" fill="currentColor" />
+                  </svg>
+                </span>
+              )}
+              <span className="font-bold">{modal.message}</span>
+            </p>
+            <div className="flex justify-end gap-2 mt-8">
+              {modal.type === "moderatorPrompt" ? (
+                <>
+                  <button
+                    className="btn btn-success"
+                    onClick={() => handleModeratorDecision("yes")}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="btn btn-error"
+                    onClick={() => handleModeratorDecision("no")}
+                  >
+                    No
+                  </button>
+                </>
+              ) : (
+                <button className="btn btn-primary" onClick={closeModal}>
+                  OK
+                </button>
+              )}
             </div>
           </div>
         </div>

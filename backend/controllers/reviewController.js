@@ -5,6 +5,7 @@ const ForumController = require("./forumController");
 const filter = require("leo-profanity");
 const safeWords = require("../filters/safeWords");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
+
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
@@ -19,11 +20,30 @@ const createReviewPost = async (req, res) => {
     const savedPost = await prisma.to_be_reviewed.create({
       data: post,
     });
+    await resetPostCheckCoutner(authorId);
+    return res.status(201).json({
+      message: "Post submitted for moderator approval",
+    });
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+async function resetPostCheckCoutner(userId) {
+  try {
+    await prisma.users.update({
+      where: { id: userId },
+      data: {
+        postCheckCounter: 0,
+      },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to decrement post counter for user ${userId}:`,
+      error
+    );
+  }
+}
 
 const getReviewPosts = async (req, res) => {
   try {
@@ -71,7 +91,7 @@ const getReviewPosts = async (req, res) => {
 
 const deleteReviewPost = async (req, res) => {
   const { id } = req.params;
-  const userId = req.query.userId;
+  const { userId } = req.params;
   const hasModeratorStatus = await verifyModeratorStatus(userId);
   if (!hasModeratorStatus) {
     console.log("Access denied: User is not a moderator");
@@ -97,7 +117,7 @@ const deleteReviewPost = async (req, res) => {
 const approveReviewPost = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.query.userId;
+    const { userId } = req.params;
 
     const hasModeratorStatus = await verifyModeratorStatus(userId);
 
