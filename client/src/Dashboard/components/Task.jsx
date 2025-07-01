@@ -211,7 +211,7 @@ const Task = () => {
 
   return (
     <div data-theme="luxury" className="dashboard h-screen flex bg-base-100">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto flex items-center justify-center min-h-full">
         <div className="container mx-auto max-w-4xl p-6" data-theme="luxury">
           {!showTask ? (
             <div className="card bg-base-200 shadow-xl">
