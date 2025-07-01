@@ -22,7 +22,8 @@ const createForumPost = async (req, res) => {
       where: { id: authorId },
     });
     const postCounter = user.postCounter;
-
+    const postCheckCounter = user.postCheckCounter;
+    console.log(postCheckCounter);
     if (true) {
       const post = new ForumPost({
         title,
@@ -58,6 +59,11 @@ const createForumPost = async (req, res) => {
               "Failed to submit post for review due to an internal error.",
           });
         }
+      } else if (postCheckCounter >= 3) {
+        return res.status(202).json({
+          message:
+            "Would you like to send this post to moderator for approval?",
+        });
       } else if (
         !(
           safeWords.includes(post.content.toLowerCase()) ||
@@ -69,6 +75,12 @@ const createForumPost = async (req, res) => {
           const aiResponse = await analyzePostContent(post.title, post.content);
           if (aiResponse.aiResponse === "INAPPROPRIATE") {
             console.log("AI analysis says INAPPROPRIATE:", aiResponse.reason);
+            await prisma.users.update({
+              where: { id: authorId },
+              data: {
+                postCheckCounter: { increment: 1 },
+              },
+            });
             return res.status(400).json({
               error: "Content is not appropriate for the forum",
             });

@@ -19,6 +19,9 @@ const createReviewPost = async (req, res) => {
     const savedPost = await prisma.to_be_reviewed.create({
       data: post,
     });
+    return res.status(201).json({
+      message: "Post submitted for moderator approval",
+    });
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -71,7 +74,7 @@ const getReviewPosts = async (req, res) => {
 
 const deleteReviewPost = async (req, res) => {
   const { id } = req.params;
-  const userId = req.query.userId;
+  const { userId } = req.params;
   const hasModeratorStatus = await verifyModeratorStatus(userId);
   if (!hasModeratorStatus) {
     console.log("Access denied: User is not a moderator");
@@ -97,7 +100,7 @@ const deleteReviewPost = async (req, res) => {
 const approveReviewPost = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.query.userId;
+    const { userId } = req.params;
 
     const hasModeratorStatus = await verifyModeratorStatus(userId);
 
