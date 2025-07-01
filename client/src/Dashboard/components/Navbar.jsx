@@ -15,6 +15,14 @@ export default function Navbar() {
     if (path === "/dashboard" && location.pathname === "/dashboard") {
       return true;
     }
+    if (
+      path === "/dashboard/forum" &&
+      (location.pathname === "/dashboard/forum" ||
+        location.pathname === "/dashboard/forum/create-post" ||
+        location.pathname === "/dashboard/create-post")
+    ) {
+      return true;
+    }
     if (path !== "/dashboard" && location.pathname.startsWith(path)) {
       return true;
     }

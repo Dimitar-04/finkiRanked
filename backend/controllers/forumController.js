@@ -45,12 +45,9 @@ const createForumPost = async (req, res) => {
         });
       } else if (post.content.length > 200) {
         try {
-          await createReviewPost(req);
+          await createReviewPost(req, res);
 
-          return res.status(202).json({
-            message:
-              "Content is too long. Your post has been submitted for moderator approval.",
-          });
+          return;
         } catch (reviewError) {
           console.error("Error submitting post for review:", reviewError);
           return res.status(500).json({
