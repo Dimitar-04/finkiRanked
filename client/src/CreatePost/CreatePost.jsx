@@ -358,7 +358,26 @@ const CreatePost = () => {
                 {modal.type === "error" && "Error"}
               </h3>
             </div>
-            <p className="py-4">{modal.message}</p>
+            <p className="py-4 flex items-center gap-3">
+              {modal.type === "moderatorPrompt" && (
+                <span className="inline-flex items-center justify-center w-8 h-8 aspect-square rounded-full text-warning">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <circle cx="12" cy="17" r="1" fill="currentColor" />
+                  </svg>
+                </span>
+              )}
+              <span className="font-bold">{modal.message}</span>
+            </p>
             <div className="flex justify-end gap-2 mt-8">
               {modal.type === "moderatorPrompt" ? (
                 <>

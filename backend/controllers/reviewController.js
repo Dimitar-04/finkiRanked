@@ -5,6 +5,7 @@ const ForumController = require("./forumController");
 const filter = require("leo-profanity");
 const safeWords = require("../filters/safeWords");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
+
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
 
@@ -19,6 +20,7 @@ const createReviewPost = async (req, res) => {
     const savedPost = await prisma.to_be_reviewed.create({
       data: post,
     });
+    await resetPostCheckCoutner(authorId);
     return res.status(201).json({
       message: "Post submitted for moderator approval",
     });
@@ -27,6 +29,21 @@ const createReviewPost = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+async function resetPostCheckCoutner(userId) {
+  try {
+    await prisma.users.update({
+      where: { id: userId },
+      data: {
+        postCheckCounter: 0,
+      },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to decrement post counter for user ${userId}:`,
+      error
+    );
+  }
+}
 
 const getReviewPosts = async (req, res) => {
   try {

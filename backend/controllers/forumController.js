@@ -23,8 +23,8 @@ const createForumPost = async (req, res) => {
     });
     const postCounter = user.postCounter;
     const postCheckCounter = user.postCheckCounter;
-    console.log(postCheckCounter);
-    if (true) {
+
+    if (postCheckCounter >= -11) {
       const post = new ForumPost({
         title,
         content,
@@ -98,10 +98,14 @@ const createForumPost = async (req, res) => {
 
       post.id = savedPost.id;
       await decrementPostCounter(authorId);
-
+      await resetPostCheckCoutner(authorId);
       res.status(201).json({
         message: "Forum post created successfully",
         post: savedPost,
+      });
+    } else {
+      return res.status(400).json({
+        error: "You have reached the daily limit for creating posts.",
       });
     }
   } catch (err) {
@@ -109,6 +113,21 @@ const createForumPost = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+async function resetPostCheckCoutner(userId) {
+  try {
+    await prisma.users.update({
+      where: { id: userId },
+      data: {
+        postCheckCounter: 0,
+      },
+    });
+  } catch (error) {
+    console.error(
+      `Failed to decrement post counter for user ${userId}:`,
+      error
+    );
+  }
+}
 
 async function decrementPostCounter(userId) {
   try {
@@ -332,5 +351,5 @@ module.exports = {
   getComments,
 
   deleteComment,
-  // createApprovedForumPost,
+  resetPostCheckCoutner,
 };

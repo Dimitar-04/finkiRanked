@@ -47,6 +47,8 @@ async function dailyResets() {
         daily_test_case_id: null,
         daily_points: 0,
         attempts: 0,
+        postCheckCounter: 0,
+        postCounter: 3,
       },
     });
     console.log(
