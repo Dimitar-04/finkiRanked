@@ -326,7 +326,7 @@ const CreatePost = () => {
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end mt-4">
-              <button className="btn btn-primary" onClick={closeModal}>
+              <button className="btn btn-tertiary" onClick={closeModal}>
                 OK
               </button>
             </div>

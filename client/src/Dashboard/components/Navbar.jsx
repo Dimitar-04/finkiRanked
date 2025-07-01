@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/images/logoIcon.png";
 import logoText from "../../assets/images/logoText.png";
 import pp from "../../assets/images/pp.svg";
@@ -8,7 +8,18 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  const isActive = (path) => {
+    if (path === "/dashboard" && location.pathname === "/dashboard") {
+      return true;
+    }
+    if (path !== "/dashboard" && location.pathname.startsWith(path)) {
+      return true;
+    }
+    return false;
+  };
 
   return (
     <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content">
@@ -23,7 +34,11 @@ export default function Navbar() {
         <ul className="menu menu-lg gap-2">
           <li>
             <button
-              className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors `}
+              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
+                isActive("/dashboard")
+                  ? "bg-[#FFB800] text-black"
+                  : "hover:bg-[#FFB800] hover:text-black"
+              }`}
               onClick={() => navigate("/dashboard")}
             >
               <svg
@@ -41,7 +56,11 @@ export default function Navbar() {
           </li>
           <li>
             <button
-              className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
+              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
+                isActive("/dashboard/leaderboard")
+                  ? "bg-[#FFB800] text-black"
+                  : "hover:bg-[#FFB800] hover:text-black"
+              }`}
               onClick={() => navigate("/dashboard/leaderboard")}
             >
               <svg
@@ -59,7 +78,11 @@ export default function Navbar() {
           </li>
           <li>
             <button
-              className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
+              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
+                isActive("/dashboard/forum")
+                  ? "bg-[#FFB800] text-black"
+                  : "hover:bg-[#FFB800] hover:text-black"
+              }`}
               onClick={() => navigate("/dashboard/forum")}
             >
               <svg
@@ -81,7 +104,11 @@ export default function Navbar() {
           {user && user.isModerator && (
             <li>
               <button
-                className={`flex items-center gap-4 px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors`}
+                className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
+                  isActive("/dashboard/manage-posts")
+                    ? "bg-[#FFB800] text-black"
+                    : "hover:bg-[#FFB800] hover:text-black"
+                }`}
                 onClick={() => navigate("/dashboard/manage-posts")}
               >
                 <svg
@@ -107,7 +134,11 @@ export default function Navbar() {
 
       <div className="absolute bottom-0 left-0 w-64 right-0 p-4 border-t border-base-content/10">
         <button
-          className={`flex items-center gap-3  px-4 py-3 hover:bg-[#FFB800] hover:text-black rounded-lg transition-colors `}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+            isActive("/dashboard/profile")
+              ? "bg-[#FFB800] text-black"
+              : "hover:bg-[#FFB800] hover:text-black"
+          }`}
           onClick={() => navigate("/dashboard/profile")}
         >
           <img
