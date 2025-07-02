@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAllTasks, deleteTask } from "@/services/taskService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 const PAGE_SIZE = 10;
 
 const ManageChallenges = () => {
@@ -9,6 +10,7 @@ const ManageChallenges = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [expandedChallenge, setExpandedChallenge] = useState(null);
+  const navigate = useNavigate();
   const { user } = useAuth();
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -59,7 +61,10 @@ const ManageChallenges = () => {
     <div className="container mx-auto max-w-4xl p-6">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Manage Challenges</h1>
-        <button className="btn border-amber-400 gap-2">
+        <button
+          className="btn border-amber-400 gap-2"
+          onClick={() => navigate("/dashboard/create-new-challenge")}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="w-5 h-5"

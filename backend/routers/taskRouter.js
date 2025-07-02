@@ -13,6 +13,7 @@ router.put(
 );
 
 router.post("/:id/evaluate", taskController.evaluateTask);
+router.post("/create", taskController.createNewTask);
 
 router.delete("/:id", taskController.deleteTask);
 

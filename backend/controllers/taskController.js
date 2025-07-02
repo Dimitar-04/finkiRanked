@@ -1,6 +1,8 @@
 const { get } = require("http");
 const prisma = require("../lib/prisma");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
+const Challenge = require("../models/challenge");
+const { at } = require("../filters/macedonianProfanity");
 const getAllTasks = async (req, res) => {
   const userId = req.user.sub;
 
@@ -472,6 +474,89 @@ const evaluateTask = async (req, res) => {
   }
 };
 
+const createNewTask = async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    const isModeratorOrAdmin = await verifyModeratorStatus(userId);
+
+    if (!isModeratorOrAdmin) {
+      return res.status(403).json({
+        message: "You do not have permission to create challenges",
+      });
+    }
+
+    const {
+      title,
+      description,
+      examples,
+      testcases,
+      difficulty,
+      output_type,
+      solving_date,
+    } = req.body;
+
+    let challengeDate = solving_date ? new Date(solving_date) : new Date();
+    if (!solving_date) {
+      challengeDate.setDate(challengeDate.getDate() + 1);
+    }
+
+    const challenge = new Challenge({
+      title: title,
+      content: description,
+      solving_date: challengeDate,
+      attempted_by: 0,
+      solved_by: 0,
+      expired: false,
+      examples: examples,
+      output_type: output_type || "string",
+      difficulty: difficulty || "Easy",
+    });
+    const validation = challenge.validate();
+    if (!validation.isValid) {
+      return res.status(400).json({
+        message: "Challenge validation failed",
+        errors: validation.errors,
+      });
+    }
+    const challengeData = challenge.toObject
+      ? challenge.toObject()
+      : { ...challenge };
+
+    const createdChallenge = await prisma.challenges.create({
+      data: {
+        ...challengeData,
+
+        test_cases: {
+          create: testcases.map((testCase) => ({
+            input: testCase.input,
+            output: testCase.output,
+          })),
+        },
+      },
+      include: {
+        test_cases: true,
+      },
+    });
+
+    res.status(201).json({
+      message: "Challenge created successfully",
+      challenge: {
+        id: createdChallenge.id,
+        title: createdChallenge.title,
+        solving_date: createdChallenge.solving_date,
+        testCaseCount: createdChallenge.test_cases.length,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating challenge:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+};
+
 const deleteTask = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.sub;
@@ -515,4 +600,5 @@ module.exports = {
   getAllTasks,
   getAllTestCasesForTask,
   deleteTask,
+  createNewTask,
 };

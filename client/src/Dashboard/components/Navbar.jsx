@@ -31,7 +31,8 @@ export default function Navbar() {
     }
     if (
       path === "/dashboard/manage-challenges" &&
-      location.pathname === "/dashboard/manage-challenges"
+      (location.pathname === "/dashboard/manage-challenges" ||
+        location.pathname === "/dashboard/create-new-challenge")
     ) {
       return true;
     }

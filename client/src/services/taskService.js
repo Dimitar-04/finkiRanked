@@ -18,6 +18,11 @@ export const updateUserDailyTestCaseId = async (userId, testCaseId) => {
     testCaseId,
   });
 };
+
+export const createNewTask = async (taskData) => {
+  return await apiClient.post(`/task/create`, taskData);
+};
+
 export const getAllTasks = async (page = 1, pageSize = 10) => {
   return await apiClient.get(`/task/all?page=${page}&pageSize=${pageSize}`);
 };
