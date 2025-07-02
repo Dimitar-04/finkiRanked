@@ -12,7 +12,7 @@ import LeaderBoardEx from "./LandingPage/components/LeaderBoardEx";
 import ManagePosts from "@/Dashboard/components/ManagePosts.jsx";
 import DashboardLayout from "./Dashboard/DashboardLayout";
 import Logout from "./Dashboard/components/Logout";
-
+import ManageChallenges from "./Dashboard/components/ManageChallenges";
 export default function App() {
   return (
     <Routes>
@@ -38,6 +38,7 @@ export default function App() {
         <Route path="forum-detail/:postId" element={<ForumPostDetail />} />
         <Route path="profile" element={<Profile />} />
         <Route path="leaderboard" element={<LeaderBoardEx />} />
+        <Route path="manage-challenges" element={<ManageChallenges />} />
       </Route>
     </Routes>
   );

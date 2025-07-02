@@ -1,5 +1,70 @@
 const { get } = require("http");
 const prisma = require("../lib/prisma");
+const verifyModeratorStatus = require("../services/checkModeratorStatus");
+const getAllTasks = async (req, res) => {
+  const userId = req.user.sub;
+
+  try {
+    const isModerator = await verifyModeratorStatus(userId);
+    if (!isModerator) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    const [challenges, total] = await Promise.all([
+      prisma.challenges.findMany({
+        include: { test_cases: true },
+        orderBy: { solving_date: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.challenges.count(),
+    ]);
+
+    const safeSerialize = (data) => {
+      return JSON.parse(
+        JSON.stringify(data, (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          if (typeof value === "bigint") {
+            return value.toString();
+          }
+          return value;
+        })
+      );
+    };
+
+    const processedChallenges = challenges.map((challenge) => {
+      const safeChallenge = safeSerialize(challenge);
+      if (safeChallenge.test_cases) {
+        safeChallenge.test_cases = safeChallenge.test_cases.map((testCase) => ({
+          id: testCase.id,
+          input: testCase.input,
+          output: testCase.output,
+          challenge_id: testCase.challenge_id,
+        }));
+      }
+      return safeChallenge;
+    });
+
+    res.status(200).json({
+      challenges: processedChallenges,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+      currentPage: page,
+      pageSize,
+    });
+  } catch (error) {
+    console.error("Error fetching all challenges:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+};
 
 const getTaskByDate = async (req, res) => {
   try {
@@ -138,6 +203,34 @@ const getSpecificTestCaseById = async (req, res) => {
     res.status(200).json(testCase);
   } catch (error) {
     console.error("Error fetching specific test case by ID:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+const getAllTestCasesForTask = async (req, res) => {
+  const { taskId } = req.params;
+  try {
+    const testCases = await prisma.test_cases.findMany({
+      where: { challenge_id: taskId },
+      select: {
+        id: true,
+        input: true,
+        output: true,
+        challenge_id: true,
+      },
+    });
+
+    if (testCases.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No test cases found for this task" });
+    }
+
+    res.status(200).json(testCases);
+  } catch (error) {
+    console.error("Error fetching all test cases for task:", error);
     res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
@@ -378,10 +471,48 @@ const evaluateTask = async (req, res) => {
     });
   }
 };
+
+const deleteTask = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.sub;
+
+  try {
+    const isModeratorOrAdmin = await verifyModeratorStatus(userId);
+
+    if (isModeratorOrAdmin) {
+      await prisma.test_cases.deleteMany({
+        where: { challenge_id: id },
+      });
+
+      await prisma.challenges.delete({
+        where: { id },
+      });
+
+      res.status(200).json({
+        message: "Challenge and associated test cases deleted successfully",
+      });
+    } else {
+      res.status(403).json({
+        message: "You do not have permission to delete this challenge",
+      });
+    }
+  } catch (error) {
+    console.error("Error deleting challenge:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+};
+
 module.exports = {
   getTaskByDate,
   getSpecificTestCaseById,
   updateUserDailyChallengeId,
   fetchTestCaseForToday,
   evaluateTask,
+  getAllTasks,
+  getAllTestCasesForTask,
+  deleteTask,
 };

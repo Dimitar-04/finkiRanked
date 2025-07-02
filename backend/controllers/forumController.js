@@ -179,6 +179,7 @@ const getForumPosts = async (req, res) => {
 const deleteForumPost = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.sub;
+  console.log(userId);
 
   try {
     const post = await prisma.forum_posts.findUnique({

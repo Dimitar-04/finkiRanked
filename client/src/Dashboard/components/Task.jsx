@@ -350,16 +350,16 @@ const Task = () => {
 
                       <div className="card bg-base-300">
                         <div className="card-body">
-                          <h3 className="card-title">Example</h3>
-                          <div className="space-y-2 mt-2">
-                            {task.examples.map((element, index) => {
-                              return (
-                                <p className="font-mono break-all" key={index}>
-                                  Input: "{element.input}" → Output: "
-                                  {element.output}"
+                          <h3 className="card-title">Examples:</h3>
+                          <div className="space-y-5 mt-2">
+                            {task.examples.map((example, index) => (
+                              <div key={index} className="font-mono text-sm">
+                                <p className="pl-2 border-l-2 border-amber-400 mt-1">
+                                  Input: "{example.input || "N/A"}" <br />
+                                  Output: "{example.output || "N/A"}"
                                 </p>
-                              );
-                            })}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
