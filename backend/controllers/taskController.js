@@ -186,6 +186,66 @@ const fetchTestCaseForToday = async (req, res) => {
   }
 };
 
+const searchTaskByDate = async (req, res) => {
+  const { date } = req.query;
+
+  try {
+    const parsedDate = new Date(date);
+    const startOfDay = new Date(parsedDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(parsedDate.setHours(24, 0, 0, 0));
+
+    const challenges = await prisma.challenges.findMany({
+      where: {
+        solving_date: {
+          gte: startOfDay,
+          lt: endOfDay,
+        },
+      },
+      include: {
+        test_cases: true,
+      },
+    });
+    if (challenges.length === 0) {
+      return res.status(404).json({ message: "No tasks found for this date" });
+    }
+    const safeSerialize = (data) => {
+      return JSON.parse(
+        JSON.stringify(data, (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          if (typeof value === "bigint") {
+            return value.toString();
+          }
+          return value;
+        })
+      );
+    };
+    const parsedChallenges = challenges.map((task) => {
+      const safeTask = safeSerialize(task);
+
+      if (safeTask.test_cases) {
+        safeTask.test_cases = safeTask.test_cases.map((testCase) => ({
+          id: testCase.id,
+          input: testCase.input || "",
+          output: testCase.output || "",
+          challenge_id: testCase.challenge_id,
+        }));
+      }
+
+      return safeTask;
+    });
+    res.status(200).json(parsedChallenges);
+  } catch (error) {
+    console.error("Error searching tasks by date:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+};
+
 const getSpecificTestCaseById = async (req, res) => {
   const { testCaseId } = req.params;
 
@@ -593,6 +653,7 @@ const deleteTask = async (req, res) => {
 
 module.exports = {
   getTaskByDate,
+  searchTaskByDate,
   getSpecificTestCaseById,
   updateUserDailyChallengeId,
   fetchTestCaseForToday,

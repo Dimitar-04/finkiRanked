@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { getAllTasks, deleteTask } from "@/services/taskService";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  getAllTasks,
+  deleteTask,
+  searchTaskByDate,
+} from "@/services/taskService";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
 import "cally";
 const PAGE_SIZE = 10;
 
@@ -13,6 +18,8 @@ const ManageChallenges = () => {
   const [expandedChallenge, setExpandedChallenge] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const calendarRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [modal, setModal] = useState({
     isOpen: false,
     message: "",
@@ -20,21 +27,64 @@ const ManageChallenges = () => {
     challengeId: null,
   });
   useEffect(() => {
-    const fetchChallenges = async () => {
+    const fetchChallengesAndStyleCalendar = async () => {
       setLoading(true);
+      const dateParam = searchParams.get("date");
+
       try {
-        const data = await getAllTasks(currentPage, PAGE_SIZE);
-        setChallenges(data.challenges);
-        console.log("Fetched challenges:", data.challenges);
-        setTotalPages(data.totalPages);
+        if (dateParam) {
+          const data = await searchTaskByDate(dateParam);
+          setChallenges(data);
+          setTotalPages(1);
+          setCurrentPage(1);
+
+          if (calendarRef.current) {
+            calendarRef.current.value = dateParam;
+
+            calendarRef.current.style.setProperty(
+              "--cally-selected-background",
+              "white"
+            );
+            calendarRef.current.style.setProperty(
+              "--cally-selected-color",
+              "#1f2937"
+            );
+
+            calendarRef.current.style.setProperty(
+              "--cally-today-background",
+              "transparent"
+            );
+            calendarRef.current.style.setProperty(
+              "--cally-today-color",
+              "inherit"
+            );
+          }
+        } else {
+          const data = await getAllTasks(currentPage, PAGE_SIZE);
+          setChallenges(data.challenges);
+          setTotalPages(data.totalPages);
+
+          if (calendarRef.current) {
+            calendarRef.current.style.removeProperty(
+              "--cally-selected-background"
+            );
+            calendarRef.current.style.removeProperty("--cally-selected-color");
+            calendarRef.current.style.removeProperty(
+              "--cally-today-background"
+            );
+            calendarRef.current.style.removeProperty("--cally-today-color");
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch challenges:", err);
+        setChallenges([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchChallenges();
-  }, [currentPage]);
+
+    fetchChallengesAndStyleCalendar();
+  }, [currentPage, searchParams]);
   const fetchTestCases = async (challengeId) => {
     try {
       setExpandedChallenge(
@@ -45,6 +95,19 @@ const ManageChallenges = () => {
         `Failed to fetch test cases for challenge ${challengeId}:`,
         err
       );
+    }
+  };
+  const handleViewAll = async () => {
+    setLoading(true);
+    try {
+      const data = await getAllTasks(1, PAGE_SIZE);
+      setChallenges(data.challenges);
+      setTotalPages(data.totalPages);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error("Failed to fetch all challenges:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,18 +144,27 @@ const ManageChallenges = () => {
     closeModal();
   };
 
+  const searchByDate = (date) => {
+    if (date) {
+      setSearchParams({ date });
+    }
+  };
+
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold ml-8 mb-12">Manage Challenges</h1>
       <div className="flex flex-col md:flex-row gap-8 ml-8 mx-auto">
         {/* Left sidebar with calendar */}
-        <div className="w-full md:w-[300px] flex-shrink-0 ">
+        <div className="w-full md:w-[310px] flex-shrink-0 ">
           <div className="sticky top-6">
             <div className="card bg-base-200 shadow-md p-4">
               <h2 className="font-semibold text-lg mb-4">Search by date:</h2>
 
               {/* Calendar component */}
-              <calendar-date class="cally bg-base-100 border border-base-300 shadow-md rounded-box w-full mb-4">
+              <calendar-date
+                ref={calendarRef}
+                class="cally bg-base-100 border border-base-300 shadow-md rounded-box w-full mb-4"
+              >
                 <svg
                   aria-label="Previous"
                   className="fill-current size-4"
@@ -124,14 +196,16 @@ const ManageChallenges = () => {
               <button
                 className="btn btn-block border-amber-400"
                 onClick={() => {
-                  // Get the selected date from the calendar component
+                  if (calendarRef.current) {
+                    const selectedDate = calendarRef.current.value;
+                    searchByDate(selectedDate);
+                  }
+
                   const calendarElement =
                     document.querySelector("calendar-date");
                   if (calendarElement) {
                     const selectedDate = calendarElement.value;
-                    console.log("Selected date:", selectedDate);
-                    // Implement your search logic here
-                    // fetchChallengesByDate(selectedDate);
+                    searchByDate(selectedDate);
                   }
                 }}
               >
@@ -180,7 +254,7 @@ const ManageChallenges = () => {
             <div className="flex justify-center items-center h-64">
               <span className="loading loading-spinner loading-lg"></span>
             </div>
-          ) : (
+          ) : challenges.length > 0 ? (
             <div className="space-y-6">
               {challenges.map((challenge) => (
                 <div key={challenge.id} className="card bg-base-200 shadow-md">
@@ -243,15 +317,16 @@ const ManageChallenges = () => {
                         Delete
                       </button>
                     </div>
+
                     {expandedChallenge === challenge.id &&
                       challenge.test_cases && (
-                        <div className="mt-4 card bg-base-300 p-3">
+                        <div className="mt-4 card bg-base-300 p-4 ">
                           <h3 className="font-medium mb-2">Test Cases:</h3>
                           <div className="space-y-4 max-h-60 overflow-y-auto">
                             {challenge.test_cases.map((testCase, index) => (
                               <div
                                 key={testCase.id}
-                                className="card bg-base-100 p-3"
+                                className="card bg-base-100 max-w-250 p-3"
                               >
                                 <h4 className="font-medium">
                                   Test Case {index + 1}
@@ -259,15 +334,19 @@ const ManageChallenges = () => {
                                 <div className="font-mono text-sm">
                                   <div className="pl-2 border-l-2 border-amber-400 mt-1">
                                     <p>Input:</p>
-                                    <pre className="bg-base-300 p-1 rounded">
-                                      {testCase.input || "N/A"}
-                                    </pre>
+                                    <div className="max-h-40 overflow-y-auto">
+                                      <pre className="bg-base-300 p-2 rounded whitespace-pre-wrap break-words w-full overflow-hidden">
+                                        {testCase.input || "N/A"}
+                                      </pre>
+                                    </div>
                                   </div>
                                   <div className="pl-2 border-l-2 border-green-400 mt-2">
                                     <p>Expected Output:</p>
-                                    <pre className="bg-base-300 p-1 rounded">
-                                      {testCase.output || "N/A"}
-                                    </pre>
+                                    <div className="max-h-40 overflow-y-auto">
+                                      <pre className="bg-base-300 p-2 rounded whitespace-pre-wrap break-words w-full overflow-hidden">
+                                        {testCase.output || "N/A"}
+                                      </pre>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -278,30 +357,41 @@ const ManageChallenges = () => {
                   </div>
                 </div>
               ))}
+              <button
+                className="block mx-auto  cursor-pointer hover:underline"
+                onClick={() => handleViewAll()}
+              >
+                View all challenges
+              </button>
+            </div>
+          ) : (
+            <div className="text-center text-base-content/60 py-16">
+              <p>No available challenges for the selected date.</p>
             </div>
           )}
-
-          <div className="flex justify-center gap-2 mt-8">
-            {Array.from({ length: totalPages }, (_, idx) => (
-              <button
-                key={idx + 1}
-                className={`btn btn-sm ${
-                  currentPage === idx + 1 ? "border-amber-400" : "btn-ghost"
-                }`}
-                onClick={() => setCurrentPage(idx + 1)}
-                disabled={loading}
-              >
-                {idx + 1}
-              </button>
-            ))}
-          </div>
+          {!loading && challenges.length > 1 && (
+            <div className="flex justify-center gap-2 mt-8">
+              {Array.from({ length: totalPages }, (_, idx) => (
+                <button
+                  key={idx + 1}
+                  className={`btn btn-sm ${
+                    currentPage === idx + 1 ? "border-amber-400" : "btn-ghost"
+                  }`}
+                  onClick={() => setCurrentPage(idx + 1)}
+                  disabled={loading}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Modal (unchanged) */}
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-xs"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"

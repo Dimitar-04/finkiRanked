@@ -27,6 +27,10 @@ export const getAllTasks = async (page = 1, pageSize = 10) => {
   return await apiClient.get(`/task/all?page=${page}&pageSize=${pageSize}`);
 };
 
+export const searchTaskByDate = async (date) => {
+  return await apiClient.get(`/task/search?date=${date}`);
+};
+
 export const deleteTask = async (taskId) => {
   return await apiClient.delete(`/task/${taskId}`);
 };

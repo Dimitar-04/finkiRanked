@@ -7,6 +7,7 @@ router.get("/", taskController.getTaskByDate);
 router.get("/:id/test-case", taskController.fetchTestCaseForToday);
 router.get("/:id/test-cases", taskController.getAllTestCasesForTask);
 router.get("/test-cases/:testCaseId", taskController.getSpecificTestCaseById);
+router.get("/search", taskController.searchTaskByDate);
 router.put(
   "/users/:userId/daily-test-case-id",
   taskController.updateUserDailyChallengeId

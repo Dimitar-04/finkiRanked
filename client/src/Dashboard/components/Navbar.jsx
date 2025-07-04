@@ -43,7 +43,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content">
+    <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content border-r border-base-content/10">
       <div className="p-4 border-b border-base-content/10">
         <a href="/" className="flex items-center gap-2">
           <img src={logoIcon} alt="Logo" className="w-14 h-auto" />
@@ -51,7 +51,7 @@ export default function Navbar() {
         </a>
       </div>
 
-      <div className="px-4 py-8">
+      <div className=" py-8">
         <ul className="menu menu-lg gap-2">
           <li>
             <button
@@ -122,8 +122,10 @@ export default function Navbar() {
               Forum
             </button>
           </li>
-          {user && user.isModerator && (
-            <>
+        </ul>
+        {user && user.isModerator && (
+          <div className="border-t border-base-content/10 pt-2 w-full">
+            <ul className="menu menu-lg gap-2 ">
               <li>
                 <button
                   className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
@@ -190,12 +192,12 @@ export default function Navbar() {
                   Manage Challenges
                 </button>
               </li>
-            </>
-          )}
-        </ul>
+            </ul>
+          </div>
+        )}
       </div>
 
-      <div className="absolute bottom-0 left-0 w-64 right-0 p-4 border-t border-base-content/10">
+      <div className="absolute bottom-0 w-80 left-0 right-0 p-4 border-t border-base-content/10">
         <button
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
             isActive("/dashboard/profile")

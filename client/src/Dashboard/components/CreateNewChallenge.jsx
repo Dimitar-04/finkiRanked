@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createNewTask } from "@/services/taskService";
+import { DatePicker } from "react-daisyui-timetools";
+import "react-datepicker/dist/react-datepicker.css";
+import "cally";
 const CreateNewChallenge = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -15,6 +18,7 @@ const CreateNewChallenge = () => {
     description: "",
     difficulty: "Easy",
     output_type: "string",
+    solving_date: new Date(),
   });
 
   const [examples, setExamples] = useState([
@@ -194,7 +198,7 @@ const CreateNewChallenge = () => {
             ></textarea>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
             <div className="form-control">
               <span className="label-text font-medium">Difficulty</span>
 
@@ -225,6 +229,18 @@ const CreateNewChallenge = () => {
                 <option value="boolean">Boolean</option>
                 <option value="object">Object</option>
               </select>
+            </div>
+          </div>
+          <div className="flex items-center gap-10 form-control">
+            <span className="label-text font-medium">Solving date</span>
+            <div data-theme="luxury " className="rounded-box w-1/5">
+              <DatePicker
+                value={formData.solving_date}
+                onChange={(date) =>
+                  setFormData((prev) => ({ ...prev, solving_date: date }))
+                }
+                minDate={new Date()}
+              />
             </div>
           </div>
         </div>
