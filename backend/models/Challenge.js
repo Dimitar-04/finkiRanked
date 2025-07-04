@@ -44,17 +44,17 @@ class Challenge {
       });
     }
 
-    if (!this.test_cases || !Array.isArray(this.test_cases)) {
-      errors.push("Test cases must be an array");
-    } else if (this.test_cases.length < 10) {
-      errors.push("At least 10 test cases are required");
-    } else {
-      this.test_cases.forEach((testCase, index) => {
-        if (!testCase.input || !testCase.output) {
-          errors.push(`Test case ${index + 1} must have both input and output`);
-        }
-      });
-    }
+    // if (!this.test_cases || !Array.isArray(this.test_cases)) {
+    //   errors.push("Test cases must be an array");
+    // } else if (this.test_cases.length < 10) {
+    //   errors.push("At least 10 test cases are required");
+    // } else {
+    //   this.test_cases.forEach((testCase, index) => {
+    //     if (!testCase.input || !testCase.output) {
+    //       errors.push(`Test case ${index + 1} must have both input and output`);
+    //     }
+    //   });
+    // }
 
     return {
       isValid: errors.length === 0,
