@@ -1,84 +1,84 @@
-import noviceIcon from '../assets/rankIcons/novice.png';
-import learnerIcon from '../assets/rankIcons/learner.png';
-import coderIcon from '../assets/rankIcons/coder.png';
-import problemSolverIcon from '../assets/rankIcons/problemsolver.png';
-import algorithmistIcon from '../assets/rankIcons/algorithmist.png';
-import hackerMageIcon from '../assets/rankIcons/hackermage.png';
-import challengerIcon from '../assets/rankIcons/challenger.png';
-import codeMasterIcon from '../assets/rankIcons/codemaster.png';
-import finkiRoyaltyIcon from '../assets/rankIcons/royalty.png';
-import finkiLegendIcon from '../assets/rankIcons/finkilegend.png';
+import noviceIcon from "../assets/rankIcons/novice.png";
+import learnerIcon from "../assets/rankIcons/learner.png";
+import coderIcon from "../assets/rankIcons/coder.png";
+import problemSolverIcon from "../assets/rankIcons/problemsolver.png";
+import algorithmistIcon from "../assets/rankIcons/algorithmist.png";
+import hackerMageIcon from "../assets/rankIcons/hackermage.png";
+import challengerIcon from "../assets/rankIcons/challenger.png";
+import codeMasterIcon from "../assets/rankIcons/codemaster.png";
+import finkiRoyaltyIcon from "../assets/rankIcons/royalty.png";
+import finkiLegendIcon from "../assets/rankIcons/finkilegend.png";
 
 export const RANK_DATA = {
   Novice: {
     id: 1,
-    title: 'Novice',
+    title: "Novice",
     requiredPoints: 0,
     icon: noviceIcon,
-    color: '#A0AEC0',
+    color: "	#e4b685", // Bronze
   },
   Learner: {
     id: 2,
-    title: 'Learner',
+    title: "Learner",
     requiredPoints: 300,
     icon: learnerIcon,
-    color: '#4299E1',
+    color: "#ac4f00", // Slightly darker Bronze
   },
-  Coder: {
+  "Junior Developer": {
     id: 3,
-    title: 'Coder',
+    title: "Junior Developer",
     requiredPoints: 800,
     icon: coderIcon,
-    color: '#48BB78',
+    color: "#7e3a06", // Darker Bronze / Sienna
   },
-  'Problem Solver': {
+  Developer: {
     id: 4,
-    title: 'Problem Solver',
+    title: "Developer",
     requiredPoints: 1500,
     icon: problemSolverIcon,
-    color: '#38B2AC',
+    color: "#cccccc", // Silver
   },
-  Algorithmist: {
+  "Senior Developer": {
     id: 5,
-    title: 'Algorithmist',
+    title: "Senior Developer",
     requiredPoints: 2500,
     icon: algorithmistIcon,
-    color: '#805AD5',
+    color: "#a4a4a4", // Slightly darker Silver
   },
-  'Hacker Mage': {
+  Expert: {
     id: 6,
-    title: 'Hacker Mage',
+    title: "Expert",
     requiredPoints: 4000,
     icon: hackerMageIcon,
-    color: '#D69E2E',
+    color: "#6a6a6a", // Darker Silver
   },
-  Challenger: {
+  Master: {
     id: 7,
-    title: 'Challenger',
+    title: "Master",
     requiredPoints: 6000,
     icon: challengerIcon,
-    color: '#F56565',
+    color: "#eddd82", // Gold
   },
-  'Code Master': {
+  "Grand Master": {
     id: 8,
-    title: 'Code Master',
+    title: "Grand Master",
     requiredPoints: 8500,
     icon: codeMasterIcon,
-    color: '#ED8936',
+    color: "#F4C430", // Saffron / Richer Gold
   },
-  'FINKI Royalty': {
+  "FINKI Royalty": {
     id: 9,
-    title: 'FINKI Royalty',
+    title: "FINKI Royalty",
     requiredPoints: 11000,
     icon: finkiRoyaltyIcon,
-    color: '#ECC94B',
+    color: "#E5B80B", // Darker Gold
   },
-  'FINKI Legend': {
+  "FINKI Legend": {
     id: 10,
-    title: 'FINKI Legend',
+    title: "FINKI Legend",
     requiredPoints: 16000,
     icon: finkiLegendIcon,
-    color: '#9F7AEA',
+    color: "#00BFFF", // Bright Blue (DeepSkyBlue)
   },
 };
 
@@ -88,7 +88,7 @@ export const RANK_DATA = {
  * @returns {object} Rank data object
  */
 export const getRankInfo = (rankName) => {
-  return RANK_DATA[rankName] || RANK_DATA['Novice'];
+  return RANK_DATA[rankName] || RANK_DATA["Novice"];
 };
 
 /**
@@ -103,19 +103,19 @@ export const getRankInfo = (rankName) => {
  * @param {string} size - Size of the badge ('sm', 'md', 'lg')
  * @returns {object} Props for styling the rank badge
  */
-export const getRankBadgeProps = (rankName, size = 'md') => {
+export const getRankBadgeProps = (rankName, size = "md") => {
   const rankInfo = getRankInfo(rankName);
 
   const sizeClasses = {
-    sm: 'text-xs px-2 py-1',
-    md: 'text-sm px-3 py-1',
-    lg: 'text-base px-4 py-2',
+    sm: "text-xs px-2 py-1",
+    md: "text-sm px-3 py-1",
+    lg: "text-base px-4 py-2",
   };
 
   const iconSizes = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
   };
 
   return {
@@ -123,7 +123,7 @@ export const getRankBadgeProps = (rankName, size = 'md') => {
     className: `inline-flex items-center gap-2 rounded-full font-medium ${sizeClasses[size]}`,
     style: {
       backgroundColor: rankInfo.color,
-      color: '#FFFFFF',
+      color: "#FFFFFF",
     },
     iconClassName: iconSizes[size],
   };

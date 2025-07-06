@@ -2,7 +2,7 @@
 import React from "react";
 import pp from "../../assets/images/pp.svg";
 import Navbar from "./Navbar";
-import RankBadge from "@/utils/RankBadge.jsx";
+import RankBadgeNav from "@/utils/RankBadgeForNavbar";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
@@ -38,7 +38,7 @@ const Profile = () => {
                 <p className="text-gray-500">{user.email}</p>
                 <div className="mt-4">
                   <div className="text-lg">
-                    <RankBadge rankName={user.rank} size="lg" />
+                    <RankBadgeNav rankName={user.rank} size="lg" />
                   </div>
                   <p className="text-lg mt-5">
                     <span className="font-bold">Points:</span> {user.points}

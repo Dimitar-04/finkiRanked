@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/images/logoIcon.png";
 import logoText from "../../assets/images/logoText.png";
 import pp from "../../assets/images/pp.svg";
-import RankBadge from "@/utils/RankBadge";
+import RankBadgeNav from "@/utils/RankBadgeForNavbar";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
@@ -122,10 +122,11 @@ export default function Navbar() {
               Forum
             </button>
           </li>
-        </ul>
-        {user && user.isModerator && (
-          <div className="border-t border-base-content/10 pt-2 w-full">
-            <ul className="menu menu-lg gap-2 ">
+
+          {user && user.isModerator && (
+            <>
+              <hr />
+
               <li>
                 <button
                   className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
@@ -192,9 +193,9 @@ export default function Navbar() {
                   Manage Challenges
                 </button>
               </li>
-            </ul>
-          </div>
-        )}
+            </>
+          )}
+        </ul>
       </div>
 
       <div className="absolute bottom-0 w-80 left-0 right-0 p-4 border-t border-base-content/10">
@@ -216,7 +217,7 @@ export default function Navbar() {
               {user && user.username}
             </span>
             <span className="text-sm text-base-content/70 mt-2">
-              {user && <RankBadge rankName={user.rank} size="sm" />}
+              {user && <RankBadgeNav rankName={user.rank} size="sm" />}
             </span>
           </div>
         </button>

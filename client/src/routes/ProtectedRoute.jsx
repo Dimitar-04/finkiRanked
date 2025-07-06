@@ -4,6 +4,8 @@ import { Navigate, useLocation } from "react-router-dom";
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const isLogout = localStorage.getItem("logout");
+  console.log(isLogout);
   // if (loading) {
   //   return (
   //     <div

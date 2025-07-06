@@ -190,15 +190,10 @@ const searchTaskByDate = async (req, res) => {
   const { date } = req.query;
 
   try {
-    const parsedDate = new Date(date);
-    const startOfDay = new Date(parsedDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(parsedDate.setHours(24, 0, 0, 0));
-
     const challenges = await prisma.challenges.findMany({
       where: {
         solving_date: {
-          gte: startOfDay,
-          lt: endOfDay,
+          equals: new Date(date),
         },
       },
       include: {
@@ -329,12 +324,16 @@ const updateUserDailyChallengeId = async (req, res) => {
 const RANK_DATA = {
   Novice: { id: 1, title: "Novice", requiredPoints: 0 },
   Learner: { id: 2, title: "Learner", requiredPoints: 300 },
-  Coder: { id: 3, title: "Coder", requiredPoints: 800 },
-  "Problem Solver": { id: 4, title: "Problem Solver", requiredPoints: 1500 },
-  Algorithmist: { id: 5, title: "Algorithmist", requiredPoints: 2500 },
-  "Hacker Mage": { id: 6, title: "Hacker Mage", requiredPoints: 4000 },
-  Challenger: { id: 7, title: "Challenger", requiredPoints: 6000 },
-  "Code Master": { id: 8, title: "Code Master", requiredPoints: 8500 },
+  "Junior Developer": { id: 3, title: "Junior Developer", requiredPoints: 800 },
+  Developer: { id: 4, title: "Developer", requiredPoints: 1500 },
+  "Senior Developer": {
+    id: 5,
+    title: "Senior Developer",
+    requiredPoints: 2500,
+  },
+  Expert: { id: 6, title: "Expert", requiredPoints: 4000 },
+  Master: { id: 7, title: "Master", requiredPoints: 6000 },
+  "Grand Master": { id: 8, title: "Grand Master", requiredPoints: 8500 },
   "FINKI Royalty": { id: 9, title: "FINKI Royalty", requiredPoints: 11000 },
   "FINKI Legend": { id: 10, title: "FINKI Legend", requiredPoints: 16000 },
 };

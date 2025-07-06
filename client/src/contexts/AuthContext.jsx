@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("token_exp");
       localStorage.removeItem("lastResetDate");
       localStorage.removeItem("user");
-
+      navigate("/");
       await supabase.auth.signOut();
 
       localStorage.setItem("logout", "true");
