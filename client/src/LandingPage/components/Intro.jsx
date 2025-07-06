@@ -1,14 +1,14 @@
-import React from 'react';
-import logoIcon from '../../assets/images/logoIcon.png';
+import React from "react";
+import logoIcon from "../../assets/images/logoIcon.png";
 const Intro = () => {
   return (
     <div className="hero bg-base-200 min-h-[80vh]">
       <div className="hero-content flex-col lg:flex-row-reverse">
         <img src={logoIcon} className="max-w-sm rounded-lg" />
         <div>
-          <h1 className="text-5xl font-bold">What is FINKI-Ranked?</h1>
+          <h1 className="text-5xl font-bold">What is FINKI Ranked?</h1>
           <p className="py-6 leading-loose">
-            FINKI-Ranked is a web platform where students receive a daily
+            FINKI Ranked is a web platform where students receive a daily
             task/challenge, compete to solve it, and are ranked according to the
             points earned. This platform aims to develop a competitive spirit
             among students, create better work habits, and develop collegiality
