@@ -41,7 +41,12 @@ const Profile = () => {
                     <RankBadgeNav rankName={user.rank} size="lg" />
                   </div>
                   <p className="text-lg mt-5">
-                    <span className="font-bold">Points:</span> {user.points}
+                    <span className="font-bold">Total Points:</span>{" "}
+                    {user.points}
+                  </p>
+                  <p className="text-lg mt-5">
+                    <span className="font-bold">Solved Challenges:</span>{" "}
+                    {user.solved_problems}
                   </p>
                 </div>
                 <div className="mt-6">
@@ -50,9 +55,6 @@ const Profile = () => {
                     className="btn btn-action btn-sm mx-2"
                   >
                     Sign Out
-                  </a>
-                  <a href="/register" className="btn btn-action btn-sm mx-2">
-                    Create New Account
                   </a>
                 </div>
               </>

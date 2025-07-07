@@ -19,7 +19,8 @@ export default function Navbar() {
       path === "/dashboard/forum" &&
       (location.pathname === "/dashboard/forum" ||
         location.pathname === "/dashboard/forum/create-post" ||
-        location.pathname === "/dashboard/create-post")
+        location.pathname === "/dashboard/create-post" ||
+        location.pathname.startsWith("/dashboard/forum-detail/"))
     ) {
       return true;
     }
@@ -29,6 +30,20 @@ export default function Navbar() {
     ) {
       return true;
     }
+    if (
+      path === "/dashboard/leaderboard" &&
+      location.pathname === "/dashboard/leaderboard"
+    ) {
+      return true;
+    }
+
+    if (
+      path === "/dashboard/profile" &&
+      location.pathname === "/dashboard/profile"
+    ) {
+      return true;
+    }
+
     if (
       path === "/dashboard/manage-challenges" &&
       (location.pathname === "/dashboard/manage-challenges" ||
@@ -122,7 +137,6 @@ export default function Navbar() {
               Forum
             </button>
           </li>
-
           {user && user.isModerator && (
             <>
               <hr />

@@ -70,36 +70,31 @@ const getAllTasks = async (req, res) => {
 
 const getTaskByDate = async (req, res) => {
   try {
-    const now = new Date();
+    // const now = new Date();
 
-    const year = now.getUTCFullYear();
-    const month = now.getUTCMonth();
-    const day = now.getUTCDate();
+    // const year = now.getUTCFullYear();
+    // const month = now.getUTCMonth();
+    // const day = now.getUTCDate();
 
-    let effectiveDay = day;
-    if (now.getUTCHours() < 7) {
-      effectiveDay = day - 1;
-    }
+    // let effectiveDay = day;
+    // if (now.getUTCHours() < 7) {
+    //   effectiveDay = day - 1;
+    // }
 
-    const startOfEffectiveDay = new Date(
-      Date.UTC(year, month, effectiveDay, 0, 0, 0, 0)
-    );
-
-    const startOfNextDay = new Date(startOfEffectiveDay);
-    startOfNextDay.setUTCDate(startOfEffectiveDay.getUTCDate() + 1);
-
-    // console.log(
-    //   "Querying between (UTC dates):",
-    //   startOfEffectiveDay.toISOString(),
-    //   "and",
-    //   startOfNextDay.toISOString()
+    // const startOfEffectiveDay = new Date(
+    //   Date.UTC(year, month, effectiveDay, 0, 0, 0, 0)
     // );
 
+    // const startOfNextDay = new Date(startOfEffectiveDay);
+    // startOfNextDay.setUTCDate(startOfEffectiveDay.getUTCDate() + 1);
+
+    const startOfDay = new Date("2025-07-08T00:00:00.000Z");
+    const endOfDay = new Date("2025-07-09T00:00:00.000Z");
     let tasks = await prisma.challenges.findMany({
       where: {
         solving_date: {
-          gte: startOfEffectiveDay,
-          lt: startOfNextDay,
+          gte: startOfDay,
+          lt: endOfDay,
         },
         expired: false,
       },

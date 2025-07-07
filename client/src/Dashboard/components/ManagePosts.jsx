@@ -49,7 +49,6 @@ const ManagePosts = () => {
       await handleApprovePost(modal.post);
     }
     setIsActionLoading(false);
-    closeModal();
   };
 
   const fetchPostsData = useCallback(async () => {
@@ -97,7 +96,7 @@ const ManagePosts = () => {
     try {
       await deleteReviewPost(postId, user.id);
       setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
-      console.log("Post deleted successfully from review queue");
+      showModal("Post deleted successfully.", "deleted");
     } catch (err) {
       console.error("Error deleting review post:", err);
       setError(
@@ -124,25 +123,29 @@ const ManagePosts = () => {
       setPosts((prevPosts) =>
         prevPosts.filter((p) => p.id !== postToApprove.id)
       );
-      console.log("Post approved successfully");
+      showModal("Post approved successfully.", "success");
     } catch (err) {
       console.error("Error approving post:", err);
       setError(
         err.response?.data?.message || err.message || "Failed to approve post."
       );
+      showModal(
+        err.response?.data?.message || err.message || "Failed to approve post.",
+        "error"
+      );
     }
   };
 
-  const openConfirmationModal = (type, item) => {
+  const openConfirmationModal = (type, item, postTitle) => {
     if (type === "delete") {
       showModal(
-        "Are you sure you want to delete this post permanently? This action cannot be undone.",
+        `Are you sure you want to delete post with title "${postTitle}"? This action cannot be undone.`,
         "delete",
         item
       );
     } else if (type === "approve") {
       showModal(
-        "Are you sure you want to approve this post? It will be published to the forum.",
+        `Are you sure you want to approve post with title "${postTitle}"? It will be published to the forum.`,
         "approve",
         item.id,
         item
@@ -214,7 +217,7 @@ const ManagePosts = () => {
                       className="btn btn-sm btn-success btn-circle"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openConfirmationModal("approve", post);
+                        openConfirmationModal("approve", post, post.title);
                       }}
                     >
                       <img src={doneAll} alt="Approve" className="w-5 h-5" />
@@ -224,7 +227,7 @@ const ManagePosts = () => {
                       className="btn btn-sm btn-error btn-circle"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openConfirmationModal("delete", post.id);
+                        openConfirmationModal("delete", post.id, post.title);
                       }}
                     >
                       <img src={trashIcon} alt="Delete" className="w-5 h-5" />
@@ -268,14 +271,14 @@ const ManagePosts = () => {
       {/* Modal element */}
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {modal.type === "approve" && (
+              {(modal.type === "approve" || modal.type === "success") && (
                 <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-success-content"
@@ -292,7 +295,9 @@ const ManagePosts = () => {
                   </svg>
                 </div>
               )}
-              {modal.type === "delete" && (
+              {(modal.type === "delete" ||
+                modal.type === "deleted" ||
+                modal.type === "error") && (
                 <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-error-content"
@@ -311,36 +316,48 @@ const ManagePosts = () => {
               )}
               <h3 className="font-bold text-lg" id="modal-title">
                 {modal.type === "approve" && "Approve Post"}
-                {modal.type === "delete" && "Delete Post"}
+                {modal.type === "deleted" && "Delete Post"}
+                {(modal.type === "success" || modal.type === "error") &&
+                  "Approve Post"}
               </h3>
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end gap-3 mt-4">
-              <button
-                className="btn btn-ghost"
-                onClick={closeModal}
-                disabled={isActionLoading}
-              >
-                Cancel
-              </button>
-              <button
-                className={`btn ${
-                  modal.type === "approve" ? "btn-success" : "btn-error"
-                }`}
-                onClick={confirmAction}
-                disabled={isActionLoading}
-              >
-                {isActionLoading ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm mr-2"></span>
-                    {modal.type === "approve" ? "Approving..." : "Deleting..."}
-                  </>
-                ) : modal.type === "approve" ? (
-                  "Approve"
-                ) : (
-                  "Delete"
-                )}
-              </button>
+              {modal.type === "approve" || modal.type === "delete" ? (
+                <>
+                  <button
+                    className="btn btn-ghost"
+                    onClick={closeModal}
+                    disabled={isActionLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={`btn ${
+                      modal.type === "approve" ? "btn-success" : "btn-error"
+                    }`}
+                    onClick={confirmAction}
+                    disabled={isActionLoading}
+                  >
+                    {isActionLoading ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm mr-2"></span>
+                        {modal.type === "approve"
+                          ? "Approving..."
+                          : "Deleting..."}
+                      </>
+                    ) : modal.type === "approve" ? (
+                      "Approve"
+                    ) : (
+                      "Delete"
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button className="btn btn-primary" onClick={closeModal}>
+                  OK
+                </button>
+              )}
             </div>
           </div>
         </div>
