@@ -8,10 +8,11 @@ const DashboardLayout = () => {
       data-theme="luxury"
       className="dashboard h-screen flex bg-base-100 overflow-hidden"
     >
-      <Navbar />
-      <div className="flex-1 w-full h-full overflow-y-auto">
-        <Outlet />
-      </div>
+      <Navbar>
+        <div className="flex-1 w-full h-full overflow-y-auto">
+          <Outlet />
+        </div>
+      </Navbar>
     </div>
   );
 };

@@ -9,7 +9,7 @@ import { OurRankSystem } from "./components/OurRankSystem";
 
 const LandingPage = () => {
   return (
-    <div data-theme="luxury" className="h-screen overflow-y-auto">
+    <div data-theme="luxury" className="min-h-screen w-full overflow-x-hidden">
       <NavbarLanding />
       <Hero />
       <Intro />

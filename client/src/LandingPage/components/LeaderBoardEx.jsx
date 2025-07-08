@@ -87,9 +87,10 @@ const LeaderBoardEx = () => {
   if (loading && leaderboard.length === 0) {
     return (
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        {/* {!landing ? <Navbar /> : null} */}
-        <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
-          <h1 className="text-4xl font-bold">Leaderboard</h1>
+        <div className="flex w-full flex-col justify-center items-center p-4 sm:p-8 lg:p-20 gap-6 sm:gap-8 lg:gap-10">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+            Leaderboard
+          </h1>
           <div className="loading loading-spinner loading-lg"></div>
         </div>
       </div>
@@ -99,14 +100,15 @@ const LeaderBoardEx = () => {
   if (error && leaderboard.length === 0) {
     return (
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        {/* {!landing ? <Navbar /> : null} */}
-        <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
-          <h1 className="text-4xl font-bold">Leaderboard</h1>
-          <div className="alert alert-error">
-            <span>{error}</span>
+        <div className="flex w-full flex-col justify-center items-center p-4 sm:p-8 lg:p-20 gap-6 sm:gap-8 lg:gap-10">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+            Leaderboard
+          </h1>
+          <div className="alert alert-error max-w-md">
+            <span className="text-sm sm:text-base">{error}</span>
           </div>
           <button
-            className="btn btn-tertiary"
+            className="btn btn-sm sm:btn-md lg:btn-lg btn-tertiary"
             onClick={() => fetchLeaderboard(1, false)}
           >
             Retry
@@ -119,53 +121,61 @@ const LeaderBoardEx = () => {
   return (
     <>
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        {/* {!landing ? <Navbar /> : null} */}
-
-        <div className="flex w-full flex-col items-center p-20 gap-10">
-          <h1 className="text-4xl font-bold">Leaderboard</h1>
-          <p>Note: The leaderboard updates every 5 minutes</p>
+        <div className="flex w-full flex-col items-center p-4 sm:p-8 lg:p-20 gap-6 sm:gap-8 lg:gap-10">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+            Leaderboard
+          </h1>
+          <p className="text-sm sm:text-base text-center">
+            Note: The leaderboard updates every 5 minutes
+          </p>
 
           {pagination && (
-            <div className="flex">
+            <div className="stats stats-vertical sm:stats-horizontal shadow">
               <div className="stat">
-                <div className="stat-title">Total Users</div>
-
-                <div className="text-3xl flex justify-center items-center">
+                <div className="stat-title text-xs sm:text-sm">Total Users</div>
+                <div className="stat-value text-lg sm:text-2xl lg:text-3xl">
                   {pagination.totalUsers}
                 </div>
               </div>
               <div className="stat">
-                <div className="stat-title">Showing</div>
-
-                <div className="text-3xl flex justify-center items-center">
+                <div className="stat-title text-xs sm:text-sm">Showing</div>
+                <div className="stat-value text-lg sm:text-2xl lg:text-3xl">
                   {leaderboard.length}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="w-full max-w-4xl">
-            <div className="rounded-box border border-base-content/5 bg-base-100">
-              <table className="table w-full">
+          <div className="w-full max-w-6xl px-2 sm:px-4">
+            <div className="rounded-box border border-base-content/5 bg-base-100 overflow-x-auto">
+              <table className="table table-xs sm:table-sm lg:table-md w-full">
                 <thead>
                   <tr>
-                    <th>Rank</th>
-                    <th>Username</th>
-                    <th>Rank Tier</th>
-                    <th>Points</th>
+                    <th className="text-xs sm:text-sm">Rank</th>
+                    <th className="text-xs sm:text-sm">Username</th>
+                    <th className="text-xs sm:text-sm hidden sm:table-cell">
+                      Rank Tier
+                    </th>
+                    <th className="text-xs sm:text-sm">Points</th>
                   </tr>
                 </thead>
                 <tbody>
                   {leaderboard.map((user, index) => (
                     <tr key={user.id} className="hover">
-                      <th>{getPosition(index)}</th>
-                      <td className="font-medium">{user.username}</td>
-                      <td>
+                      <th className="text-xs sm:text-sm">
+                        {getPosition(index)}
+                      </th>
+                      <td className="font-medium text-xs sm:text-sm truncate max-w-24 sm:max-w-none">
+                        {user.username}
+                      </td>
+                      <td className="hidden sm:table-cell">
                         <div>
-                          <RankBadge rankName={user.rank} />
+                          <RankBadge rankName={user.rank} size="sm" />
                         </div>
                       </td>
-                      <td className="font-mono font-bold">{user.points}</td>
+                      <td className="font-mono font-bold text-xs sm:text-sm">
+                        {user.points}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -174,14 +184,16 @@ const LeaderBoardEx = () => {
           </div>
 
           {error && leaderboard.length > 0 && (
-            <div className="alert alert-warning">
-              <span>Error loading more data: {error}</span>
+            <div className="alert alert-warning max-w-md">
+              <span className="text-sm sm:text-base">
+                Error loading more data: {error}
+              </span>
             </div>
           )}
 
           {pagination && pagination.hasNextPage && (
             <button
-              className={`btn btn-lg ${
+              className={`btn btn-sm sm:btn-md lg:btn-lg ${
                 loadingMore ? "btn-disabled" : "btn-primary"
               }`}
               onClick={handleLoadMore}
@@ -189,8 +201,8 @@ const LeaderBoardEx = () => {
             >
               {loadingMore ? (
                 <>
-                  <span className="loading loading-spinner"></span>
-                  Loading...
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <span className="hidden sm:inline">Loading...</span>
                 </>
               ) : (
                 "Load More"
@@ -200,7 +212,9 @@ const LeaderBoardEx = () => {
 
           {pagination && !pagination.hasNextPage && leaderboard.length > 0 && (
             <div className="text-center text-base-content/70">
-              <p>You've reached the end of the leaderboard!</p>
+              <p className="text-sm sm:text-base">
+                You've reached the end of the leaderboard!
+              </p>
             </div>
           )}
         </div>

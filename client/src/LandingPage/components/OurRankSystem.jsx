@@ -25,23 +25,25 @@ export const OurRankSystem = () => {
       </style>
       <div
         data-theme="luxury"
-        className="dashboard bg-base-200 flex overflow-none p-20"
+        className="dashboard bg-base-200 flex overflow-none py-8 sm:py-12 lg:py-20 px-4 sm:px-8 lg:px-20"
       >
-        <div className="flex w-full flex-col justify-center items-center p-20 gap-10">
-          <h1 className="text-4xl font-bold">Our Ranking System</h1>
-          <p className="text-lg text-center max-w-2xl">
+        <div className="flex w-full flex-col justify-center items-center gap-6 sm:gap-8 lg:gap-10 max-w-7xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+            Our Ranking System
+          </h1>
+          <p className="text-sm sm:text-base lg:text-lg text-center max-w-2xl">
             Climb the ranks and show your coding prowess! Each rank represents
             your dedication and skill level in competitive programming.
           </p>
 
-          <div className="rounded-box border border-base-content/5 bg-base-100 w-full max-w-4xl p-10">
-            <table className="table">
+          <div className="rounded-box border border-base-content/5 bg-base-100 w-full max-w-6xl p-4 sm:p-6 lg:p-10 overflow-x-auto">
+            <table className="table table-xs sm:table-sm lg:table-md w-full">
               <thead>
                 <tr>
-                  <th>Rank #</th>
-                  <th>Title</th>
-                  <th>Required Points</th>
-                  <th>Icon</th>
+                  <th className="text-xs sm:text-sm">Rank #</th>
+                  <th className="text-xs sm:text-sm">Title</th>
+                  <th className="text-xs sm:text-sm">Required Points</th>
+                  <th className="text-xs sm:text-sm">Icon</th>
                 </tr>
               </thead>
               <tbody>
@@ -50,14 +52,21 @@ export const OurRankSystem = () => {
 
                   return (
                     <tr key={rank.id} className="hover">
-                      <th>{rank.id}</th>
-                      <td className="font-medium">{rank.title}</td>
-                      <td className="font-mono font-bold">
-                        {rank.requiredPoints.toLocaleString()} pts
+                      <th className="text-xs sm:text-sm">{rank.id}</th>
+                      <td className="font-medium text-xs sm:text-sm">
+                        {rank.title}
+                      </td>
+                      <td className="font-mono font-bold text-xs sm:text-sm">
+                        <span className="hidden sm:inline">
+                          {rank.requiredPoints.toLocaleString()} pts
+                        </span>
+                        <span className="sm:hidden">
+                          {rank.requiredPoints.toLocaleString()}
+                        </span>
                       </td>
                       <td>
                         <svg
-                          className={`w-6 h-6 ${
+                          className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${
                             isGlowing ? "breathing-glow" : ""
                           }`}
                           viewBox="0 0 24 24"
@@ -81,20 +90,22 @@ export const OurRankSystem = () => {
             </table>
           </div>
 
-          <div className="text-center text-base-content/70 max-w-2xl">
-            <p className="mb-4">
-              <strong>How to earn points:</strong>
+          <div className="text-center text-base-content/70 max-w-4xl w-full">
+            <p className="mb-4 text-sm sm:text-base font-semibold">
+              How to earn points:
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div className="bg-base-100 p-6 rounded-lg">
-                <h3 className="font-semibold mb-2">Early bird gets the worm</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs sm:text-sm">
+              <div className="bg-base-100 p-4 sm:p-6 rounded-lg">
+                <h3 className="font-semibold mb-2 text-sm sm:text-base">
+                  Early bird gets the worm
+                </h3>
                 <p>
                   Solve the challenges as early as you can every day. Remember
                   they start 7 AM sharp
                 </p>
               </div>
-              <div className="bg-base-100 p-6 rounded-lg">
-                <h3 className="font-semibold mb-2">
+              <div className="bg-base-100 p-4 sm:p-6 rounded-lg">
+                <h3 className="font-semibold mb-2 text-sm sm:text-base">
                   As few attempts as possible
                 </h3>
                 <p>
