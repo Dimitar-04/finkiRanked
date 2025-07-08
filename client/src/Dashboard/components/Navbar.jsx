@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/images/logoIcon.png";
 import logoText from "../../assets/images/logoText.png";
@@ -6,7 +6,62 @@ import pp from "../../assets/images/pp.svg";
 import RankBadgeNav from "@/utils/RankBadgeForNavbar";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function Navbar() {
+// Sidebar Provider Component
+const SidebarProvider = ({ children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="drawer lg:drawer-open">
+      <input
+        id="drawer-toggle"
+        type="checkbox"
+        className="drawer-toggle"
+        checked={isOpen}
+        onChange={() => setIsOpen(!isOpen)}
+      />
+      <div className="drawer-content flex flex-col">
+        {/* Mobile navbar */}
+        <div className="navbar bg-base-200 lg:hidden border-b border-base-content/10">
+          <div className="flex-none">
+            <label htmlFor="drawer-toggle" className="btn btn-square btn-ghost">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                ></path>
+              </svg>
+            </label>
+          </div>
+          <div className="flex-1">
+            <a href="/" className="flex items-center gap-2">
+              <img src={logoIcon} alt="Logo" className="w-8 h-auto" />
+              <img src={logoText} alt="Logo Text" className="w-24 h-auto" />
+            </a>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <main className="flex-1 p-0">{children}</main>
+      </div>
+
+      {/* Sidebar */}
+      <div className="drawer-side">
+        <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
+        <AppSidebar onClose={() => setIsOpen(false)} />
+      </div>
+    </div>
+  );
+};
+
+// Sidebar Component
+const AppSidebar = ({ onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -57,8 +112,14 @@ export default function Navbar() {
     return false;
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+    onClose?.();
+  };
+
   return (
-    <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content border-r border-base-content/10">
+    <aside className="w-80 min-h-full bg-base-200 text-base-content border-r border-base-content/10 flex flex-col">
+      {/* Sidebar Header */}
       <div className="p-4 border-b border-base-content/10">
         <a href="/" className="flex items-center gap-2">
           <img src={logoIcon} alt="Logo" className="w-14 h-auto" />
@@ -66,7 +127,8 @@ export default function Navbar() {
         </a>
       </div>
 
-      <div className=" py-8">
+      {/* Sidebar Content */}
+      <div className="flex-1 py-8">
         <ul className="menu menu-lg gap-2">
           <li>
             <button
@@ -75,11 +137,11 @@ export default function Navbar() {
                   ? "bg-[#FFB800] text-black"
                   : "hover:bg-[#FFB800] hover:text-black"
               }`}
-              onClick={() => navigate("/dashboard")}
+              onClick={() => handleNavigation("/dashboard")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
+                className="w-5 h-5 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -87,7 +149,7 @@ export default function Navbar() {
               >
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               </svg>
-              Challenge of the Day
+              <span>Challenge of the Day</span>
             </button>
           </li>
           <li>
@@ -97,11 +159,11 @@ export default function Navbar() {
                   ? "bg-[#FFB800] text-black"
                   : "hover:bg-[#FFB800] hover:text-black"
               }`}
-              onClick={() => navigate("/dashboard/leaderboard")}
+              onClick={() => handleNavigation("/dashboard/leaderboard")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
+                className="w-5 h-5 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -109,7 +171,7 @@ export default function Navbar() {
               >
                 <path d="M18 20V10M12 20V4M6 20v-6"></path>
               </svg>
-              Leaderboard
+              <span>Leaderboard</span>
             </button>
           </li>
           <li>
@@ -119,11 +181,11 @@ export default function Navbar() {
                   ? "bg-[#FFB800] text-black"
                   : "hover:bg-[#FFB800] hover:text-black"
               }`}
-              onClick={() => navigate("/dashboard/forum")}
+              onClick={() => handleNavigation("/dashboard/forum")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5"
+                className="w-5 h-5 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -134,13 +196,14 @@ export default function Navbar() {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              Forum
+              <span>Forum</span>
             </button>
           </li>
           {user && user.isModerator && (
             <>
-              <hr />
-
+              <li>
+                <div className="divider my-2"></div>
+              </li>
               <li>
                 <button
                   className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
@@ -148,11 +211,11 @@ export default function Navbar() {
                       ? "bg-[#FFB800] text-black"
                       : "hover:bg-[#FFB800] hover:text-black"
                   }`}
-                  onClick={() => navigate("/dashboard/manage-posts")}
+                  onClick={() => handleNavigation("/dashboard/manage-posts")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5"
+                    className="w-5 h-5 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -171,7 +234,7 @@ export default function Navbar() {
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
                   </svg>
-                  Manage Posts
+                  <span>Manage Posts</span>
                 </button>
               </li>
               <li>
@@ -181,11 +244,13 @@ export default function Navbar() {
                       ? "bg-[#FFB800] text-black"
                       : "hover:bg-[#FFB800] hover:text-black"
                   }`}
-                  onClick={() => navigate("/dashboard/manage-challenges")}
+                  onClick={() =>
+                    handleNavigation("/dashboard/manage-challenges")
+                  }
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5"
+                    className="w-5 h-5 shrink-0"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -204,7 +269,7 @@ export default function Navbar() {
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
                   </svg>
-                  Manage Challenges
+                  <span>Manage Challenges</span>
                 </button>
               </li>
             </>
@@ -212,30 +277,36 @@ export default function Navbar() {
         </ul>
       </div>
 
-      <div className="absolute bottom-0 w-80 left-0 right-0 p-4 border-t border-base-content/10">
+      {/* Sidebar Footer */}
+      <div className="p-4 border-t border-base-content/10">
         <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full ${
             isActive("/dashboard/profile")
               ? "bg-[#FFB800] text-black"
               : "hover:bg-[#FFB800] hover:text-black"
           }`}
-          onClick={() => navigate("/dashboard/profile")}
+          onClick={() => handleNavigation("/dashboard/profile")}
         >
           <img
             src={pp}
             alt="Profile"
-            className="w-10 h-10 rounded-full border-2 border-base-content/10"
+            className="w-10 h-10 rounded-full border-2 border-base-content/10 shrink-0"
           />
-          <div className="flex flex-col items-start cursor-pointer">
+          <div className="flex flex-col items-start">
             <span className="font-medium text-left">
               {user && user.username}
             </span>
-            <span className="text-sm text-base-content/70 mt-2">
+            <span className="text-sm text-base-content/70 mt-1">
               {user && <RankBadgeNav rankName={user.rank} size="sm" />}
             </span>
           </div>
         </button>
       </div>
-    </nav>
+    </aside>
   );
+};
+
+// Main Navbar Component (now acts as a layout wrapper)
+export default function Navbar({ children }) {
+  return <SidebarProvider>{children}</SidebarProvider>;
 }

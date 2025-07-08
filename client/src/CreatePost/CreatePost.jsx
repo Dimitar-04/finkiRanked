@@ -123,19 +123,22 @@ const CreatePost = () => {
   };
 
   return (
-    <div data-theme="luxury" className="min-h-screen bg-base-100 p-6">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl font-bold text-base-content">
+    <div
+      data-theme="luxury"
+      className="min-h-screen bg-base-100 p-3 sm:p-4 lg:p-6"
+    >
+      <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-base-content">
             Create a Post
           </h2>
           <button
             onClick={() => navigate("/dashboard/forum")}
-            className="btn btn-outline gap-2"
+            className="btn btn-outline btn-sm sm:btn-md gap-2 w-full sm:w-auto"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -151,7 +154,7 @@ const CreatePost = () => {
           onSubmit={handleSubmit}
           className="card bg-base-200 shadow-xl w-full relative"
         >
-          <div className="absolute top-6 right-6 z-10">
+          <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10">
             <div className="dropdown dropdown-hover dropdown-end">
               <div
                 tabIndex={0}
@@ -160,7 +163,7 @@ const CreatePost = () => {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -175,11 +178,13 @@ const CreatePost = () => {
               </div>
               <div
                 tabIndex={0}
-                className="dropdown-content z-[1] card card-compact w-80 p-2 shadow bg-base-200 text-base-content border border-base-300"
+                className="dropdown-content z-[1] card card-compact w-72 sm:w-80 p-2 shadow bg-base-200 text-base-content border border-base-300"
               >
                 <div className="card-body">
-                  <h3 className="font-bold text-lg mb-3">Posting Guidelines</h3>
-                  <div className="space-y-2 text-sm">
+                  <h3 className="font-bold text-base sm:text-lg mb-3">
+                    Posting Guidelines
+                  </h3>
+                  <div className="space-y-2 text-xs sm:text-sm">
                     <div className="flex items-start gap-2">
                       <span className="text-success">✓</span>
                       <span>Keep discussions respectful and constructive</span>
@@ -221,25 +226,27 @@ const CreatePost = () => {
             </div>
           </div>
 
-          <div className="card-body p-6 sm:p-8">
-            <div className="space-y-8">
+          <div className="card-body p-4 sm:p-6 lg:p-8">
+            <div className="space-y-6 sm:space-y-8">
               <div className="form-control w-full">
                 <label className="label mb-1.5">
-                  <span className="label-text text-lg font-medium">Title</span>
+                  <span className="label-text text-base sm:text-lg font-medium">
+                    Title
+                  </span>
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter your post title"
-                  className="input input-bordered input-lg w-full focus:input-primary"
+                  className="input input-bordered input-md sm:input-lg w-full focus:input-primary"
                   required
                 />
               </div>
 
               <div className="flex flex-col form-control w-full">
                 <label className="label mb-1.5">
-                  <span className="label-text text-lg font-medium">
+                  <span className="label-text text-base sm:text-lg font-medium">
                     Content
                   </span>
                 </label>
@@ -247,24 +254,24 @@ const CreatePost = () => {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Write your post content here..."
-                  className="textarea textarea-bordered min-h-[300px] sm:min-h-[400px] w-full text-base leading-relaxed focus:textarea-primary p-4"
+                  className="textarea textarea-bordered min-h-[250px] sm:min-h-[300px] lg:min-h-[400px] w-full text-sm sm:text-base leading-relaxed focus:textarea-primary p-3 sm:p-4"
                   required
                 ></textarea>
               </div>
             </div>
 
-            <div className="card-actions justify-end mt-8">
+            <div className="card-actions justify-end mt-6 sm:mt-8 gap-3 flex-col sm:flex-row">
               <button
                 type="button"
                 onClick={() => navigate("/dashboard/forum")}
-                className="btn btn-ghost btn-lg"
+                className="btn btn-ghost btn-md sm:btn-lg w-full sm:w-auto order-2 sm:order-1"
                 disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn border-amber-400 btn-lg"
+                className="btn border-amber-400 btn-md sm:btn-lg w-full sm:w-auto order-1 sm:order-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
@@ -284,17 +291,17 @@ const CreatePost = () => {
       {/* Modal element */}
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-xs p-4"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-base-200 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+          <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               {modal.type === "success" && (
-                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
-                    className="w-5 h-5 text-success-content"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-success-content"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -309,9 +316,9 @@ const CreatePost = () => {
                 </div>
               )}
               {modal.type === "pending" && (
-                <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-warning flex items-center justify-center shrink-0">
                   <svg
-                    className="w-5 h-5 text-warning-content"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-warning-content"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -326,9 +333,9 @@ const CreatePost = () => {
                 </div>
               )}
               {(modal.type === "auth" || modal.type === "error") && (
-                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
-                    className="w-5 h-5 text-error-content"
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-error-content"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -351,16 +358,16 @@ const CreatePost = () => {
                   </svg>
                 </div>
               )}
-              <h3 className="font-bold text-lg" id="modal-title">
+              <h3 className="font-bold text-base sm:text-lg" id="modal-title">
                 {modal.type === "success" && "Success!"}
                 {modal.type === "pending" && "Pending Approval"}
                 {modal.type === "auth" && "Authentication Required"}
                 {modal.type === "error" && "Error"}
               </h3>
             </div>
-            <p className="py-4 flex items-center gap-3">
+            <div className="py-3 sm:py-4 flex items-center gap-3">
               {modal.type === "moderatorPrompt" && (
-                <span className="inline-flex items-center justify-center w-8 h-8 aspect-square rounded-full text-warning">
+                <span className="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 aspect-square rounded-full text-warning">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -376,26 +383,31 @@ const CreatePost = () => {
                   </svg>
                 </span>
               )}
-              <span className="font-bold">{modal.message}</span>
-            </p>
-            <div className="flex justify-end gap-2 mt-8">
+              <span className="font-bold text-sm sm:text-base">
+                {modal.message}
+              </span>
+            </div>
+            <div className="flex justify-end gap-2 mt-6 sm:mt-8">
               {modal.type === "moderatorPrompt" ? (
                 <>
                   <button
-                    className="btn btn-success"
+                    className="btn btn-success btn-sm sm:btn-md"
                     onClick={() => handleModeratorDecision("yes")}
                   >
                     Yes
                   </button>
                   <button
-                    className="btn btn-error"
+                    className="btn btn-error btn-sm sm:btn-md"
                     onClick={() => handleModeratorDecision("no")}
                   >
                     No
                   </button>
                 </>
               ) : (
-                <button className="btn btn-primary" onClick={closeModal}>
+                <button
+                  className="btn btn-primary btn-sm sm:btn-md"
+                  onClick={closeModal}
+                >
                   OK
                 </button>
               )}

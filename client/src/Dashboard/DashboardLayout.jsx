@@ -4,12 +4,9 @@ import Navbar from "./components/Navbar";
 
 const DashboardLayout = () => {
   return (
-    <div
-      data-theme="luxury"
-      className="dashboard h-screen flex bg-base-100 overflow-hidden"
-    >
+    <div data-theme="luxury" className="dashboard h-screen bg-base-100">
       <Navbar>
-        <div className="flex-1 w-full h-full overflow-y-auto">
+        <div className="h-full w-full overflow-y-auto">
           <Outlet />
         </div>
       </Navbar>
