@@ -132,14 +132,16 @@ const LeaderBoardEx = () => {
           {pagination && (
             <div className="stats stats-vertical sm:stats-horizontal shadow">
               <div className="stat">
-                <div className="stat-title text-xs sm:text-sm">Total Users</div>
-                <div className="stat-value text-lg sm:text-2xl lg:text-3xl">
+                <div className="stat-title text-center text-xs sm:text-sm">
+                  Total Users
+                </div>
+                <div className="stat-value text-lg text-center sm:text-2xl lg:text-3xl">
                   {pagination.totalUsers}
                 </div>
               </div>
               <div className="stat">
                 <div className="stat-title text-xs sm:text-sm">Showing</div>
-                <div className="stat-value text-lg sm:text-2xl lg:text-3xl">
+                <div className="stat-value text-lg sm:text-2xl text-center lg:text-3xl">
                   {leaderboard.length}
                 </div>
               </div>

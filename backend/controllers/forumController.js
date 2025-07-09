@@ -144,6 +144,7 @@ async function decrementPostCounter(userId) {
 }
 
 const getForumPosts = async (req, res) => {
+  console.log("Forum backend called");
   try {
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
