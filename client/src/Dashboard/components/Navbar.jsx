@@ -278,9 +278,9 @@ const AppSidebar = ({ onClose }) => {
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-base-content/10">
+      <div className="p-4 border-t border-base-content/10 ">
         <button
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full ${
+          className={`flex items-center gap-3 px-4 py-3  cursor-pointer rounded-lg transition-colors w-full ${
             isActive("/dashboard/profile")
               ? "bg-[#FFB800] text-black"
               : "hover:bg-[#FFB800] hover:text-black"
@@ -292,7 +292,7 @@ const AppSidebar = ({ onClose }) => {
             alt="Profile"
             className="w-10 h-10 rounded-full border-2 border-base-content/10 shrink-0"
           />
-          <div className="flex flex-col items-start">
+          <div className="flex flex-col items-start ">
             <span className="font-medium text-left">
               {user && user.username}
             </span>
