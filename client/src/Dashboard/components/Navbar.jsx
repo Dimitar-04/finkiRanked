@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/images/logoIcon.png";
 import logoText from "../../assets/images/logoText.png";
@@ -6,62 +6,7 @@ import pp from "../../assets/images/pp.svg";
 import RankBadgeNav from "@/utils/RankBadgeForNavbar";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Sidebar Provider Component
-const SidebarProvider = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="drawer lg:drawer-open">
-      <input
-        id="drawer-toggle"
-        type="checkbox"
-        className="drawer-toggle"
-        checked={isOpen}
-        onChange={() => setIsOpen(!isOpen)}
-      />
-      <div className="drawer-content flex flex-col">
-        {/* Mobile navbar */}
-        <div className="navbar bg-base-200 lg:hidden border-b border-base-content/10">
-          <div className="flex-none">
-            <label htmlFor="drawer-toggle" className="btn btn-square btn-ghost">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                ></path>
-              </svg>
-            </label>
-          </div>
-          <div className="flex-1">
-            <a href="/" className="flex items-center gap-2">
-              <img src={logoIcon} alt="Logo" className="w-8 h-auto" />
-              <img src={logoText} alt="Logo Text" className="w-24 h-auto" />
-            </a>
-          </div>
-        </div>
-
-        {/* Main content */}
-        <main className="flex-1 p-0">{children}</main>
-      </div>
-
-      {/* Sidebar */}
-      <div className="drawer-side">
-        <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
-        <AppSidebar onClose={() => setIsOpen(false)} />
-      </div>
-    </div>
-  );
-};
-
-// Sidebar Component
-const AppSidebar = ({ onClose }) => {
+export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -112,14 +57,9 @@ const AppSidebar = ({ onClose }) => {
     return false;
   };
 
-  const handleNavigation = (path) => {
-    navigate(path);
-    onClose?.();
-  };
-
   return (
-    <aside className="w-80 min-h-full bg-base-200 text-base-content border-r border-base-content/10 flex flex-col">
-      {/* Sidebar Header */}
+    <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content border-r border-base-content/10 flex flex-col">
+      {/* Header */}
       <div className="p-4 border-b border-base-content/10">
         <a href="/" className="flex items-center gap-2">
           <img src={logoIcon} alt="Logo" className="w-14 h-auto" />
@@ -127,7 +67,7 @@ const AppSidebar = ({ onClose }) => {
         </a>
       </div>
 
-      {/* Sidebar Content */}
+      {/* Main Navigation (This part will grow) */}
       <div className="flex-1 py-8">
         <ul className="menu menu-lg gap-2">
           <li>
@@ -137,11 +77,11 @@ const AppSidebar = ({ onClose }) => {
                   ? "bg-[#FFB800] text-black"
                   : "hover:bg-[#FFB800] hover:text-black"
               }`}
-              onClick={() => handleNavigation("/dashboard")}
+              onClick={() => navigate("/dashboard")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 shrink-0"
+                className="w-5 h-5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -149,7 +89,7 @@ const AppSidebar = ({ onClose }) => {
               >
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
               </svg>
-              <span>Challenge of the Day</span>
+              Challenge of the Day
             </button>
           </li>
           <li>
@@ -159,11 +99,11 @@ const AppSidebar = ({ onClose }) => {
                   ? "bg-[#FFB800] text-black"
                   : "hover:bg-[#FFB800] hover:text-black"
               }`}
-              onClick={() => handleNavigation("/dashboard/leaderboard")}
+              onClick={() => navigate("/dashboard/leaderboard")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 shrink-0"
+                className="w-5 h-5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -171,7 +111,7 @@ const AppSidebar = ({ onClose }) => {
               >
                 <path d="M18 20V10M12 20V4M6 20v-6"></path>
               </svg>
-              <span>Leaderboard</span>
+              Leaderboard
             </button>
           </li>
           <li>
@@ -181,11 +121,11 @@ const AppSidebar = ({ onClose }) => {
                   ? "bg-[#FFB800] text-black"
                   : "hover:bg-[#FFB800] hover:text-black"
               }`}
-              onClick={() => handleNavigation("/dashboard/forum")}
+              onClick={() => navigate("/dashboard/forum")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-5 h-5 shrink-0"
+                className="w-5 h-5"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -196,14 +136,12 @@ const AppSidebar = ({ onClose }) => {
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              <span>Forum</span>
+              Forum
             </button>
           </li>
           {user && user.isModerator && (
             <>
-              <li>
-                <div className="divider my-2"></div>
-              </li>
+              <hr />
               <li>
                 <button
                   className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
@@ -211,11 +149,11 @@ const AppSidebar = ({ onClose }) => {
                       ? "bg-[#FFB800] text-black"
                       : "hover:bg-[#FFB800] hover:text-black"
                   }`}
-                  onClick={() => handleNavigation("/dashboard/manage-posts")}
+                  onClick={() => navigate("/dashboard/manage-posts")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5 shrink-0"
+                    className="w-5 h-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -234,7 +172,7 @@ const AppSidebar = ({ onClose }) => {
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
                   </svg>
-                  <span>Manage Posts</span>
+                  Manage Posts
                 </button>
               </li>
               <li>
@@ -244,13 +182,11 @@ const AppSidebar = ({ onClose }) => {
                       ? "bg-[#FFB800] text-black"
                       : "hover:bg-[#FFB800] hover:text-black"
                   }`}
-                  onClick={() =>
-                    handleNavigation("/dashboard/manage-challenges")
-                  }
+                  onClick={() => navigate("/dashboard/manage-challenges")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5 shrink-0"
+                    className="w-5 h-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -269,7 +205,7 @@ const AppSidebar = ({ onClose }) => {
                     <line x1="9" y1="3" x2="9" y2="21"></line>
                     <line x1="15" y1="3" x2="15" y2="21"></line>
                   </svg>
-                  <span>Manage Challenges</span>
+                  Manage Challenges
                 </button>
               </li>
             </>
@@ -277,36 +213,31 @@ const AppSidebar = ({ onClose }) => {
         </ul>
       </div>
 
-      {/* Sidebar Footer */}
-      <div className="p-4 border-t border-base-content/10 ">
+      {/* Footer (This will be pushed to the bottom) */}
+      <div className="p-4 border-t border-base-content/10">
         <button
-          className={`flex items-center gap-3 px-4 py-3  cursor-pointer rounded-lg transition-colors w-full ${
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
             isActive("/dashboard/profile")
               ? "bg-[#FFB800] text-black"
               : "hover:bg-[#FFB800] hover:text-black"
           }`}
-          onClick={() => handleNavigation("/dashboard/profile")}
+          onClick={() => navigate("/dashboard/profile")}
         >
           <img
             src={pp}
             alt="Profile"
-            className="w-10 h-10 rounded-full border-2 border-base-content/10 shrink-0"
+            className="w-10 h-10 rounded-full border-2 border-base-content/10"
           />
-          <div className="flex flex-col items-start ">
+          <div className="flex flex-col items-start cursor-pointer">
             <span className="font-medium text-left">
               {user && user.username}
             </span>
-            <span className="text-sm text-base-content/70 mt-1">
+            <span className="text-sm text-base-content/70 mt-2">
               {user && <RankBadgeNav rankName={user.rank} size="sm" />}
             </span>
           </div>
         </button>
       </div>
-    </aside>
+    </nav>
   );
-};
-
-// Main Navbar Component (now acts as a layout wrapper)
-export default function Navbar({ children }) {
-  return <SidebarProvider>{children}</SidebarProvider>;
 }

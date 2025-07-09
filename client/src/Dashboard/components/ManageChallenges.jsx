@@ -366,12 +366,14 @@ const ManageChallenges = () => {
                   </div>
                 </div>
               ))}
-              <button
-                className="block mx-auto cursor-pointer hover:underline text-sm sm:text-base"
-                onClick={() => handleViewAll()}
-              >
-                View all challenges
-              </button>
+              {challenges.length == 1 && (
+                <button
+                  className="block mx-auto cursor-pointer hover:underline text-sm sm:text-base"
+                  onClick={() => handleViewAll()}
+                >
+                  View all challenges
+                </button>
+              )}
             </div>
           ) : (
             <div className="text-center text-base-content/60 py-12 sm:py-16">

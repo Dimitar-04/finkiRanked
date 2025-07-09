@@ -93,7 +93,7 @@ const Forum = () => {
 
   return (
     <div data-theme="luxury" className="min-h-screen bg-base-100">
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 sm:p-6 w-full">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6  sm:p-6 sm:pl-12 w-full">
         <div className="flex-1 order-2 lg:order-1">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 lg:mb-10">
             Forum Posts
