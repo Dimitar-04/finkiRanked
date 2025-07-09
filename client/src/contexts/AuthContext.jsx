@@ -10,246 +10,44 @@ import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { loginUser, registerUser } from "@/services/registerLoginService";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    storageKey: "supabase-auth-token",
-    storage: localStorage,
-    autoRefreshToken: true,
-  },
-});
-
-function parseJwt(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = decodeURIComponent(
-      atob(base64Url)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(base64);
-  } catch (e) {
-    return null;
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      storageKey: "supabase-auth-token",
+      storage: localStorage,
+    },
   }
-}
+);
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
+
 const INACTIVITY_TIMEOUT = 120 * 60 * 1000;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const inactivityTimeoutRef = useRef(null);
   const tokenExpiryTimeoutRef = useRef(null);
-  const isActiveRef = useRef(false);
   const userRef = useRef(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    userRef.current = user?.id || null;
-  }, [user]);
-
-  const login = useCallback(async (email, password) => {
-    try {
-      const { data: supabaseAuthData, error: supabaseAuthError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-      if (supabaseAuthError) {
-        return { success: false, error: supabaseAuthError.message };
-      }
-
-      if (!supabaseAuthData.session?.access_token) {
-        return {
-          success: false,
-          error: "Failed to retrieve session token from Supabase.",
-        };
-      }
-
-      const backendLoginData = await loginUser({ email });
-
-      if (backendLoginData.success) {
-        setUser(backendLoginData.user);
-
-        return { success: true };
-      } else {
-        await supabase.auth.signOut();
-        return {
-          success: false,
-          error: backendLoginData.message || "Login failed on backend.",
-        };
-      }
-    } catch (err) {
-      console.error("Login error caught in AuthContext:", err);
-      const message =
-        err.response?.data?.message ||
-        err.message ||
-        "An unexpected error occurred during login.";
-      return { success: false, error: message };
-    }
-  }, []);
-
   const logout = useCallback(async () => {
-    try {
-      setIsLoggingOut(true);
+    clearTimeout(inactivityTimeoutRef.current);
+    clearTimeout(tokenExpiryTimeoutRef.current);
+    navigate("/");
+    await supabase.auth.signOut();
 
-      if (inactivityTimeoutRef.current) {
-        clearTimeout(inactivityTimeoutRef.current);
-        inactivityTimeoutRef.current = null;
-      }
-      if (tokenExpiryTimeoutRef.current) {
-        clearTimeout(tokenExpiryTimeoutRef.current);
-        tokenExpiryTimeoutRef.current = null;
-      }
-      localStorage.removeItem("lastActivityTimestamp");
-      localStorage.removeItem("jwt");
-      localStorage.removeItem("token_exp");
-      localStorage.removeItem("lastResetDate");
-      localStorage.removeItem("user");
-      navigate("/");
-      await supabase.auth.signOut();
-
-      localStorage.setItem("logout", "true");
-      setTimeout(() => localStorage.removeItem("logout"), 1000);
-
-      setUser(null);
-      userRef.current = null;
-
-      setTimeout(() => setIsLoggingOut(false), 500);
-    } catch (error) {
-      console.error("Error during logout:", error);
-      setIsLoggingOut(false);
-    }
-  }, []);
-  const setupTokenExpiryLogout = useCallback(
-    (accessToken) => {
-      if (!accessToken) return;
-
-      const payload = parseJwt(accessToken);
-      if (!payload?.exp) return;
-
-      const now = Math.floor(Date.now() / 1000);
-      const expiresIn = payload.exp - now;
-
-      if (expiresIn <= 0) {
-        console.warn("Token already expired, handling expiration");
-
-        const lastActivity = parseInt(
-          localStorage.getItem("lastActivityTimestamp") || "0",
-          10
-        );
-        const inactiveDuration = Date.now() - lastActivity;
-
-        if (inactiveDuration > INACTIVITY_TIMEOUT) {
-          logout();
-        } else {
-          supabase.auth
-            .refreshSession()
-            .then(({ data, error }) => {
-              if (error) {
-                console.error("Token refresh failed:", error);
-                logout();
-              } else if (data?.session?.access_token) {
-                localStorage.setItem("jwt", data.session.access_token);
-                setupTokenExpiryLogout(data.session.access_token);
-              }
-            })
-            .catch((err) => {
-              console.error("Refresh failed:", err);
-              logout();
-            });
-        }
-      } else {
-        localStorage.setItem("token_exp", payload.exp.toString());
-
-        if (tokenExpiryTimeoutRef.current) {
-          clearTimeout(tokenExpiryTimeoutRef.current);
-        }
-
-        tokenExpiryTimeoutRef.current = setTimeout(() => {
-          setupTokenExpiryLogout(accessToken);
-        }, expiresIn * 1000);
-      }
-    },
-    [logout]
-  );
-
-  const register = useCallback(
-    async (userData) => {
-      try {
-        const backendRegisterData = await registerUser(userData);
-        if (!backendRegisterData.success) {
-          return {
-            success: false,
-            error: backendRegisterData.message,
-            errors: backendRegisterData.errors,
-          };
-        }
-        const { data: supabaseAuthData, error: supabaseAuthError } =
-          await supabase.auth.signInWithPassword({
-            email: userData.email,
-            password: userData.password,
-          });
-        if (supabaseAuthError) {
-          console.error(
-            "Supabase sign-in failed after registration:",
-            supabaseAuthError
-          );
-          return {
-            success: false,
-            error:
-              "Registration successful, but failed to create a session. Please try logging in.",
-          };
-        }
-        setUser(backendRegisterData.user);
-        localStorage.setItem("user", JSON.stringify(backendRegisterData.user));
-        localStorage.setItem("jwt", supabaseAuthData.session.access_token);
-        setupTokenExpiryLogout(supabaseAuthData.session.access_token);
-        return { success: true };
-      } catch (apiError) {
-        console.error("Registration error caught in AuthContext:", apiError);
-        const message =
-          apiError.response?.data?.message ||
-          "An unexpected error occurred during registration.";
-        const errors = apiError.response?.data?.errors || null;
-        return { success: false, error: message, errors: errors };
-      }
-    },
-    [setupTokenExpiryLogout]
-  );
-
-  const resetInactivityTimer = useCallback(() => {
-    isActiveRef.current = true;
-    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
-
-    if (inactivityTimeoutRef.current) {
-      clearTimeout(inactivityTimeoutRef.current);
-    }
-
-    if (userRef.current) {
-      inactivityTimeoutRef.current = setTimeout(() => {
-        isActiveRef.current = false;
-        console.warn("User inactive, logging out");
-        logout();
-      }, INACTIVITY_TIMEOUT);
-    }
-  }, [logout]);
-
-  const updateUser = useCallback((newUserData) => {
-    setUser(newUserData);
-
-    localStorage.setItem("user", JSON.stringify(newUserData));
-  }, []);
-
+    localStorage.removeItem("user");
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("lastActivityTimestamp");
+    setUser(null);
+    userRef.current = null;
+  }, [navigate]);
   useEffect(() => {
     const checkStaleSession = () => {
       const storedUser = localStorage.getItem("user");
@@ -266,139 +64,148 @@ export const AuthProvider = ({ children }) => {
 
     checkStaleSession();
   }, [navigate, INACTIVITY_TIMEOUT]);
+  const resetInactivityTimer = useCallback(() => {
+    const now = Date.now();
+    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
+    clearTimeout(inactivityTimeoutRef.current);
+    if (userRef.current) {
+      inactivityTimeoutRef.current = setTimeout(() => {
+        console.warn("Logged out due to inactivity");
+        logout();
+      }, INACTIVITY_TIMEOUT);
+    }
+  }, [logout]);
+
+  const login = useCallback(
+    async (email, password) => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error || !data.session?.access_token) {
+        return { success: false, error: error?.message || "Login failed" };
+      }
+
+      const backendData = await loginUser({ email });
+      if (!backendData.success) {
+        await supabase.auth.signOut();
+        return { success: false, error: backendData.message };
+      }
+
+      setUser(backendData.user);
+      userRef.current = backendData.user.id;
+      localStorage.setItem("user", JSON.stringify(backendData.user));
+      localStorage.setItem("jwt", data.session.access_token);
+      resetInactivityTimer();
+      return { success: true };
+    },
+    [resetInactivityTimer]
+  );
+
+  const register = useCallback(
+    async (userData) => {
+      const backendResult = await registerUser(userData);
+      if (!backendResult.success) {
+        return {
+          success: false,
+          error: backendResult.message,
+          errors: backendResult.errors,
+        };
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: userData.email,
+        password: userData.password,
+      });
+
+      if (error || !data.session?.access_token) {
+        return {
+          success: false,
+          error: "Registration succeeded but login failed.",
+        };
+      }
+
+      setUser(backendResult.user);
+      userRef.current = backendResult.user.id;
+      localStorage.setItem("user", JSON.stringify(backendResult.user));
+      localStorage.setItem("jwt", data.session.access_token);
+      resetInactivityTimer();
+
+      return { success: true };
+    },
+    [resetInactivityTimer]
+  );
 
   useEffect(() => {
-    console.log("AuthContext mounted");
-    const initializeAndVerifyAuth = async () => {
-      try {
-        setIsVerifying(true);
-
-        const storedUserJson = localStorage.getItem("user");
-        if (storedUserJson) {
-          setUser(JSON.parse(storedUserJson));
-        }
-
-        const { data } = await supabase.auth.getSession();
-        const session = data?.session;
-
-        if (session?.user) {
-          const backendLoginData = await loginUser({
-            email: session.user.email,
-          });
-
-          if (backendLoginData.success) {
-            setUser(backendLoginData.user);
-            localStorage.setItem("user", JSON.stringify(backendLoginData.user));
-          } else {
-            logout();
-            return;
-          }
-
-          localStorage.setItem("jwt", session.access_token);
-          setupTokenExpiryLogout(session.access_token);
-        } else if (storedUserJson) {
-          logout();
-        }
-      } catch (error) {
-        console.error("Error initializing/verifying auth:", error);
-        logout();
-      } finally {
-        if (loading) {
-          setLoading(false);
-        }
-        setIsVerifying(false);
-      }
-    };
-
-    initializeAndVerifyAuth();
-
+    console.log("Mounted");
+    const localUser = localStorage.getItem("user");
+    if (localUser) {
+      setUser(localUser);
+    }
+    setLoading(true);
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          if (session?.user) {
-            initializeAndVerifyAuth();
-          }
+      async (event, session) => {
+        if (event === "TOKEN_REFRESHED" && session) {
+          const now = Date.now();
+          const readableTime = new Date(now).toLocaleString();
+          console.log(`Token reset at: ${readableTime}`);
+          console.log("Token refreshed, updating JWT in localStorage.");
+          localStorage.setItem("jwt", session.access_token);
+
+          return;
         }
-        // } else if (event === "SIGNED_OUT") {
-        //   logout();
-        // }
+        if (session) {
+          const backendData = await loginUser({ email: session.user.email });
+          if (backendData.success) {
+            setUser(backendData.user);
+            userRef.current = backendData.user.id;
+            localStorage.setItem("user", JSON.stringify(backendData.user));
+            localStorage.setItem("jwt", session.access_token);
+            if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+              resetInactivityTimer();
+            }
+          } else {
+            await supabase.auth.signOut();
+          }
+        } else {
+          setUser(null);
+          userRef.current = null;
+          localStorage.removeItem("user");
+          localStorage.removeItem("jwt");
+        }
+        setLoading(false);
       }
     );
 
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        initializeAndVerifyAuth();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
     return () => {
-      if (authListener?.subscription) {
-        authListener.subscription.unsubscribe();
-      }
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      authListener.subscription.unsubscribe();
     };
-  }, [logout, setupTokenExpiryLogout]);
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
+    const events = ["click", "mousemove", "keydown", "scroll", "touchstart"];
+    const handleActivity = () => resetInactivityTimer();
+    events.forEach((event) => window.addEventListener(event, handleActivity));
+    return () =>
+      events.forEach((event) =>
+        window.removeEventListener(event, handleActivity)
+      );
+  }, [resetInactivityTimer]);
 
-    const activityEvents = [
-      "mousedown",
-      "mousemove",
-      "keypress",
-      "scroll",
-      "touchstart",
-      "click",
-    ];
+  const updateUser = useCallback((newUserData) => {
+    setUser(newUserData);
 
-    const handleActivity = () => {
-      resetInactivityTimer();
-    };
-
-    activityEvents.forEach((event) => {
-      document.addEventListener(event, handleActivity);
-    });
-
-    resetInactivityTimer();
-
-    return () => {
-      activityEvents.forEach((event) => {
-        document.removeEventListener(event, handleActivity);
-      });
-      if (inactivityTimeoutRef.current) {
-        clearTimeout(inactivityTimeoutRef.current);
-      }
-    };
-  }, [resetInactivityTimer, user]);
-
-  //Sync actions between tabs
-  useEffect(() => {
-    const handleStorageChange = (event) => {
-      if (event.key === "logout" && event.newValue === "true") {
-        logout();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [logout]);
-
+    localStorage.setItem("user", JSON.stringify(newUserData));
+  }, []);
   return (
     <AuthContext.Provider
       value={{
         user,
-        loading,
-        register,
         login,
+        register,
         logout,
         resetInactivityTimer,
-        isLoggingOut,
-        isVerifying,
+        loading,
         updateUser,
       }}
     >

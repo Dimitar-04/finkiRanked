@@ -23,8 +23,9 @@ const createForumPost = async (req, res) => {
     });
     const postCounter = user.postCounter;
     const postCheckCounter = user.postCheckCounter;
+    console.log(postCheckCounter);
 
-    if (postCheckCounter >= -11) {
+    if (postCounter >= 1) {
       const post = new ForumPost({
         title,
         content,

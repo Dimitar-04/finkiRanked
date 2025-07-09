@@ -163,7 +163,6 @@ const ManageChallenges = () => {
                 Search by date:
               </h2>
 
-              {/* Calendar component */}
               <calendar-date
                 ref={calendarRef}
                 class="cally bg-base-100 border border-base-300 shadow-md rounded-box w-full mb-3 sm:mb-4"
@@ -195,7 +194,6 @@ const ManageChallenges = () => {
                 <calendar-month></calendar-month>
               </calendar-date>
 
-              {/* Search button */}
               <button
                 className="btn btn-block border-amber-400 btn-sm sm:btn-md"
                 onClick={() => {

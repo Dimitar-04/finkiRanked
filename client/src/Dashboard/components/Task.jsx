@@ -38,6 +38,7 @@ const Task = () => {
   async function fetchTaskForToday() {
     try {
       const data = await getTaskForDate();
+      console.log(data);
 
       if (Array.isArray(data) && data.length > 0) {
         const taskData = data[0];
@@ -319,10 +320,10 @@ const Task = () => {
                   <>
                     <div className="card bg-base-300 mb-2">
                       <div className="card-body">
-                        <h2 className="card-title mb-1">
+                        <h2 className="card-title mb-1 underline">
                           Problem: {task.title || "Daily Challenge"}
                         </h2>
-                        <p className="text-lg leading-relaxed">
+                        <p className="text-lg leading-relaxed  break-words font-bold whitespace-pre-line">
                           {task.content || "No description available"}
                         </p>
                       </div>
@@ -331,11 +332,9 @@ const Task = () => {
                     <div className="space-y-6 mb-8">
                       <div className="card bg-primary/5">
                         <div className="card-body">
-                          <h3 className="card-title text-seondary underline">
-                            Your Input:
-                          </h3>
+                          <h3 className="card-title underline">Your Input:</h3>
                           <div
-                            className={`text-xl font-mono mt-3 break-words font-bold ${
+                            className={`text-xl font-mono mt-3 break-words max-h-45 overflow-y-auto font-bold ${
                               testCase &&
                               testCase.input &&
                               testCase.input.includes("\n")
@@ -343,7 +342,9 @@ const Task = () => {
                                 : "whitespace-normal"
                             }`}
                           >
-                            {testCase && testCase.input}
+                            {testCase &&
+                              testCase.input &&
+                              testCase.input.replace(/^"|"$/g, "")}
                           </div>
                         </div>
                       </div>
@@ -353,10 +354,14 @@ const Task = () => {
                           <h3 className="card-title">Examples:</h3>
                           <div className="space-y-5 mt-2">
                             {task.examples.map((example, index) => (
-                              <div key={index} className="font-mono text-sm">
+                              <div
+                                key={index}
+                                className="font-mono mt-3 break-words font-bold whitespace-pre-line"
+                              >
                                 <p className="pl-2 border-l-2 border-amber-400 mt-1">
-                                  Input: "{example.input || "N/A"}" <br />
-                                  Output: "{example.output || "N/A"}"
+                                  Input: {example.input || "N/A"} <br />
+                                  <br />
+                                  Output: {example.output || "N/A"}
                                 </p>
                               </div>
                             ))}

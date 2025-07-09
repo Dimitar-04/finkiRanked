@@ -290,7 +290,6 @@ const getAllTestCasesForTask = async (req, res) => {
 const updateUserDailyChallengeId = async (req, res) => {
   const { userId } = req.params;
   const { testCaseId } = req.body;
-  console.log("Updating user daily challenge ID:", userId, testCaseId);
 
   if (!testCaseId) {
     return res.status(400).json({ message: "testCaseId is required" });
