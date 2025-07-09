@@ -21,6 +21,7 @@ const Forum = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const postsPerPage = 5;
   const { user } = useAuth();
+  console.log(user);
 
   const showModal = (message, type = "info", postId = null) => {
     setModal({ isOpen: true, message, type, postId });

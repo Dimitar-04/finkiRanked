@@ -78,7 +78,6 @@ const CreateNewChallenge = () => {
       //   setLoading(false);
       //   return;
       // }
-
       const hasEmptyTestCase = testCases.some(
         (tc) => !tc.input.trim() || !tc.output.trim()
       );
@@ -239,7 +238,12 @@ const CreateNewChallenge = () => {
                 onChange={(date) =>
                   setFormData((prev) => ({ ...prev, solving_date: date }))
                 }
-                minDate={new Date()}
+                minDate={(() => {
+                  const tomorrow = new Date();
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+
+                  return tomorrow;
+                })()}
               />
             </div>
           </div>

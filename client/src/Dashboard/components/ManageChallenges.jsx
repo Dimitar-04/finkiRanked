@@ -153,13 +153,11 @@ const ManageChallenges = () => {
     <div className="p-6">
       <h1 className="text-3xl font-bold ml-8 mb-12">Manage Challenges</h1>
       <div className="flex flex-col md:flex-row gap-8 ml-8 mx-auto">
-        {/* Left sidebar with calendar */}
         <div className="w-full md:w-[310px] flex-shrink-0 ">
           <div className="sticky top-6">
             <div className="card bg-base-200 shadow-md p-4">
               <h2 className="font-semibold text-lg mb-4">Search by date:</h2>
 
-              {/* Calendar component */}
               <calendar-date
                 ref={calendarRef}
                 class="cally bg-base-100 border border-base-300 shadow-md rounded-box w-full mb-4"
@@ -191,7 +189,6 @@ const ManageChallenges = () => {
                 <calendar-month></calendar-month>
               </calendar-date>
 
-              {/* Search button */}
               <button
                 className="btn btn-block border-amber-400"
                 onClick={() => {
@@ -226,7 +223,6 @@ const ManageChallenges = () => {
               </button>
             </div>
             <div className="mt-6 w-full">
-              {/* Add new challenge button */}
               <button
                 className="btn btn-block btn-outline  border-amber-400 gap-2"
                 onClick={() => navigate("/dashboard/create-new-challenge")}
@@ -247,7 +243,6 @@ const ManageChallenges = () => {
           </div>
         </div>
 
-        {/* Main content area */}
         <div className="flex-1">
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -387,7 +382,6 @@ const ManageChallenges = () => {
         </div>
       </div>
 
-      {/* Modal (unchanged) */}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"

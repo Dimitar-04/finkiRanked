@@ -17,7 +17,7 @@ const createReviewPost = async (req, res) => {
       authorName,
       dateCreated: new Date(),
     });
-    const savedPost = await prisma.to_be_reviewed.create({
+    await prisma.to_be_reviewed.create({
       data: post,
     });
     await resetPostCheckCoutner(authorId);
@@ -135,14 +135,18 @@ const approveReviewPost = async (req, res) => {
     if (!postToApprove) {
       return res.status(404).json({ error: "Post not found" });
     }
+    const newForumPost = new ForumPost({
+      id: postToApprove.id,
+      title: postToApprove.title,
+      content: postToApprove.content,
+      authorName: postToApprove.author_name,
+      authorId: postToApprove.author_id,
+      dateCreated: postToApprove.created_at,
+      commentCount: postToApprove.comment_count || 0,
+    });
 
-    const newForumPost = await prisma.forum_posts.create({
-      data: {
-        title: postToApprove.title,
-        content: postToApprove.content,
-        author_id: postToApprove.author_id,
-        author_name: postToApprove.author_name,
-      },
+    await prisma.forum_posts.create({
+      data: newForumPost,
     });
 
     await prisma.to_be_reviewed.delete({
