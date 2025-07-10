@@ -114,7 +114,7 @@ const ManageChallenges = () => {
   const deleteChallenge = async (challengeId) => {
     try {
       setLoading(true);
-      console.log(challengeId);
+
       await deleteTask(challengeId);
       setChallenges(
         challenges.filter((challenge) => challenge.id !== challengeId)
@@ -282,18 +282,30 @@ const ManageChallenges = () => {
 
                     {challenge.examples && challenge.examples.length > 0 && (
                       <div className="mt-3 sm:mt-4 card bg-base-300 p-2 sm:p-3">
-                        <h3 className="font-medium mb-2 text-sm sm:text-base">
+                        <h3 className="font-large mb-2 text-sm sm:text-base">
                           Examples:
                         </h3>
-                        <div className="space-y-2 sm:space-y-3">
+                        <div className=" flex flex-col md:flex-row md:gap-20 space-y-2 sm:space-y-3 md:flex-row md:space-y-0 md:space-x-4 w-full max-w-[80%]">
                           {challenge.examples.map((example, index) => (
                             <div
                               key={index}
-                              className="font-mono text-xs sm:text-sm"
+                              className="break-words font-bold whitespace-pre-line "
                             >
                               <p className="pl-2 border-l-2 border-amber-400 mt-1">
-                                Input: "{example.input || "N/A"}" <br />
-                                Output: "{example.output || "N/A"}"
+                                <span className="underline ">Input: </span>
+                                {example.input &&
+                                  example.input.includes("\n") && <br />}
+                                {(example.input &&
+                                  example.input.replace(/^"|"$/g, "")) ||
+                                  "N/A"}
+                                <br />
+                                <br />
+                                <span className="underline">Output: </span>
+                                {example.output &&
+                                  example.output.includes("\n") && <br />}
+                                {(example.output &&
+                                  example.output.replace(/^"|"$/g, "")) ||
+                                  "N/A"}
                               </p>
                             </div>
                           ))}

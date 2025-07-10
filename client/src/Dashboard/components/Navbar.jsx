@@ -59,15 +59,16 @@ export default function Navbar() {
 
   return (
     <nav className="dashboard__navbar w-80 min-h-screen bg-base-200 text-base-content border-r border-base-content/10 flex flex-col">
-      {/* Header */}
       <div className="p-4 border-b border-base-content/10">
-        <a href="/" className="flex items-center gap-2">
+        <p
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 cursor-pointer"
+        >
           <img src={logoIcon} alt="Logo" className="w-14 h-auto" />
           <img src={logoText} alt="Logo Text" className="w-32 h-auto" />
-        </a>
+        </p>
       </div>
 
-      {/* Main Navigation (This part will grow) */}
       <div className="flex-1 py-8">
         <ul className="menu menu-lg gap-2">
           <li>
@@ -213,7 +214,6 @@ export default function Navbar() {
         </ul>
       </div>
 
-      {/* Footer (This will be pushed to the bottom) */}
       <div className="p-4 border-t border-base-content/10">
         <button
           className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${

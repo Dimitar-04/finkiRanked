@@ -171,51 +171,45 @@ const ForumPostDetail = () => {
                 ) : error ? (
                   <div className="text-red-500 p-3">{error}</div>
                 ) : comments.length > 0 ? (
-                  (console.log(comments),
-                  comments.map(
-                    (comment, idx) => (
-                      console.log(comment),
-                      (
-                        <div
-                          key={comment.id || idx}
-                          className="p-4 rounded-lg bg-base-200 border border-base-300"
-                        >
-                          <div className="flex relative items-center gap-2 mb-1">
-                            {(comment.author_id === user.id ||
-                              user.isModerator) && (
-                              <button
-                                className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  showModal(
-                                    "Are you sure you want to delete this comment? This action cannot be undone.",
-                                    "confirm",
-                                    comment.id
-                                  );
-                                }}
-                              >
-                                <img
-                                  src={trashIcon}
-                                  alt="Delete"
-                                  className="w-6 h-6"
-                                />
-                              </button>
-                            )}
-                            <span className="font-semibold text-base-content">
-                              {comment.author_name}
-                            </span>
-                            <span className="text-xs text-base-content/60">
-                              {comment.dateCreated
-                                ? new Date(comment.dateCreated).toLocaleString()
-                                : ""}
-                            </span>
-                          </div>
-                          <div className="text-base-content/80 text-base break-words">
-                            {comment.content}
-                          </div>
-                        </div>
-                      )
-                    )
+                  comments.map((comment, idx) => (
+                    <div
+                      key={comment.id || idx}
+                      className="p-4 rounded-lg bg-base-200 border border-base-300"
+                    >
+                      <div className="flex relative items-center gap-2 mb-1">
+                        {(comment.author_id === user.id ||
+                          user.isModerator) && (
+                          <button
+                            className=" absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              showModal(
+                                "Are you sure you want to delete this comment? This action cannot be undone.",
+                                "confirm",
+                                comment.id
+                              );
+                            }}
+                          >
+                            <img
+                              src={trashIcon}
+                              alt="Delete"
+                              className="w-6 h-6"
+                            />
+                          </button>
+                        )}
+                        <span className="font-semibold text-base-content">
+                          {comment.author_name}
+                        </span>
+                        <span className="text-xs text-base-content/60">
+                          {comment.dateCreated
+                            ? new Date(comment.dateCreated).toLocaleString()
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="text-base-content/80 text-base break-words">
+                        {comment.content}
+                      </div>
+                    </div>
                   ))
                 ) : (
                   <div className="text-gray-400 p-3">No comments yet.</div>

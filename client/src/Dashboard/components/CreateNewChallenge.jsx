@@ -18,7 +18,11 @@ const CreateNewChallenge = () => {
     description: "",
     difficulty: "Easy",
     output_type: "string",
-    solving_date: new Date(),
+    solving_date: (() => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow;
+    })(),
   });
 
   const [examples, setExamples] = useState([
@@ -428,7 +432,7 @@ const CreateNewChallenge = () => {
       </form>
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"

@@ -71,7 +71,6 @@ const Forum = () => {
   const handleDeletePost = async (postId) => {
     try {
       await deleteForumPost(postId);
-      console.log("Post deleted successfully");
 
       setLoading(true);
       const data = await getForumPosts(0, postsPerPage);
@@ -136,7 +135,6 @@ const Forum = () => {
                       <h2
                         className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2"
                         onClick={() => {
-                          console.log("Post clicked:", post);
                           navigate(`/dashboard/forum-detail/${post.id}`, {
                             state: { post },
                           });
@@ -216,7 +214,7 @@ const Forum = () => {
       {/* Modal element */}
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm p-4"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"

@@ -105,7 +105,7 @@ const CreatePost = () => {
           authorName: user.username,
         };
         const res = await createApprovalForumPost(postData);
-        console.log(res);
+
         showModal(
           res.message || "Your post has been submitted for moderator approval.",
           "pending"
@@ -291,7 +291,7 @@ const CreatePost = () => {
       {/* Modal element */}
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-xs p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-xs p-4"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"

@@ -137,7 +137,6 @@ export const AuthProvider = ({ children }) => {
   );
 
   useEffect(() => {
-    console.log("Mounted");
     const localUser = localStorage.getItem("user");
     if (localUser) {
       setUser(localUser);
@@ -149,7 +148,7 @@ export const AuthProvider = ({ children }) => {
           const now = Date.now();
           const readableTime = new Date(now).toLocaleString();
           console.log(`Token reset at: ${readableTime}`);
-          console.log("Token refreshed, updating JWT in localStorage.");
+
           localStorage.setItem("jwt", session.access_token);
 
           return;

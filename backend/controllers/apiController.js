@@ -42,7 +42,6 @@ const registerPOST = async (req, res) => {
     }
 
     try {
-      //Check if you can store isModerator in metadata to be refreneced in delete functions!
       const { data: authUser, error: authError } =
         await supabase.auth.admin.createUser({
           email,

@@ -23,7 +23,6 @@ const createForumPost = async (req, res) => {
     });
     const postCounter = user.postCounter;
     const postCheckCounter = user.postCheckCounter;
-    console.log(postCheckCounter);
 
     if (postCounter >= 1) {
       const post = new ForumPost({
@@ -144,7 +143,6 @@ async function decrementPostCounter(userId) {
 }
 
 const getForumPosts = async (req, res) => {
-  console.log("Forum backend called");
   try {
     const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 5;
@@ -181,7 +179,6 @@ const getForumPosts = async (req, res) => {
 const deleteForumPost = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.sub;
-  console.log(userId);
 
   try {
     const post = await prisma.forum_posts.findUnique({
