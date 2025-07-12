@@ -5,6 +5,10 @@ const ForumController = require("./forumController");
 const filter = require("leo-profanity");
 const safeWords = require("../filters/safeWords");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
+const {
+  sendApprovalEmail,
+  sendDeletionEmail,
+} = require("../services/emailService");
 
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
@@ -89,6 +93,26 @@ const getReviewPosts = async (req, res) => {
   }
 };
 
+const getPendingPosts = async (req, res) => {
+  try {
+    const userId = req.user.sub;
+    console.log(userId);
+    const pendingPosts = await prisma.to_be_reviewed.findMany({
+      where: {
+        author_id: userId,
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
+    console.log(pendingPosts);
+    res.status(200).json(pendingPosts);
+  } catch (err) {
+    console.error("Error fetching user's pending posts:", err);
+    res.status(500).json({ error: "Failed to fetch pending posts" });
+  }
+};
+
 const deleteReviewPost = async (req, res) => {
   const { id } = req.params;
   const { userId } = req.params;
@@ -100,9 +124,20 @@ const deleteReviewPost = async (req, res) => {
     });
   }
   try {
+    const post = await prisma.to_be_reviewed.findUnique({
+      where: { id },
+    });
+    const author = await prisma.users.findUnique({
+      where: { id: post.author_id },
+      select: { email: true },
+    });
     await prisma.to_be_reviewed.delete({
       where: { id },
     });
+
+    if (author && author.email) {
+      sendDeletionEmail(author.email, post.title);
+    }
 
     res.status(204).send();
   } catch (err) {
@@ -135,6 +170,17 @@ const approveReviewPost = async (req, res) => {
     if (!postToApprove) {
       return res.status(404).json({ error: "Post not found" });
     }
+
+    const author = await prisma.users.findUnique({
+      where: { id: postToApprove.author_id },
+      select: { email: true },
+    });
+    if (!author || !author.email) {
+      console.error(
+        `Could not find email for author with ID: ${postToApprove.author_id}`
+      );
+    }
+
     const newForumPost = new ForumPost({
       id: postToApprove.id,
       title: postToApprove.title,
@@ -152,6 +198,9 @@ const approveReviewPost = async (req, res) => {
     await prisma.to_be_reviewed.delete({
       where: { id },
     });
+    if (author && author.email) {
+      sendApprovalEmail(author.email, newForumPost.title);
+    }
 
     res.status(200).json({
       message: "Post approved and published successfully",
@@ -168,4 +217,5 @@ module.exports = {
   getReviewPosts,
   deleteReviewPost,
   approveReviewPost,
+  getPendingPosts,
 };

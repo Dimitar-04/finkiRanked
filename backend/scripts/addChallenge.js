@@ -9,10 +9,10 @@
 //   const data = await fs.readFile(jsonPath, "utf8");
 //   const challengesData = JSON.parse(data);
 
-//   const challenge = challengesData[challengesData.length - 2];
+//   const challenge = challengesData[challengesData.length - 3];
 
 //   let currentDate = new Date();
-//   currentDate.setDate(currentDate.getDate() + 2);
+//   currentDate.setDate(currentDate.getDate());
 //   const newChallenge = new Challenge({
 //     title: challenge.title,
 //     content: challenge.description,

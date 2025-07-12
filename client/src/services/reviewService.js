@@ -15,3 +15,7 @@ export const createApprovalForumPost = (postData) => {
 export const approveReviewPost = async (postId, postData, userId) => {
   return await apiClient.post(`/review/posts/${postId}/${userId}`, postData);
 };
+
+export const getPendingPosts = async () => {
+  return await apiClient.get(`/review/pendingPosts`);
+};

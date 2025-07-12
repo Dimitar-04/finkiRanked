@@ -29,6 +29,8 @@ model to_be_reviewed {
   author_name   String?
   comment_count Int?     @default(0) @db.SmallInt
   users         users?   @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "to_be_reviewed_author_id_fkey")
+
+  @@index([author_id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

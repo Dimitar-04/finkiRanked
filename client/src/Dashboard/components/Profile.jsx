@@ -1,18 +1,37 @@
-// Example for Profile.jsx
-import React from "react";
+import React, { use, useState } from "react";
 import pp from "../../assets/images/pp.svg";
 import Navbar from "./Navbar";
 import RankBadgeNav from "@/utils/RankBadgeForNavbar";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { getPendingPosts } from "@/services/reviewService";
 const Profile = () => {
   const { user, loading, logout } = useAuth();
+  const [pendingPosts, setPendingPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     navigate("/logout");
   };
+  useEffect(() => {
+    if (user) {
+      const fetchPendingPosts = async () => {
+        try {
+          const data = await getPendingPosts();
+
+          setPendingPosts(data);
+        } catch (error) {
+          console.error("Error fetching pending posts:", error);
+        } finally {
+          setLoadingPosts(false);
+        }
+      };
+      fetchPendingPosts();
+    }
+  }, []);
 
   return (
     <div
@@ -48,6 +67,22 @@ const Profile = () => {
                     <span className="font-bold">Solved Challenges:</span>{" "}
                     {user.solved_problems}
                   </p>
+                </div>
+                <div className="w-full mt-6">
+                  <h3 className="text-xl font-bold">Posts Awaiting Approval</h3>
+                  {loadingPosts ? (
+                    <span className="loading loading-spinner loading-md mt-2"></span>
+                  ) : pendingPosts.length > 0 ? (
+                    <ul className="mt-2 text-left list-disc list-inside bg-base-200 p-4 rounded-lg">
+                      {pendingPosts.map((post) => (
+                        <li key={post.id}>{post.title}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-gray-500">
+                      You have no posts waiting for review.
+                    </p>
+                  )}
                 </div>
                 <div className="mt-6">
                   <a
