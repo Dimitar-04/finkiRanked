@@ -24,6 +24,7 @@ const ForumPostDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const location = useLocation();
   const statePost = useState(location.state?.post || {});
+  const fromPath = location.state?.from || "/dashboard/forum";
   const post = statePost[0];
   const [posting, setPosting] = useState(false);
   const { user } = useAuth();
@@ -121,9 +122,9 @@ const ForumPostDetail = () => {
         <div className="w-full  max-w-2xl">
           <button
             className="btn btn-ghost mb-4"
-            onClick={() => navigate("/dashboard/forum")}
+            onClick={() => navigate(fromPath)}
           >
-            ← Back to Forum
+            ← Back to {fromPath.includes("user-posts") ? "Your Posts" : "Forum"}
           </button>
           <div className="card bg-base-100 shadow-xl  p-6 mb-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">

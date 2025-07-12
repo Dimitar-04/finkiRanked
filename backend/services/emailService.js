@@ -56,5 +56,26 @@ const sendDeletionEmail = async (userEmail, postTitle) => {
     console.error(`Failed to send approval email to ${userEmail}:`, error);
   }
 };
+const sendModeratorEmail = async (userEmail, postsNumber) => {
+  const mailOptions = {
+    from: "FinkiRanked",
+    to: userEmail,
+    subject: "Action Required: Posts Awaiting Review",
+    html: `
+        <h1>Action Required: Posts Awaiting Review</h1>
+        <p>This is an automated notification to let you know that there are <strong>${postsNumber}</strong> forum post(s) that have been waiting for review for more than 24 hours.</p>
+        <p>Please log in to the moderator dashboard at your earliest convenience to review and approve or reject these submissions.</p>
+        <br>
+        <p>Thank you for your help in maintaining our community standards.</p>
+        <p>The FinkiRanked System</p>
+    `,
+  };
 
-module.exports = { sendApprovalEmail, sendDeletionEmail };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Moderator email sent successfully to ${userEmail}`);
+  } catch (error) {
+    console.error(`Failed to send approval email to ${userEmail}:`, error);
+  }
+};
+module.exports = { sendApprovalEmail, sendDeletionEmail, sendModeratorEmail };

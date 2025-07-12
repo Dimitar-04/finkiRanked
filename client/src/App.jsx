@@ -14,6 +14,7 @@ import DashboardLayout from "./Dashboard/DashboardLayout";
 import Logout from "./Dashboard/components/Logout";
 import ManageChallenges from "./Dashboard/components/ManageChallenges";
 import CreateNewChallenge from "./Dashboard/components/CreateNewChallenge";
+import UserPosts from "./Dashboard/components/userPosts";
 export default function App() {
   return (
     <Routes>
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="leaderboard" element={<LeaderBoardEx />} />
         <Route path="manage-challenges" element={<ManageChallenges />} />
         <Route path="create-new-challenge" element={<CreateNewChallenge />} />
+        <Route path="user-posts" element={<UserPosts />} />
       </Route>
     </Routes>
   );

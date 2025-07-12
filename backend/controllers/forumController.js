@@ -176,6 +176,22 @@ const getForumPosts = async (req, res) => {
   }
 };
 
+const getAllPostsByUser = async (req, res) => {
+  const userId = req.user.sub;
+  try {
+    const posts = await prisma.forum_posts.findMany({
+      where: { author_id: userId },
+      orderBy: {
+        date_created: "desc",
+      },
+    });
+    res.status(200).json(posts);
+  } catch (err) {
+    console.error("Error fetching posts by user:", err);
+    res.status(500).json({ error: "Failed to fetch user posts" });
+  }
+};
+
 const deleteForumPost = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.sub;
@@ -342,6 +358,7 @@ const deleteComment = async (req, res) => {
 module.exports = {
   createForumPost,
   getForumPosts,
+  getAllPostsByUser,
 
   deleteForumPost,
   createComment,

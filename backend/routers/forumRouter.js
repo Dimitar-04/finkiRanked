@@ -4,6 +4,7 @@ const forumController = require("../controllers/forumController");
 
 router.post("/posts", forumController.createForumPost);
 router.get("/posts", forumController.getForumPosts);
+router.get("/user-posts", forumController.getAllPostsByUser);
 
 router.delete("/posts/:id", forumController.deleteForumPost);
 

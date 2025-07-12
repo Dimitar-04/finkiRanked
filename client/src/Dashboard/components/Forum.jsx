@@ -145,8 +145,18 @@ const Forum = () => {
                     </div>
 
                     <p className="text-xs sm:text-sm lg:text-base text-gray-500 mb-2">
-                      By {post.author_name},{" "}
-                      <span>{post.date_created?.split("T")[0]}</span>
+                      By <span className="underline">{post.author_name}</span>{" "}
+                      <br></br>
+                      <span>
+                        {new Date(post.date_created).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )}
+                      </span>
                     </p>
                     <p className="mt-2 text-gray-400 text-sm sm:text-base lg:text-lg xl:text-xl line-clamp-3 sm:line-clamp-none">
                       {post.content && post.content.length > 300

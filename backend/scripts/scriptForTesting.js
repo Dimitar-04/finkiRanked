@@ -1,6 +1,6 @@
 const { start } = require("repl");
 const prisma = require("../lib/prisma");
-
+const { sendModeratorEmail } = require("../services/emailService");
 // async function getTodaysChallenges() {
 //   try {
 //     const now = new Date();
@@ -58,23 +58,78 @@ const prisma = require("../lib/prisma");
 
 // getTodaysChallenges();
 
-async function resetUsers() {
+// async function resetUsers() {
+//   try {
+//     const usersOutput = await prisma.users.updateMany({
+//       data: {
+//         solvedDailyChallenge: false,
+//         daily_test_case_id: null,
+//         daily_points: 0,
+//         attempts: 0,
+//       },
+//     });
+//     console.log(
+//       `Daily reset process completed successfully. Updated ${usersOutput.count} users to reset their daily challenge status.`
+//     );
+//   } catch (error) {
+//     console.error("Error resetting users:", error);
+//     process.exitCode = 1;
+//   }
+// }
+
+// resetUsers();
+
+async function sendmailToModerators() {
   try {
-    const usersOutput = await prisma.users.updateMany({
-      data: {
-        solvedDailyChallenge: false,
-        daily_test_case_id: null,
-        daily_points: 0,
-        attempts: 0,
+    // 1. Define the time threshold (24 hours ago)
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate());
+
+    // 2. Check if there are any posts older than the threshold
+    const postsToReviewCount = await prisma.to_be_reviewed.count({
+      where: {
+        created_at: {
+          lt: oneDayAgo, // 'lt' means "less than"
+        },
       },
     });
-    console.log(
-      `Daily reset process completed successfully. Updated ${usersOutput.count} users to reset their daily challenge status.`
-    );
+
+    console.log(`Found ${postsToReviewCount} post(s) older than 24 hours.`);
+
+    // 3. If no old posts, exit gracefully
+    if (postsToReviewCount === 0) {
+      console.log("No old posts to review. No emails sent.");
+      return;
+    }
+
+    // 4. If there are old posts, get all moderators
+    const moderators = await prisma.users.findMany({
+      where: {
+        isModerator: true,
+      },
+      select: {
+        email: true, // Only select the email field
+      },
+    });
+
+    if (moderators.length === 0) {
+      console.log(
+        "Found old posts, but no moderators are defined in the system."
+      );
+      return;
+    }
+
+    const moderatorEmails = moderators.map((m) => m.email);
+
+    moderatorEmails.forEach((email) => {
+      sendModeratorEmail(email, postsToReviewCount);
+    });
   } catch (error) {
-    console.error("Error resetting users:", error);
+    console.error("Error in sendEmailToModerators script:", error);
     process.exitCode = 1;
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-resetUsers();
+sendmailToModerators();

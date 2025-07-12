@@ -96,7 +96,7 @@ const getReviewPosts = async (req, res) => {
 const getPendingPosts = async (req, res) => {
   try {
     const userId = req.user.sub;
-    console.log(userId);
+
     const pendingPosts = await prisma.to_be_reviewed.findMany({
       where: {
         author_id: userId,
@@ -105,7 +105,7 @@ const getPendingPosts = async (req, res) => {
         created_at: "desc",
       },
     });
-    console.log(pendingPosts);
+
     res.status(200).json(pendingPosts);
   } catch (err) {
     console.error("Error fetching user's pending posts:", err);
