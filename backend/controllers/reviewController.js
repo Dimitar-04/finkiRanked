@@ -8,6 +8,7 @@ const verifyModeratorStatus = require("../services/checkModeratorStatus");
 const {
   sendApprovalEmail,
   sendDeletionEmail,
+  sendModeratorManyPendingPostsEmail,
 } = require("../services/emailService");
 
 const createReviewPost = async (req, res) => {
@@ -24,6 +25,23 @@ const createReviewPost = async (req, res) => {
     await prisma.to_be_reviewed.create({
       data: post,
     });
+
+    const pendingCount = await prisma.to_be_reviewed.count();
+
+    if (pendingCount > 5) {
+      const moderators = await prisma.users.findMany({
+        where: { isModerator: true },
+        select: { email: true },
+      });
+
+      if (moderators.length > 0) {
+        const emailPromises = moderators.map((moderator) =>
+          sendModeratorManyPendingPostsEmail(moderator.email, pendingCount)
+        );
+        await Promise.all(emailPromises);
+      }
+    }
+
     await resetPostCheckCoutner(authorId);
     return res.status(201).json({
       message: "Post submitted for moderator approval",
@@ -51,9 +69,9 @@ async function resetPostCheckCoutner(userId) {
 
 const getReviewPosts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 0;
-    const limit = parseInt(req.query.limit) || 5;
-    const skip = page * limit;
+    console.log("called getREviewPosts");
+    const { page = 0, limit = 5, search = "", date = "" } = req.query;
+    const skip = parseInt(page) * parseInt(limit);
     const userId = req.query.userId;
     const hasModeratorStatus = await verifyModeratorStatus(userId);
     if (!hasModeratorStatus) {
@@ -62,27 +80,50 @@ const getReviewPosts = async (req, res) => {
       });
     }
     try {
-      const posts = await prisma.to_be_reviewed.findMany({
-        skip,
-        take: limit,
-        orderBy: {
-          created_at: "desc",
-        },
-      });
+      const whereClause = {
+        AND: [],
+      };
+      if (search) {
+        whereClause.AND.push({
+          title: {
+            contains: search,
+            mode: "insensitive",
+          },
+        });
+      }
+      if (date) {
+        const startDate = new Date(date);
+        startDate.setUTCHours(0, 0, 0, 0);
 
-      const forumPosts = posts.map(
-        (post) =>
-          new ForumPost({
-            id: post.id,
-            title: post.title,
-            content: post.content,
-            authorName: post.author_name,
-            dateCreated: post.created_at,
-            commentCount: post.comment_count || 0,
-          })
-      );
+        const endDate = new Date(date);
+        endDate.setUTCHours(23, 59, 59, 999);
 
-      res.status(200).json(forumPosts);
+        whereClause.AND.push({
+          created_at: {
+            gte: startDate,
+            lte: endDate,
+          },
+        });
+      }
+
+      const where = whereClause.AND.length > 0 ? whereClause : undefined;
+
+      const [totalPosts, posts] = await prisma.$transaction([
+        prisma.to_be_reviewed.count({ where }),
+        prisma.to_be_reviewed.findMany({
+          where,
+          skip,
+          take: parseInt(limit),
+          orderBy: {
+            created_at: "asc",
+          },
+        }),
+      ]);
+
+      const totalPages = Math.ceil(totalPosts / parseInt(limit));
+      console.log(posts);
+
+      res.status(200).json({ posts, totalPages });
     } catch (dbError) {
       console.error("Database query error:", dbError);
       res.status(500).json({ error: "Error fetching posts from database" });

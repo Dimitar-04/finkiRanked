@@ -36,7 +36,7 @@ const UserPosts = () => {
 
       fetchAllPosts();
     }
-  }, []);
+  }, [user?.id]);
 
   const filteredApprovedPosts = approvedPosts.filter((post) => {
     const searchLower = searchQuery.toLowerCase();

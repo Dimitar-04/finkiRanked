@@ -8,7 +8,11 @@ const safeWords = require("../filters/safeWords");
 const { analyzePostContent } = require("../ai/processRequestAi");
 const { createReviewPost } = require("./reviewController");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
-
+const {
+  sendDeletedFromForumEmail,
+  sendDeletedCommentEmail,
+  sendCommentedNotificationEmail,
+} = require("../services/emailService");
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName } = req.body;
   if (!title || !content || !authorId || !authorName) {
@@ -201,6 +205,7 @@ const deleteForumPost = async (req, res) => {
       where: { id },
       select: {
         author_id: true,
+        title: true,
       },
     });
 
@@ -208,19 +213,29 @@ const deleteForumPost = async (req, res) => {
       return res.status(404).json({ error: "Forum post not found" });
     }
 
-    if (post.author_id === userId) {
-      await prisma.forum_posts.delete({ where: { id } });
-      return res.status(204).send();
-    }
+    const isAuthor = post.author_id === userId;
+    const isUserModerator = await verifyModeratorStatus(userId);
 
-    const hasPermission = await verifyModeratorStatus(userId);
-    if (!hasPermission) {
+    if (!isAuthor && !isUserModerator) {
       return res.status(403).json({
         error: "You do not have permission to delete this post",
       });
     }
+
     await prisma.forum_posts.delete({ where: { id } });
-    res.status(204).send();
+
+    if (isUserModerator) {
+      const author = await prisma.users.findUnique({
+        where: { id: post.author_id },
+        select: { email: true },
+      });
+
+      if (author && author.email) {
+        await sendDeletedFromForumEmail(author.email, post.title);
+      }
+    }
+
+    return res.status(204).send();
   } catch (err) {
     if (err.code === "P2025") {
       return res.status(404).json({ error: "Forum post not found" });
@@ -263,8 +278,24 @@ const createComment = async (req, res) => {
       data: { comment_count: { increment: 1 } },
     });
 
-    comment.id = savedComment.id;
+    const post = await prisma.forum_posts.findUnique({
+      where: { id: post_id },
+      select: { title: true, author_id: true },
+    });
 
+    const postAuthor = await prisma.users.findUnique({
+      where: { id: post.author_id },
+      select: { email: true },
+    });
+
+    comment.id = savedComment.id;
+    if (post.author_id != authorId) {
+      await sendCommentedNotificationEmail(
+        postAuthor.email,
+        post.title,
+        authorName
+      );
+    }
     res.status(201).json({
       message: "Comment created successfully",
       comment: savedComment,
@@ -318,17 +349,28 @@ const deleteComment = async (req, res) => {
   try {
     const comment = await prisma.comments.findUnique({
       where: { id: commentId },
-      select: { post_id: true, author_id: true },
+      select: { post_id: true, author_id: true, content: true },
     });
 
     if (!comment) {
       return res.status(404).json({ error: "Comment not found" });
     }
-    const user = await prisma.users.findUnique({
-      where: { id: userId },
-      select: { isModerator: true },
+
+    const post = await prisma.forum_posts.findUnique({
+      where: { id: comment.post_id },
+      select: { title: true },
     });
-    if (comment.author_id !== userId && !(user && user.isModerator)) {
+
+    if (!post) {
+      return res
+        .status(404)
+        .json({ error: "Post associated with comment not found" });
+    }
+
+    const isUserModerator = await verifyModeratorStatus(userId);
+    const isAuthor = comment.author_id === userId;
+
+    if (!isUserModerator && !isAuthor) {
       return res.status(403).json({
         error: "You do not have permission to delete this comment",
       });
@@ -345,7 +387,21 @@ const deleteComment = async (req, res) => {
       });
     }
 
-    res.status(204).send();
+    if (isUserModerator) {
+      const author = await prisma.users.findUnique({
+        where: { id: comment.author_id },
+        select: { email: true },
+      });
+      if (author && author.email) {
+        await sendDeletedCommentEmail(
+          author.email,
+          post.title,
+          comment.content
+        );
+      }
+    }
+
+    return res.status(204).send();
   } catch (err) {
     if (err.code === "P2025") {
       return res.status(404).json({ error: "Comment not found" });
