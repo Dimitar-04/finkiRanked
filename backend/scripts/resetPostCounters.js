@@ -1,5 +1,5 @@
-const prisma = require("../lib/prisma");
-const schedule = require("node-schedule");
+const prisma = require('../lib/prisma');
+const schedule = require('node-schedule');
 
 async function resetPostCounters() {
   try {
@@ -28,7 +28,7 @@ async function resetPostCounters() {
   }
 }
 
-const job = schedule.scheduleJob("0 0 * * *", function () {
+const job = schedule.scheduleJob('0 0 * * *', function () {
   console.log(
     `[${new Date().toISOString()}] Running scheduled post counter reset at midnight.`
   );
@@ -40,7 +40,7 @@ console.log(
   `[${new Date().toISOString()}] Next scheduled run: ${job.nextInvocation()}`
 );
 
-process.on("SIGINT", function () {
+process.on('SIGINT', function () {
   job.cancel();
   console.log(
     `[${new Date().toISOString()}] Post counter reset scheduler stopped`
@@ -51,4 +51,3 @@ process.on("SIGINT", function () {
 console.log(
   `[${new Date().toISOString()}] Running initial post counter reset...`
 );
-resetPostCounters();

@@ -1,6 +1,6 @@
-const { start } = require("repl");
-const prisma = require("../lib/prisma");
-const { sendModeratorEmail } = require("../services/emailService");
+const { start } = require('repl');
+const prisma = require('../lib/prisma');
+const { sendModeratorEmail } = require('../services/emailService');
 // async function getTodaysChallenges() {
 //   try {
 //     const now = new Date();
@@ -86,21 +86,36 @@ async function sendmailToModerators() {
     oneDayAgo.setDate(oneDayAgo.getDate());
 
     // 2. Check if there are any posts older than the threshold
-    const postsToReviewCount = await prisma.to_be_reviewed.count({
+    const posts = await prisma.to_be_reviewed.findMany({
       where: {
         created_at: {
           lt: oneDayAgo, // 'lt' means "less than"
         },
       },
+      select: {
+        title: true,
+        created_at: true,
+      },
+      orderBy: {
+        created_at: 'asc',
+      },
     });
 
-    console.log(`Found ${postsToReviewCount} post(s) older than 24 hours.`);
+    console.log(`Found ${posts.length} post(s) older than 24 hours.`);
 
     // 3. If no old posts, exit gracefully
-    if (postsToReviewCount === 0) {
-      console.log("No old posts to review. No emails sent.");
+    if (posts.length === 0) {
+      console.log('No old posts to review. No emails sent.');
       return;
     }
+    console.log('Posts awaiting review:');
+    posts.forEach((post, index) => {
+      console.log(
+        `${index + 1}. ${post.title} (ID: ${
+          post.id
+        }) - Created at: ${post.created_at.toISOString()}`
+      );
+    });
 
     // 4. If there are old posts, get all moderators
     const moderators = await prisma.users.findMany({
@@ -114,7 +129,7 @@ async function sendmailToModerators() {
 
     if (moderators.length === 0) {
       console.log(
-        "Found old posts, but no moderators are defined in the system."
+        'Found old posts, but no moderators are defined in the system.'
       );
       return;
     }
@@ -122,10 +137,10 @@ async function sendmailToModerators() {
     const moderatorEmails = moderators.map((m) => m.email);
 
     moderatorEmails.forEach((email) => {
-      sendModeratorEmail(email, postsToReviewCount);
+      sendModeratorEmail(email, posts);
     });
   } catch (error) {
-    console.error("Error in sendEmailToModerators script:", error);
+    console.error('Error in sendEmailToModerators script:', error);
     process.exitCode = 1;
   } finally {
     await prisma.$disconnect();

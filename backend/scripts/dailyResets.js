@@ -1,5 +1,5 @@
-const prisma = require("../lib/prisma");
-const schedule = require("node-schedule");
+const prisma = require('../lib/prisma');
+const schedule = require('node-schedule');
 
 async function dailyResets() {
   const scriptExecutionTime = new Date();
@@ -22,12 +22,12 @@ async function dailyResets() {
 
     console.log(
       `[${scriptExecutionTime.toISOString()}] Current script execution UTC date: ${
-        scriptExecutionTime.toISOString().split("T")[0]
+        scriptExecutionTime.toISOString().split('T')[0]
       }`
     );
     console.log(
       `[${scriptExecutionTime.toISOString()}] Target date for challenge expiry (YYYY-MM-DD UTC): ${
-        targetDateForQuery.toISOString().split("T")[0]
+        targetDateForQuery.toISOString().split('T')[0]
       }`
     );
 
@@ -55,7 +55,7 @@ async function dailyResets() {
       `[${scriptExecutionTime.toISOString()}] Marked ${
         challengeUpdateResult.count
       } challenges from ${
-        targetDateForQuery.toISOString().split("T")[0]
+        targetDateForQuery.toISOString().split('T')[0]
       } as expired.`
     );
 
@@ -80,15 +80,13 @@ async function dailyResets() {
   }
 }
 
-const job = schedule.scheduleJob("0 7 * * *", function () {
+const job = schedule.scheduleJob('0 7 * * *', function () {
   console.log(`Running scheduled daily reset at ${new Date().toISOString()}`);
   dailyResets();
 });
 
-process.on("SIGINT", function () {
+process.on('SIGINT', function () {
   job.cancel();
-  console.log("Daily reset scheduler stopped.");
+  console.log('Daily reset scheduler stopped.');
   process.exit(0);
 });
-
-dailyResets();
