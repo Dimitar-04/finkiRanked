@@ -5,6 +5,7 @@ import trashIcon from "../../assets/images/delete.svg"; // Add this import
 import Navbar from "./Navbar";
 import { getForumPosts, deleteForumPost } from "@/services/forumService";
 import { useAuth } from "@/contexts/AuthContext";
+
 const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -92,134 +93,135 @@ const Forum = () => {
 
   return (
     <div data-theme="luxury" className="min-h-screen bg-base-100">
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6  sm:p-6 sm:pl-12 w-full">
-        <div className="flex-1 order-2 lg:order-1">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 lg:mb-10">
+      <div className="p-4 sm:p-6 sm:pl-12 w-full">
+        {/* Header section with title and create post button */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 lg:mb-10">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center lg:text-left">
             Forum Posts
           </h1>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 w-full lg:w-auto">
+            <button
+              onClick={() => {
+                navigate("/dashboard/create-post");
+              }}
+              className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+            >
+              Create a Post
+            </button>
+            <button
+              onClick={() => {
+                navigate("/dashboard/user-posts");
+              }}
+              className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+            >
+              Your posts
+            </button>
+          </div>
+        </div>
 
-          {loading ? (
-            <div className="flex justify-center items-center h-32 sm:h-48 lg:h-64">
-              <span className="loading loading-spinner loading-md sm:loading-lg"></span>
-            </div>
-          ) : (
-            <>
-              <div className="space-y-3 sm:space-y-4 pb-6 sm:pb-8">
-                {posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="p-3 sm:p-4 lg:p-6 border rounded-lg shadow-sm hover:shadow-md transition relative bg-base-200"
-                  >
-                    {(post.author_name === user.name ||
-                      post.author_name === user.username ||
-                      user.isModerator) && (
-                      <button
-                        className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          showModal(
-                            "Are you sure you want to delete this post? This action cannot be undone.",
-                            "confirm",
-                            post.id
-                          );
-                        }}
-                      >
-                        <img
-                          src={trashIcon}
-                          alt="Delete"
-                          className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-                        />
-                      </button>
-                    )}
-
-                    <div className="flex items-center gap-2 sm:gap-4 mt-2 pr-8 sm:pr-10">
-                      <h2
-                        className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2"
-                        onClick={() => {
-                          navigate(`/dashboard/forum-detail/${post.id}`, {
-                            state: { post },
-                          });
-                        }}
-                      >
-                        {post.title}
-                      </h2>
-                    </div>
-
-                    <p className="text-xs sm:text-sm lg:text-base text-gray-500 mb-2">
-                      By <span className="underline">{post.author_name}</span>{" "}
-                      <br></br>
-                      <span>
-                        {new Date(post.date_created).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          }
-                        )}
-                      </span>
-                    </p>
-                    <p className="mt-2 text-gray-400 text-sm sm:text-base lg:text-lg xl:text-xl line-clamp-3 sm:line-clamp-none">
-                      {post.content && post.content.length > 300
-                        ? post.content.slice(0, 300) + "..."
-                        : post.content}
-                    </p>
-                    <div
-                      className="mt-3 sm:mt-4 flex justify-end items-center gap-2 cursor-pointer"
+        {loading ? (
+          <div className="flex justify-center items-center h-32 sm:h-48 lg:h-64">
+            <span className="loading loading-spinner loading-md sm:loading-lg"></span>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-8">
+              {posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="p-3 sm:p-4 lg:p-6 border rounded-lg shadow-sm hover:shadow-md transition relative bg-base-200 h-full flex flex-col"
+                >
+                  {(post.author_name === user.name ||
+                    post.author_name === user.username ||
+                    user.isModerator) && (
+                    <button
+                      className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
                       onClick={(e) => {
+                        e.stopPropagation();
+                        showModal(
+                          "Are you sure you want to delete this post? This action cannot be undone.",
+                          "confirm",
+                          post.id
+                        );
+                      }}
+                    >
+                      <img
+                        src={trashIcon}
+                        alt="Delete"
+                        className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                      />
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-2 sm:gap-4 mt-2 pr-8 sm:pr-10">
+                    <h2
+                      className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2 text-center sm:text-left w-full"
+                      onClick={() => {
                         navigate(`/dashboard/forum-detail/${post.id}`, {
                           state: { post },
                         });
                       }}
                     >
-                      <p className="text-sm sm:text-base">
-                        {post.comment_count}
-                      </p>
-                      <img
-                        src={commentIcon}
-                        alt="Comment"
-                        className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 hover:opacity-80"
-                      />
-                    </div>
+                      {post.title}
+                    </h2>
                   </div>
-                ))}
-              </div>
-              {hasMore && (
-                <div className="flex justify-center mt-4 sm:mt-6">
-                  <button
-                    onClick={handleLoadMore}
-                    className={`btn btn-outline mb-4 sm:mb-6 ${
-                      loadingMore ? "btn-disabled" : ""
-                    }`}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? (
-                      <>
-                        <span className="loading loading-spinner loading-sm mr-2"></span>
-                        Loading...
-                      </>
-                    ) : (
-                      "Load More"
-                    )}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
 
-        <div className="w-full lg:w-1/4 order-1 lg:order-2">
-          <div className="flex flex-row justify-center lg:justify-end p-4 sm:p-6 rounded-lg shadow-md bg-base-100">
-            <button
-              onClick={() => {
-                navigate("/dashboard/create-post");
-              }}
-              className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full sm:w-auto"
-            >
-              Create a Post
-            </button>
-          </div>
-        </div>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-2 text-center sm:text-left">
+                    By <span className="underline">{post.author_name}</span>{" "}
+                    <br></br>
+                    <span>
+                      {new Date(post.date_created).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </p>
+                  <p className="mt-2 text-gray-400 text-sm sm:text-base line-clamp-3 text-center sm:text-left flex-grow">
+                    {post.content && post.content.length > 100
+                      ? post.content.slice(0, 100) + "..."
+                      : post.content}
+                  </p>
+                  <div
+                    className="mt-3 sm:mt-4 flex justify-center sm:justify-end items-center gap-2 cursor-pointer"
+                    onClick={(e) => {
+                      navigate(`/dashboard/forum-detail/${post.id}`, {
+                        state: { post },
+                      });
+                    }}
+                  >
+                    <p className="text-sm sm:text-base">{post.comment_count}</p>
+                    <img
+                      src={commentIcon}
+                      alt="Comment"
+                      className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 hover:opacity-80"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center mt-4 sm:mt-6">
+                <button
+                  onClick={handleLoadMore}
+                  className={`btn btn-outline mb-4 sm:mb-6 ${
+                    loadingMore ? "btn-disabled" : ""
+                  }`}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm mr-2"></span>
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More"
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Modal element */}

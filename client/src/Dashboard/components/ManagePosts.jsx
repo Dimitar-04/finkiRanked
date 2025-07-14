@@ -170,23 +170,28 @@ const ManagePosts = () => {
   const isLoading = authLoading || isFetching;
 
   return (
-    <div data-theme="luxury" className="dashboard h-screen flex bg-base-100 ">
-      <div className="flex flex-col w-full h-full overflow-y-auto p-6">
-        <div className="flex-1 md:ml-8">
-          <h1 className="text-4xl font-bold mb-10">Posts to be reviewed:</h1>
+    <div
+      data-theme="luxury"
+      className="dashboard min-h-screen flex bg-base-100"
+    >
+      <div className="flex flex-col w-full h-full overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 lg:mb-10 text-center lg:text-left">
+            Posts to be reviewed:
+          </h1>
           {/* Search and Filter Bar */}
-          <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center">
-            <div className="relative  w-[40%]">
+          <div className="mb-6 sm:mb-8 flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
+            <div className="relative w-full lg:w-2/5">
               <input
                 type="text"
                 placeholder="Search by title..."
-                className="input input-bordered w-full pl-10"
+                className="input input-bordered w-full pl-10 text-sm sm:text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
               />
               <svg
-                className="w-5 h-5 z-10 absolute top-1/2 left-3 transform -translate-y-1/2 text-base-content/40"
+                className="w-4 h-4 sm:w-5 sm:h-5 z-10 absolute top-1/2 left-3 transform -translate-y-1/2 text-base-content/40"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -199,16 +204,16 @@ const ManagePosts = () => {
                 ></path>
               </svg>
             </div>
-            <div className="flex flex-row gap-2 w-[30%]">
+            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
               <DatePicker
-                className="p-2 w-[37%]"
+                className="p-2 w-full sm:w-auto min-w-0"
                 value={selectedDate}
                 onChange={(date) => setSelectedDate(date)}
                 placeholder="Search by date"
-              ></DatePicker>
+              />
               {selectedDate && (
                 <button
-                  className="btn-sm text-red-500 cursor-pointer"
+                  className="btn btn-sm text-red-500 cursor-pointer w-full sm:w-auto"
                   onClick={() => setSelectedDate(null)}
                 >
                   Clear date
@@ -218,46 +223,58 @@ const ManagePosts = () => {
           </div>
 
           {error && (
-            <div className="alert alert-error shadow-lg mb-4">
-              <span>{error}</span>
+            <div className="alert alert-error shadow-lg mb-4 mx-auto max-w-4xl">
+              <span className="text-sm sm:text-base">{error}</span>
             </div>
           )}
           {isLoading && (
             <div className="flex justify-center mt-6">
-              <span className="loading loading-spinner loading-lg"></span>
+              <span className="loading loading-spinner loading-md sm:loading-lg"></span>
             </div>
           )}
           {posts.length === 0 && !isLoading && !error && (
-            <div className="text-center text-gray-500 py-10">
-              No posts found matching your criteria.
+            <div className="text-center text-gray-500 py-8 sm:py-10">
+              <p className="text-base sm:text-lg">
+                No posts found matching your criteria.
+              </p>
             </div>
           )}
 
           {!isLoading && (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 2xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
               {posts.map((post) => (
                 <div
                   key={post.id}
-                  className="p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-[80%]"
+                  className="p-4 sm:p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-full"
                 >
-                  <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
-                  <div className="absolute top-4 right-4 flex gap-2">
+                  <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 pr-16 sm:pr-20">
+                    {post.title}
+                  </h1>
+                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex gap-1 sm:gap-2">
                     <button
                       title="Approve Post"
-                      className="btn btn-sm btn-success btn-circle"
+                      className="btn btn-xs sm:btn-sm btn-success btn-circle"
                       onClick={() => openConfirmationModal("approve", post)}
                     >
-                      <img src={doneAll} alt="Approve" className="w-5 h-5" />
+                      <img
+                        src={doneAll}
+                        alt="Approve"
+                        className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5"
+                      />
                     </button>
                     <button
                       title="Delete Post"
-                      className="btn btn-sm btn-error btn-circle"
+                      className="btn btn-xs sm:btn-sm btn-error btn-circle"
                       onClick={() => openConfirmationModal("delete", post)}
                     >
-                      <img src={trashIcon} alt="Delete" className="w-5 h-5" />
+                      <img
+                        src={trashIcon}
+                        alt="Delete"
+                        className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5"
+                      />
                     </button>
                   </div>
-                  <p className="text-sm text-base-content/70 mb-3">
+                  <p className="text-xs sm:text-sm text-base-content/70 mb-2 sm:mb-3">
                     By {post.author_name} on{" "}
                     <span>
                       {new Date(post.created_at).toLocaleDateString("en-GB", {
@@ -267,7 +284,7 @@ const ManagePosts = () => {
                       })}
                     </span>
                   </p>
-                  <p className="text-base-content/90 whitespace-pre-line break-words">
+                  <p className="text-sm sm:text-base text-base-content/90 whitespace-pre-line break-words">
                     {post.content}
                   </p>
                 </div>
@@ -276,7 +293,7 @@ const ManagePosts = () => {
           )}
 
           {!isLoading && totalPages > 1 && (
-            <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-6 sm:mt-8">
+            <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-6 sm:mt-8 px-4">
               {Array.from({ length: totalPages }, (_, idx) => (
                 <button
                   key={idx + 1}
@@ -297,17 +314,17 @@ const ManagePosts = () => {
       {/* Modal element */}
       {modal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm p-4"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-base-200 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+          <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               {(modal.type === "approve" || modal.type === "success") && (
-                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
-                    className="w-5 h-5 text-success-content"
+                    className="w-3 h-3 sm:w-5 sm:h-5 text-success-content"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -324,9 +341,9 @@ const ManagePosts = () => {
               {(modal.type === "delete" ||
                 modal.type === "deleted" ||
                 modal.type === "error") && (
-                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
-                    className="w-5 h-5 text-error-content"
+                    className="w-3 h-3 sm:w-5 sm:h-5 text-error-content"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -340,7 +357,7 @@ const ManagePosts = () => {
                   </svg>
                 </div>
               )}
-              <h3 className="font-bold text-lg" id="modal-title">
+              <h3 className="font-bold text-base sm:text-lg" id="modal-title">
                 {modal.type === "approve" && "Approve Post"}
                 {(modal.type === "deleted" || modal.type === "delete") &&
                   "Delete Post"}
@@ -348,19 +365,19 @@ const ManagePosts = () => {
                   "Approve Post"}
               </h3>
             </div>
-            <p className="py-4">{modal.message}</p>
-            <div className="flex justify-end gap-3 mt-4">
+            <p className="py-3 sm:py-4 text-sm sm:text-base">{modal.message}</p>
+            <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
               {modal.type === "approve" || modal.type === "delete" ? (
                 <>
                   <button
-                    className="btn btn-ghost"
+                    className="btn btn-ghost btn-sm sm:btn-md"
                     onClick={closeModal}
                     disabled={isActionLoading}
                   >
                     Cancel
                   </button>
                   <button
-                    className={`btn ${
+                    className={`btn btn-sm sm:btn-md ${
                       modal.type === "approve" ? "btn-success" : "btn-error"
                     }`}
                     onClick={confirmAction}
@@ -381,7 +398,10 @@ const ManagePosts = () => {
                   </button>
                 </>
               ) : (
-                <button className="btn btn-primary" onClick={closeModal}>
+                <button
+                  className="btn btn-primary btn-sm sm:btn-md"
+                  onClick={closeModal}
+                >
                   OK
                 </button>
               )}
