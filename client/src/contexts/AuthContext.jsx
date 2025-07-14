@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { loginUser, registerUser } from "@/services/registerLoginService";
-
+import { jwtDecode } from "jwt-decode";
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -104,34 +104,41 @@ export const AuthProvider = ({ children }) => {
 
   const register = useCallback(
     async (userData) => {
-      const backendResult = await registerUser(userData);
-      if (!backendResult.success) {
-        return {
-          success: false,
-          error: backendResult.message,
-          errors: backendResult.errors,
-        };
+      try {
+        const response = await registerUser(userData);
+
+        if (response.success) {
+          const { data: signInData, error: signInError } =
+            await supabase.auth.signInWithPassword({
+              email: userData.email,
+              password: userData.password,
+            });
+
+          if (signInError) {
+            return { success: false, error: signInError.message };
+          }
+          return { success: true, user: signInData.user };
+        } else {
+          return {
+            success: false,
+            error: response.data.message,
+            errors: response.data.errors,
+          };
+        }
+      } catch (error) {
+        if (error.response && error.response.data) {
+          return {
+            success: false,
+            error: error.response.data.message,
+            errors: error.response.data.errors,
+          };
+        } else {
+          return {
+            success: false,
+            error: "An unexpected network error occurred.",
+          };
+        }
       }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: userData.email,
-        password: userData.password,
-      });
-
-      if (error || !data.session?.access_token) {
-        return {
-          success: false,
-          error: "Registration succeeded but login failed.",
-        };
-      }
-
-      setUser(backendResult.user);
-      userRef.current = backendResult.user.id;
-      localStorage.setItem("user", JSON.stringify(backendResult.user));
-      localStorage.setItem("jwt", data.session.access_token);
-      resetInactivityTimer();
-
-      return { success: true };
     },
     [resetInactivityTimer]
   );
@@ -144,6 +151,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log(event);
         if (event === "TOKEN_REFRESHED" && session) {
           const now = Date.now();
           const readableTime = new Date(now).toLocaleString();
@@ -204,6 +212,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         resetInactivityTimer,
+
         loading,
         updateUser,
       }}
