@@ -19,3 +19,7 @@ export const loginUser = async (credentials) => {
     throw error;
   }
 };
+
+export const signInWithGoogle = () => {
+  window.location.href = "http://localhost:5001/api/auth/google";
+};
