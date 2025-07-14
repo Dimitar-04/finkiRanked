@@ -17,20 +17,16 @@ export default function Navbar() {
       return true;
     }
     if (
-      path === "/dashboard/forum" &&
+      (path === "/dashboard/forum" || path === "/dashboard/user-posts") &&
       (location.pathname === "/dashboard/forum" ||
         location.pathname === "/dashboard/forum/create-post" ||
         location.pathname === "/dashboard/create-post" ||
+        location.pathname === "/dashboard/user-posts" ||
         location.pathname.startsWith("/dashboard/forum-detail/"))
     ) {
       return true;
     }
-    if (
-      path === "/dashboard/user-posts" &&
-      location.pathname === "/dashboard/user-posts"
-    ) {
-      return true;
-    }
+
     if (
       path === "/dashboard/manage-posts" &&
       location.pathname === "/dashboard/manage-posts"
