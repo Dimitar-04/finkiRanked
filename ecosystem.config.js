@@ -35,5 +35,14 @@ module.exports = {
       exec_mode: 'fork',
       env: backendEnv,
     },
+    {
+      name: 'hourly-review-check',
+      script: './backend/scripts/hourlyCheckForDailyChallengePosts.js',
+      autorestart: true,
+      watch: false,
+      instances: 1,
+      exec_mode: 'fork',
+      env: backendEnv,
+    },
   ],
 };
