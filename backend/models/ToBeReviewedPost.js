@@ -7,6 +7,8 @@ class ToBeReviewedPost {
     id,
     commentCount,
     dateCreated,
+    topic,
+    challengeId,
   }) {
     this.id = id;
     this.title = title;
@@ -15,6 +17,8 @@ class ToBeReviewedPost {
     this.comment_count = commentCount;
     this.author_id = authorId;
     this.author_name = authorName;
+    this.topic = topic;
+    this.challenge_id = challengeId;
   }
 }
 

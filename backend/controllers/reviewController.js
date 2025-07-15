@@ -12,7 +12,7 @@ const {
 } = require("../services/emailService");
 
 const createReviewPost = async (req, res) => {
-  const { title, content, authorId, authorName } = req.body;
+  const { title, content, authorId, authorName, topic, challengeId } = req.body;
 
   try {
     const post = new ToBeReviewedPost({
@@ -21,9 +21,21 @@ const createReviewPost = async (req, res) => {
       authorId,
       authorName,
       dateCreated: new Date(),
+      topic,
+      challengeId,
     });
+    const { author_id, challenge_id, ...data } = post;
+
     await prisma.to_be_reviewed.create({
-      data: post,
+      data: {
+        ...data,
+        users: {
+          connect: { id: author_id },
+        },
+        challenges: challenge_id
+          ? { connect: { id: challenge_id } }
+          : undefined,
+      },
     });
 
     const pendingCount = await prisma.to_be_reviewed.count();
@@ -69,7 +81,6 @@ async function resetPostCheckCoutner(userId) {
 
 const getReviewPosts = async (req, res) => {
   try {
-    console.log("called getREviewPosts");
     const { page = 0, limit = 5, search = "", date = "" } = req.query;
     const skip = parseInt(page) * parseInt(limit);
     const userId = req.query.userId;
@@ -121,7 +132,6 @@ const getReviewPosts = async (req, res) => {
       ]);
 
       const totalPages = Math.ceil(totalPosts / parseInt(limit));
-      console.log(posts);
 
       res.status(200).json({ posts, totalPages });
     } catch (dbError) {
@@ -230,6 +240,8 @@ const approveReviewPost = async (req, res) => {
       authorId: postToApprove.author_id,
       dateCreated: postToApprove.created_at,
       commentCount: postToApprove.comment_count || 0,
+      topic: postToApprove.topic,
+      challengeId: postToApprove.challenge_id,
     });
 
     await prisma.forum_posts.create({

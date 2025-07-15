@@ -4,6 +4,7 @@ const taskController = require("../controllers/taskController");
 
 router.get("/all", taskController.getAllTasks);
 router.get("/", taskController.getTaskByDate);
+router.get("/forum-post", taskController.getTasksForForumPost);
 router.get("/:id/test-case", taskController.fetchTestCaseForToday);
 router.get("/:id/test-cases", taskController.getAllTestCasesForTask);
 router.get("/test-cases/:testCaseId", taskController.getSpecificTestCaseById);

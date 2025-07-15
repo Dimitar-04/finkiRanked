@@ -87,141 +87,363 @@ const Forum = () => {
       setLoading(false);
     }
   };
-  const handleLoadMore = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
 
   return (
     <div data-theme="luxury" className="min-h-screen bg-base-100">
-      <div className="p-4 sm:p-6 sm:pl-12 w-full">
-        {/* Header section with title and create post button */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 lg:mb-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center lg:text-left">
-            Forum Posts
-          </h1>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 w-full lg:w-auto">
-            <button
-              onClick={() => {
-                navigate("/dashboard/create-post");
-              }}
-              className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
-            >
-              Create a Post
-            </button>
-            <button
-              onClick={() => {
-                navigate("/dashboard/user-posts");
-              }}
-              className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
-            >
-              Your posts
-            </button>
+      <div className="flex flex-col h-screen">
+        {/* Sticky Header Section */}
+        <div className="sticky top-0 z-10 bg-base-100 border-b border-base-300 shadow-sm">
+          <div className="p-4 sm:p-6 sm:pl-12 w-full">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center lg:text-left">
+                Forum Posts
+              </h1>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 w-full lg:w-auto">
+                <button
+                  onClick={() => {
+                    navigate("/dashboard/create-post");
+                  }}
+                  className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+                >
+                  Create a Post
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/dashboard/user-posts");
+                  }}
+                  className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+                >
+                  Your posts
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center items-center h-32 sm:h-48 lg:h-64">
-            <span className="loading loading-spinner loading-md sm:loading-lg"></span>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 pb-6 sm:pb-8">
-              {posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="p-3 sm:p-4 lg:p-6 border rounded-lg shadow-sm hover:shadow-md transition relative bg-base-200 h-full flex flex-col"
-                >
-                  {(post.author_name === user.name ||
-                    post.author_name === user.username ||
-                    user.isModerator) && (
-                    <button
-                      className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        showModal(
-                          "Are you sure you want to delete this post? This action cannot be undone.",
-                          "confirm",
-                          post.id
-                        );
-                      }}
+        {/* Main Content Area */}
+        <div className="flex-1 ">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <span className="loading loading-spinner loading-md sm:loading-lg"></span>
+            </div>
+          ) : (
+            <div className="h-full">
+              {/* Sticky Column Headers */}
+              <div className="sticky top-0 z-10 bg-base-100  border-base-300 shadow-sm">
+                <div className="p-4 sm:p-6 sm:pl-12 w-full">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
+                    {/* General Programming Header */}
+                    <div
+                      className="cursor-pointer  group border rounded-lg"
+                      onClick={() => navigate("/dashboard/forum/general")}
                     >
-                      <img
-                        src={trashIcon}
-                        alt="Delete"
-                        className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-                      />
-                    </button>
-                  )}
+                      <div className="flex items-center gap-3 p-3 sm:p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+                        <div className="flex-1 ">
+                          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold transition-colors mb-2 ">
+                            General Programming Discussions
+                          </h2>
+                          <p className="text-sm text-gray-500">
+                            Click to view all discussions on "General
+                            Programming"
+                          </p>
+                        </div>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition-colors"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
 
-                  <div className="flex items-center gap-2 sm:gap-4 mt-2 pr-8 sm:pr-10">
-                    <h2
-                      className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2 text-center sm:text-left w-full"
-                      onClick={() => {
-                        navigate(`/dashboard/forum-detail/${post.id}`, {
-                          state: { post },
-                        });
-                      }}
+                    {/* Daily Challenge Header */}
+                    <div
+                      className="cursor-pointer group border rounded-lg"
+                      onClick={() =>
+                        navigate("/dashboard/forum/daily-challenge")
+                      }
                     >
-                      {post.title}
-                    </h2>
-                  </div>
-
-                  <p className="text-xs sm:text-sm text-gray-500 mb-2 text-center sm:text-left">
-                    By <span className="underline">{post.author_name}</span>{" "}
-                    <br></br>
-                    <span>
-                      {new Date(post.date_created).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </p>
-                  <p className="mt-2 text-gray-400 text-sm sm:text-base line-clamp-3 text-center sm:text-left flex-grow">
-                    {post.content && post.content.length > 100
-                      ? post.content.slice(0, 100) + "..."
-                      : post.content}
-                  </p>
-                  <div
-                    className="mt-3 sm:mt-4 flex justify-center sm:justify-end items-center gap-2 cursor-pointer"
-                    onClick={(e) => {
-                      navigate(`/dashboard/forum-detail/${post.id}`, {
-                        state: { post },
-                      });
-                    }}
-                  >
-                    <p className="text-sm sm:text-base">{post.comment_count}</p>
-                    <img
-                      src={commentIcon}
-                      alt="Comment"
-                      className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 hover:opacity-80"
-                    />
+                      <div className="flex items-center gap-3 p-3 sm:p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
+                        <div className="flex-1">
+                          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold transition-colors mb-2">
+                            Daily Challenge Discussions
+                          </h2>
+                          <p className="text-sm text-gray-500">
+                            Click to view all discussions on "Daily Challenge"
+                          </p>
+                        </div>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition-colors"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-            {hasMore && (
-              <div className="flex justify-center mt-4 sm:mt-6">
-                <button
-                  onClick={handleLoadMore}
-                  className={`btn btn-outline mb-4 sm:mb-6 ${
-                    loadingMore ? "btn-disabled" : ""
-                  }`}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm mr-2"></span>
-                      Loading...
-                    </>
-                  ) : (
-                    "Load More"
-                  )}
-                </button>
               </div>
-            )}
-          </>
-        )}
+
+              {/* Scrollable Posts Content */}
+              <div className=" overflow-y-auto">
+                <div className="p-4 sm:p-6 sm:pl-12 w-full">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8 items-start">
+                    {/* General Programming Column */}
+                    <div className="flex flex-col ">
+                      <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                        {posts
+                          .filter((post) => post.topic === "general")
+                          .map((post) => (
+                            <div
+                              key={post.id}
+                              className="p-3 sm:p-4 lg:p-6  rounded-lg shadow-sm hover:shadow-md transition relative bg-base-200 h-full flex flex-col"
+                            >
+                              {(post.author_name === user.name ||
+                                post.author_name === user.username ||
+                                user.isModerator) && (
+                                <button
+                                  className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    showModal(
+                                      "Are you sure you want to delete this post? This action cannot be undone.",
+                                      "confirm",
+                                      post.id
+                                    );
+                                  }}
+                                >
+                                  <img
+                                    src={trashIcon}
+                                    alt="Delete"
+                                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                                  />
+                                </button>
+                              )}
+
+                              <div className="flex items-center gap-2 sm:gap-4 mt-2 pr-8 sm:pr-10">
+                                <h3
+                                  className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2 text-center sm:text-left w-full"
+                                  onClick={() => {
+                                    navigate(
+                                      `/dashboard/forum-detail/${post.id}`,
+                                      {
+                                        state: { post },
+                                      }
+                                    );
+                                  }}
+                                >
+                                  {post.title}
+                                </h3>
+                              </div>
+
+                              <p className="text-xs sm:text-sm text-gray-500 mb-2 flex flex-col sm:flex-row items-center sm:justify-start gap-0 sm:gap-2">
+                                <span>
+                                  By{" "}
+                                  <span className="font-semibold underline">
+                                    {post.author_name}
+                                  </span>
+                                </span>
+                                <span className="hidden sm:inline mx-1 text-gray-400">
+                                  •
+                                </span>
+                                <span className="italic text-gray-400">
+                                  {new Date(
+                                    post.date_created
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              </p>
+                              <p className="mt-2 text-gray-400 text-sm sm:text-base line-clamp-3 text-center sm:text-left flex-grow">
+                                {post.content && post.content.length > 100
+                                  ? post.content.slice(0, 70) + "..."
+                                  : post.content}
+                              </p>
+                              <div
+                                className="mt-3 sm:mt-4 flex justify-center sm:justify-end items-center gap-2 cursor-pointer"
+                                onClick={(e) => {
+                                  navigate(
+                                    `/dashboard/forum-detail/${post.id}`,
+                                    {
+                                      state: { post },
+                                    }
+                                  );
+                                }}
+                              >
+                                <p className="text-sm sm:text-base">
+                                  {post.comment_count}
+                                </p>
+                                <img
+                                  src={commentIcon}
+                                  alt="Comment"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 hover:opacity-80"
+                                />
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+
+                      {posts.filter((post) => post.topic === "general").length >
+                        6 && (
+                        <div className="flex justify-center mt-4 sm:mt-6">
+                          <button
+                            onClick={() => navigate("/dashboard/forum/general")}
+                            className="btn btn-outline"
+                          >
+                            View All General Posts
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Daily Challenge Column */}
+                    <div className="flex flex-col ">
+                      <div className="grid grid-cols-1 gap-4 sm:gap-6 ">
+                        {posts
+                          .filter((post) => post.topic === "daily-challenge")
+                          .map((post) => (
+                            <div
+                              key={post.id}
+                              className="p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition relative bg-base-200 h-full flex flex-col"
+                            >
+                              {(post.author_name === user.name ||
+                                post.author_name === user.username ||
+                                user.isModerator) && (
+                                <button
+                                  className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    showModal(
+                                      "Are you sure you want to delete this post? This action cannot be undone.",
+                                      "confirm",
+                                      post.id
+                                    );
+                                  }}
+                                >
+                                  <img
+                                    src={trashIcon}
+                                    alt="Delete"
+                                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
+                                  />
+                                </button>
+                              )}
+
+                              <div className="flex items-center gap-2 sm:gap-4 mt-2 pr-8 sm:pr-10">
+                                <h3
+                                  className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2 text-center sm:text-left w-full"
+                                  onClick={() => {
+                                    navigate(
+                                      `/dashboard/forum-detail/${post.id}`,
+                                      {
+                                        state: { post },
+                                      }
+                                    );
+                                  }}
+                                >
+                                  {post.title}
+                                </h3>
+                              </div>
+
+                              {/* Challenge Title Badge */}
+
+                              <p className="text-xs sm:text-sm text-gray-500 mb-2 flex flex-col sm:flex-row items-center sm:justify-start gap-0 sm:gap-2">
+                                <span>
+                                  By{" "}
+                                  <span className="font-semibold underline">
+                                    {post.author_name}
+                                  </span>
+                                </span>
+                                <span className="hidden sm:inline mx-1 text-gray-400">
+                                  •
+                                </span>
+                                <span className="italic text-gray-400">
+                                  {new Date(
+                                    post.date_created
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>{" "}
+                                {/* Left: Challenge Title Badge */}
+                                {post.challengeTitle ? (
+                                  <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1 py-1 rounded">
+                                    {post.challengeTitle}
+                                  </span>
+                                ) : (
+                                  <span /> // keeps spacing if no badge
+                                )}
+                              </p>
+                              <p className="mt-2 text-gray-400 text-sm sm:text-base line-clamp-3 text-center sm:text-left flex-grow">
+                                {post.content && post.content.length > 100
+                                  ? post.content.slice(0, 100) + "..."
+                                  : post.content}
+                              </p>
+                              <div className="mt-3 sm:mt-4 flex items-center justify-end gap-4">
+                                {/* Right: Comment Count and Icon */}
+                                <div
+                                  className="flex items-center gap-2 cursor-pointer"
+                                  onClick={(e) => {
+                                    navigate(
+                                      `/dashboard/forum-detail/${post.id}`,
+                                      {
+                                        state: { post },
+                                      }
+                                    );
+                                  }}
+                                >
+                                  <p className="text-sm sm:text-base">
+                                    {post.comment_count}
+                                  </p>
+                                  <img
+                                    src={commentIcon}
+                                    alt="Comment"
+                                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 hover:opacity-80"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+
+                      {posts.filter((post) => post.topic === "daily-challenge")
+                        .length > 6 && (
+                        <div className="flex justify-center mt-4 sm:mt-6">
+                          <button
+                            onClick={() =>
+                              navigate("/dashboard/forum/daily-challenge")
+                            }
+                            className="btn btn-outline"
+                          >
+                            View All Challenge Posts
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal element */}

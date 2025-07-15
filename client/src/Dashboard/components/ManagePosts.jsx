@@ -109,6 +109,7 @@ const ManagePosts = () => {
 
   const handleDeletePost = async (postId) => {
     try {
+      console.log(postId.id);
       await deleteReviewPost(postId, user.id);
       fetchPostsData();
       showModal("Post deleted successfully.", "deleted");
@@ -149,6 +150,7 @@ const ManagePosts = () => {
       showModal(
         `Are you sure you want to delete post with title "${item.title}"? This action cannot be undone.`,
         "delete",
+        item.id,
         item
       );
     } else if (type === "approve") {

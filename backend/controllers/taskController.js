@@ -3,6 +3,22 @@ const prisma = require("../lib/prisma");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
 const Challenge = require("../models/challenge");
 const { at } = require("../filters/macedonianProfanity");
+
+//Helper functions
+const safeSerialize = (data) => {
+  return JSON.parse(
+    JSON.stringify(data, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      if (typeof value === "bigint") {
+        return value.toString();
+      }
+      return value;
+    })
+  );
+};
+
 const getAllTasks = async (req, res) => {
   const userId = req.user.sub;
 
@@ -23,20 +39,6 @@ const getAllTasks = async (req, res) => {
       }),
       prisma.challenges.count(),
     ]);
-
-    const safeSerialize = (data) => {
-      return JSON.parse(
-        JSON.stringify(data, (key, value) => {
-          if (value instanceof Date) {
-            return value.toISOString();
-          }
-          if (typeof value === "bigint") {
-            return value.toString();
-          }
-          return value;
-        })
-      );
-    };
 
     const processedChallenges = challenges.map((challenge) => {
       const safeChallenge = safeSerialize(challenge);
@@ -104,20 +106,6 @@ const getTaskByDate = async (req, res) => {
       return res.status(404).json({ message: "No tasks found for this date" });
     }
 
-    const safeSerialize = (data) => {
-      return JSON.parse(
-        JSON.stringify(data, (key, value) => {
-          if (value instanceof Date) {
-            return value.toISOString();
-          }
-          if (typeof value === "bigint") {
-            return value.toString();
-          }
-          return value;
-        })
-      );
-    };
-
     const processedTasks = tasks.map((task) => {
       const safeTask = safeSerialize(task);
 
@@ -142,6 +130,54 @@ const getTaskByDate = async (req, res) => {
       message: "Internal server error",
       error: error.message,
       stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+};
+
+const getTasksForForumPost = async (req, res) => {
+  try {
+    console.log("Called");
+    const now = new Date();
+    const today = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
+
+    const startOfRange = new Date(today);
+    startOfRange.setUTCDate(startOfRange.getUTCDate() - 2);
+
+    const endOfRange = new Date(today);
+    endOfRange.setUTCDate(endOfRange.getUTCDate() + 1);
+
+    const challenges = await prisma.challenges.findMany({
+      where: {
+        solving_date: {
+          gte: startOfRange,
+          lt: endOfRange,
+        },
+      },
+      orderBy: { solving_date: "desc" },
+    });
+
+    const processedChallenges = challenges.map((challenge) => {
+      const safeChallenge = safeSerialize(challenge);
+      if (safeChallenge.test_cases) {
+        safeChallenge.test_cases = safeChallenge.test_cases.map((testCase) => ({
+          id: testCase.id,
+          input: testCase.input,
+          output: testCase.output,
+          challenge_id: testCase.challenge_id,
+        }));
+      }
+      return safeChallenge;
+    });
+
+    res.status(200).json(processedChallenges);
+  } catch (err) {
+    console.error("Error fetching tasks for forum post:", err);
+    res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
     });
   }
 };
@@ -196,19 +232,7 @@ const searchTaskByDate = async (req, res) => {
     if (challenges.length === 0) {
       return res.status(404).json({ message: "No tasks found for this date" });
     }
-    const safeSerialize = (data) => {
-      return JSON.parse(
-        JSON.stringify(data, (key, value) => {
-          if (value instanceof Date) {
-            return value.toISOString();
-          }
-          if (typeof value === "bigint") {
-            return value.toString();
-          }
-          return value;
-        })
-      );
-    };
+
     const parsedChallenges = challenges.map((task) => {
       const safeTask = safeSerialize(task);
 
@@ -653,4 +677,5 @@ module.exports = {
   getAllTestCasesForTask,
   deleteTask,
   createNewTask,
+  getTasksForForumPost,
 };

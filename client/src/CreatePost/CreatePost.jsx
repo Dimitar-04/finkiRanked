@@ -3,12 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { createForumPost } from "@/services/forumService";
 import { useAuth } from "@/contexts/AuthContext";
 import { createApprovalForumPost } from "@/services/reviewService";
+import { getTasksForForumPost } from "@/services/taskService";
 const CreatePost = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingModerator, setPendingModerator] = useState(false);
+  const [selectedChallengeId, setSelectedChallengeId] = useState(0);
+  const [challenges, setChallenges] = useState([]);
+  const [topic, setTopic] = useState("general");
   const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
   const navigate = useNavigate();
   useEffect(() => {
@@ -36,6 +40,28 @@ const CreatePost = () => {
     }
   };
 
+  const handleTopicChange = async (e) => {
+    const selectedTopic = e.target.value;
+    setTopic(selectedTopic);
+
+    if (selectedTopic === "daily-challenge") {
+      console.log(challenges);
+      if (!challenges || challenges.length === 0) {
+        try {
+          const response = await getTasksForForumPost();
+          setChallenges(response);
+        } catch (error) {
+          setChallenges([]);
+          console.error("Error fetching challenges:", error);
+          showModal(
+            "Failed to load challenges. Please try again later.",
+            "error"
+          );
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -52,6 +78,11 @@ const CreatePost = () => {
         content,
         authorId: user.id,
         authorName: user.username,
+        topic,
+        challengeId:
+          topic === "daily-challenge" && challenges.length > 0
+            ? challenges[selectedChallengeId]?.id || null
+            : null,
       };
       const res = await createForumPost(postData);
       if (res.message.includes("moderator approval")) {
@@ -121,6 +152,11 @@ const CreatePost = () => {
       setModal({ isOpen: false, message: "", type: "" });
     }
   };
+  useEffect(() => {
+    if (topic === "daily-challenge" && challenges.length > 0) {
+      setSelectedChallengeId(0);
+    }
+  }, [topic, challenges]);
 
   return (
     <div
@@ -228,6 +264,155 @@ const CreatePost = () => {
 
           <div className="card-body p-4 sm:p-6 lg:p-8">
             <div className="space-y-6 sm:space-y-8">
+              <div className="form-control w-full">
+                <label className="label mb-1.5">
+                  <span className="label-text text-base sm:text-lg font-medium">
+                    Topic
+                  </span>
+                </label>
+                <select
+                  value={topic}
+                  onChange={(e) => {
+                    setTopic(e.target.value);
+                    handleTopicChange(e);
+                  }}
+                  className="select select-bordered w-full"
+                  required
+                  disabled={isSubmitting}
+                >
+                  <option value="general">General Programming</option>
+                  <option value="daily-challenge">Daily Challenge</option>
+                </select>
+              </div>
+              {topic === "daily-challenge" &&
+                challenges.length > 0 &&
+                typeof selectedChallengeId === "number" && (
+                  <div className="form-control w-full">
+                    <label className="label mb-1.5">
+                      <span className="label-text text-base sm:text-lg font-medium">
+                        Select Challenge
+                      </span>
+                    </label>
+
+                    <div className="card bg-base-300 shadow-md border border-base-300">
+                      <div className="card-body p-4 sm:p-6">
+                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                          <button
+                            type="button"
+                            className="btn btn-circle btn-sm sm:btn-md btn-outline hover:btn-primary transition-all duration-200"
+                            onClick={() =>
+                              setSelectedChallengeId((i) =>
+                                Math.min(i + 1, challenges.length - 1)
+                              )
+                            }
+                            disabled={
+                              selectedChallengeId === challenges.length - 1
+                            }
+                            aria-label="Previous Challenge"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              className="w-4 h-4 sm:w-5 sm:h-5"
+                            >
+                              <path
+                                d="M15 19l-7-7 7-7"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+
+                          <div className="flex-1 text-center px-2">
+                            <h3 className="font-semibold text-base sm:text-lg text-base-content leading-tight">
+                              {challenges[selectedChallengeId]?.title
+                                .split("-")
+                                .map(
+                                  (word) =>
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                )
+                                .join(" ") || "No challenge title"}
+                            </h3>
+                            {challenges[selectedChallengeId]?.solving_date &&
+                              selectedChallengeId > 0 && (
+                                <p className="text-xs sm:text-sm text-base-content/70 mt-1">
+                                  This challenge was available on:{" "}
+                                  <span className="underline">
+                                    {new Date(
+                                      challenges[
+                                        selectedChallengeId
+                                      ].solving_date
+                                    ).toLocaleDateString("en-GB", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                </p>
+                              )}
+                          </div>
+
+                          <button
+                            type="button"
+                            className="btn btn-circle btn-sm sm:btn-md btn-outline hover:btn-primary transition-all duration-200"
+                            onClick={() =>
+                              setSelectedChallengeId((i) => Math.max(i - 1, 0))
+                            }
+                            disabled={selectedChallengeId === 0}
+                            aria-label="Next Challenge"
+                          >
+                            <svg
+                              width="20"
+                              height="20"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              className="w-4 h-4 sm:w-5 sm:h-5"
+                            >
+                              <path
+                                d="M9 5l7 7-7 7"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div className="mt-3 sm:mt-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="text-xs sm:text-sm text-base-content/60">
+                              This post will be linked to the selected challenge
+                            </span>
+                            <div
+                              className="tooltip tooltip-top"
+                              data-tip="Your post will appear in the challenge's discussion thread"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-4 h-4 text-base-content/40 cursor-help"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               <div className="form-control w-full">
                 <label className="label mb-1.5">
                   <span className="label-text text-base sm:text-lg font-medium">

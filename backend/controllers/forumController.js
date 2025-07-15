@@ -14,8 +14,8 @@ const {
   sendCommentedNotificationEmail,
 } = require("../services/emailService");
 const createForumPost = async (req, res) => {
-  const { title, content, authorId, authorName } = req.body;
-  if (!title || !content || !authorId || !authorName) {
+  const { title, content, authorId, authorName, topic, challengeId } = req.body;
+  if (!title || !content || !authorId || !authorName || !topic) {
     return res.status(400).json({
       error: "Title, content, authorId, and authorName are required",
     });
@@ -28,13 +28,15 @@ const createForumPost = async (req, res) => {
     const postCounter = user.postCounter;
     const postCheckCounter = user.postCheckCounter;
 
-    if (postCounter >= 1) {
+    if (postCounter >= -11) {
       const post = new ForumPost({
         title,
         content,
         authorId,
         authorName,
         dateCreated: new Date(),
+        topic: topic,
+        challengeId: challengeId || null,
       });
 
       const isProfane = filter.check(post.title);
@@ -93,8 +95,19 @@ const createForumPost = async (req, res) => {
           });
         }
       }
+      const { author_id, challenge_id, ...data } = post;
+
+      //Connect must be used becase multiple relations were introduced
       const savedPost = await prisma.forum_posts.create({
-        data: post,
+        data: {
+          ...data,
+          users: {
+            connect: { id: author_id },
+          },
+          challenges: challenge_id
+            ? { connect: { id: challenge_id } }
+            : undefined,
+        },
       });
 
       post.id = savedPost.id;
@@ -148,30 +161,57 @@ async function decrementPostCounter(userId) {
 
 const getForumPosts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 0;
-    const limit = parseInt(req.query.limit) || 5;
-    const skip = page * limit;
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
 
-    const posts = await prisma.forum_posts.findMany({
-      skip,
-      take: limit,
-      orderBy: {
-        date_created: "desc",
+    const generalPosts = await prisma.forum_posts.findMany({
+      where: {
+        topic: "general",
+        date_created: {
+          gte: fiveDaysAgo,
+        },
+      },
+      take: 5,
+      orderBy: [{ comment_count: "desc" }, { date_created: "desc" }],
+      include: {
+        challenges: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
       },
     });
 
-    const forumPosts = posts.map(
-      (post) =>
-        new ForumPost({
-          id: post.id,
-          title: post.title,
-          content: post.content,
-          authorName: post.author_name,
-          authorId: post.author_id,
-          dateCreated: post.date_created,
-          commentCount: post.comment_count,
-        })
-    );
+    const challengePosts = await prisma.forum_posts.findMany({
+      where: {
+        topic: "daily-challenge",
+        date_created: {
+          gte: fiveDaysAgo,
+        },
+      },
+      take: 5,
+      orderBy: [{ comment_count: "desc" }, { date_created: "desc" }],
+      include: {
+        challenges: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+    const forumPosts = [
+      ...generalPosts.map((post) => ({
+        ...post,
+        topic: "general",
+      })),
+      ...challengePosts.map((post) => ({
+        ...post,
+        topic: "daily-challenge",
+        challengeTitle: post.challenges.title,
+      })),
+    ];
 
     res.status(200).json(forumPosts);
   } catch (err) {

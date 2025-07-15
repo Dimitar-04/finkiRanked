@@ -21,29 +21,37 @@ model comments {
 }
 
 model to_be_reviewed {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   title         String?
-  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
   content       String?
-  author_id     String?  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_id     String?     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   author_name   String?
-  comment_count Int?     @default(0) @db.SmallInt
-  users         users?   @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "to_be_reviewed_author_id_fkey")
+  comment_count Int?        @default(0) @db.SmallInt
+  topic         String?
+  challenge_id  String?     @db.Uuid
+  users         users?      @relation(fields: [author_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "to_be_reviewed_author_id_fkey")
+  challenges    challenges? @relation(fields: [challenge_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([author_id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model forum_posts {
-  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title         String     @default("")
-  content       String?    @default("")
-  author_id     String?    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title         String      @default("")
+  content       String?     @default("")
+  author_id     String?     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   author_name   String?
-  date_created  DateTime?  @default(now()) @db.Date
-  comment_count Int        @default(0)
+  date_created  DateTime?   @default(now()) @db.Date
+  comment_count Int         @default(0)
+  topic         String?
+  challenge_id  String?     @db.Uuid
   comments      comments[]
-  users         users?     @relation(fields: [author_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "forum_posts_author_id_fkey")
+  users         users?      @relation(fields: [author_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "forum_posts_author_id_fkey")
+  challenges    challenges? @relation(fields: [challenge_id], references: [id], onUpdate: NoAction)
+
+  @@index([challenge_id], map: "idx_forum_posts_challenge_id")
 }
 
 model users {
@@ -70,17 +78,19 @@ model users {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model challenges {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  solving_date DateTime     @db.Date
-  title        String?
-  content      String?
-  attempted_by Int?         @db.SmallInt
-  solved_by    Int?         @db.SmallInt
-  expired      Boolean?
-  examples     Json?
-  output_type  String?
-  difficulty   String?
-  test_cases   test_cases[]
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  solving_date   DateTime         @db.Date
+  title          String?
+  content        String?
+  attempted_by   Int?             @db.SmallInt
+  solved_by      Int?             @db.SmallInt
+  expired        Boolean?
+  examples       Json?
+  output_type    String?
+  difficulty     String?
+  forum_posts    forum_posts[]
+  test_cases     test_cases[]
+  to_be_reviewed to_be_reviewed[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
