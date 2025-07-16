@@ -170,15 +170,29 @@ const sendModeratorManyPendingPostsEmail = async (userEmail, postsLength) => {
     console.error(`Failed to send approval email to ${userEmail}:`, error);
   }
 };
-const sendHourlyReviewNotification = async (userEmail, postsLength) => {
+const sendHourlyReviewNotification = async (userEmail, posts) => {
+  const postsList = posts
+    .map((post) => {
+      const date = new Date(post.created_at);
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      return `<li style="margin-bottom: 8px;"><strong>${post.title}</strong> (Created: ${formattedDate})</li>`;
+    })
+    .join('');
   const mailOptions = {
     from: 'FinkiRanked',
     to: userEmail,
-    subject: 'Action Required: Posts Awaiting Review',
+    subject: 'Hourly Reminder: Daily Challenge Posts Awaiting Review',
     html: `
-        <h1>Action Required: Posts Awaiting Review</h1>
-        <p>This is an automated notification to let you know that there are <strong>${postsLength}</strong> forum post(s) waiting for review.</p>
-        <p>These posts are related to the daily challenge and need your attention ASAP!.</p>
+        <h1>Hourly Reminder: Daily Challenge Posts Awaiting Review</h1>
+        <p>This is an automated notification to let you know that there are <strong>${posts.length}</strong> daily challenge forum post(s) waiting for review.</p>
+        <h3>Posts requiring review:</h3>
+        <ul style="padding-left: 20px;">
+          ${postsList}
+        </ul>
         <p>Please log in to the moderator dashboard at your earliest convenience to review and approve or reject these submissions.</p>
         <br>
         <p>Thank you for your help in maintaining our community standards.</p>

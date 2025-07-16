@@ -5,11 +5,11 @@ import {
   useEffect,
   useRef,
   useCallback,
-} from "react";
-import { useNavigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
-import { loginUser, registerUser } from "@/services/registerLoginService";
-import { jwtDecode } from "jwt-decode";
+} from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
+import { loginUser, registerUser } from '@/services/registerLoginService';
+
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -17,7 +17,7 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      storageKey: "supabase-auth-token",
+      storageKey: 'supabase-auth-token',
       storage: localStorage,
     },
   }
@@ -39,19 +39,19 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(async () => {
     clearTimeout(inactivityTimeoutRef.current);
     clearTimeout(tokenExpiryTimeoutRef.current);
-    navigate("/");
+    navigate('/');
     await supabase.auth.signOut();
 
-    localStorage.removeItem("user");
-    localStorage.removeItem("jwt");
-    localStorage.removeItem("lastActivityTimestamp");
+    localStorage.removeItem('user');
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('lastActivityTimestamp');
     setUser(null);
     userRef.current = null;
   }, [navigate]);
   useEffect(() => {
     const checkStaleSession = () => {
-      const storedUser = localStorage.getItem("user");
-      const lastActivity = localStorage.getItem("lastActivityTimestamp");
+      const storedUser = localStorage.getItem('user');
+      const lastActivity = localStorage.getItem('lastActivityTimestamp');
 
       if (storedUser && lastActivity) {
         const inactiveTime = Date.now() - parseInt(lastActivity);
@@ -66,11 +66,11 @@ export const AuthProvider = ({ children }) => {
   }, [navigate, INACTIVITY_TIMEOUT]);
   const resetInactivityTimer = useCallback(() => {
     const now = Date.now();
-    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
+    localStorage.setItem('lastActivityTimestamp', Date.now().toString());
     clearTimeout(inactivityTimeoutRef.current);
     if (userRef.current) {
       inactivityTimeoutRef.current = setTimeout(() => {
-        console.warn("Logged out due to inactivity");
+        console.warn('Logged out due to inactivity');
         logout();
       }, INACTIVITY_TIMEOUT);
     }
@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
         password,
       });
       if (error || !data.session?.access_token) {
-        return { success: false, error: error?.message || "Login failed" };
+        return { success: false, error: error?.message || 'Login failed' };
       }
 
       const backendData = await loginUser({ email });
@@ -94,8 +94,8 @@ export const AuthProvider = ({ children }) => {
 
       setUser(backendData.user);
       userRef.current = backendData.user.id;
-      localStorage.setItem("user", JSON.stringify(backendData.user));
-      localStorage.setItem("jwt", data.session.access_token);
+      localStorage.setItem('user', JSON.stringify(backendData.user));
+      localStorage.setItem('jwt', data.session.access_token);
       resetInactivityTimer();
       return { success: true };
     },
@@ -135,7 +135,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           return {
             success: false,
-            error: "An unexpected network error occurred.",
+            error: 'An unexpected network error occurred.',
           };
         }
       }
@@ -144,7 +144,7 @@ export const AuthProvider = ({ children }) => {
   );
 
   useEffect(() => {
-    const localUser = localStorage.getItem("user");
+    const localUser = localStorage.getItem('user');
     if (localUser) {
       setUser(localUser);
     }
@@ -152,12 +152,12 @@ export const AuthProvider = ({ children }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log(event);
-        if (event === "TOKEN_REFRESHED" && session) {
+        if (event === 'TOKEN_REFRESHED' && session) {
           const now = Date.now();
           const readableTime = new Date(now).toLocaleString();
           console.log(`Token reset at: ${readableTime}`);
 
-          localStorage.setItem("jwt", session.access_token);
+          localStorage.setItem('jwt', session.access_token);
 
           return;
         }
@@ -166,9 +166,9 @@ export const AuthProvider = ({ children }) => {
           if (backendData.success) {
             setUser(backendData.user);
             userRef.current = backendData.user.id;
-            localStorage.setItem("user", JSON.stringify(backendData.user));
-            localStorage.setItem("jwt", session.access_token);
-            if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+            localStorage.setItem('user', JSON.stringify(backendData.user));
+            localStorage.setItem('jwt', session.access_token);
+            if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
               resetInactivityTimer();
             }
           } else {
@@ -177,8 +177,8 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUser(null);
           userRef.current = null;
-          localStorage.removeItem("user");
-          localStorage.removeItem("jwt");
+          localStorage.removeItem('user');
+          localStorage.removeItem('jwt');
         }
         setLoading(false);
       }
@@ -190,7 +190,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const events = ["click", "mousemove", "keydown", "scroll", "touchstart"];
+    const events = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'];
     const handleActivity = () => resetInactivityTimer();
     events.forEach((event) => window.addEventListener(event, handleActivity));
     return () =>
@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }) => {
   const updateUser = useCallback((newUserData) => {
     setUser(newUserData);
 
-    localStorage.setItem("user", JSON.stringify(newUserData));
+    localStorage.setItem('user', JSON.stringify(newUserData));
   }, []);
   return (
     <AuthContext.Provider

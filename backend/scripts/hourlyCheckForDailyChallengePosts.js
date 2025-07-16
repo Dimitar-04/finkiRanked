@@ -7,19 +7,39 @@ const prisma = require('../lib/prisma');
 
 async function checkForNewReviews() {
   const scriptExecutionTime = new Date();
+  const currentHour = scriptExecutionTime.getHours();
+
+  if (currentHour >= 1 && currentHour < 7) {
+    console.log(
+      `[${scriptExecutionTime.toISOString()}] Skipping hourly review check (between 1AM and 7AM).`
+    );
+    return;
+  }
   console.log(
     `[${scriptExecutionTime.toISOString()}] Starting hourly review check process`
   );
 
   try {
-    const postsToReviewCount = await prisma.to_be_reviewed.count();
+    const posts = await prisma.to_be_reviewed.findMany({
+      where: {
+        topic: 'daily-challenge',
+      },
+      select: {
+        title: true,
+        created_at: true,
+      },
+      orderBy: {
+        created_at: 'asc',
+      },
+    });
 
     console.log(
-      `[${scriptExecutionTime.toISOString()}] Found ${postsToReviewCount} post(s) awaiting review.`
+      `[${scriptExecutionTime.toISOString()}] Found ${
+        posts.length
+      } daily-challenge post(s) awaiting review.`
     );
 
-    // If there are no posts, do nothing.
-    if (postsToReviewCount === 0) {
+    if (posts.length === 0) {
       console.log(
         `[${scriptExecutionTime.toISOString()}] No new posts to review. Skipping email notification.`
       );
@@ -47,7 +67,7 @@ async function checkForNewReviews() {
 
     for (const email of moderatorEmails) {
       try {
-        await sendHourlyReviewNotification(email, postsToReviewCount);
+        await sendHourlyReviewNotification(email, posts);
         console.log(
           `[${scriptExecutionTime.toISOString()}] Hourly notification sent to ${email}`
         );
