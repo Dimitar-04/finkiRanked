@@ -53,6 +53,7 @@ const Forum = () => {
       }
 
       const data = await getForumPosts(page, postsPerPage);
+      console.log(data);
 
       if (page === 0) {
         setPosts(data);

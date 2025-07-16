@@ -104,7 +104,21 @@ const ForumPostDetail = () => {
       setCommentText("");
       fetchComments();
     } catch (err) {
-      setError(err.message || "Failed to post comment");
+      // Check for inappropriate language error from backend
+      const message =
+        err?.response?.data?.error || err?.message || "Failed to post comment";
+      if (
+        message.toLowerCase().includes("inappropriate language") ||
+        message.toLowerCase().includes("not on topic") ||
+        message.toLowerCase().includes("profanity")
+      ) {
+        showModal(
+          "Your comment was not posted because it contains inappropriate language or is not on topic.",
+          "error"
+        );
+      } else {
+        setError(message);
+      }
       console.error("Error posting comment:", err);
     } finally {
       setPosting(false);
@@ -248,6 +262,23 @@ const ForumPostDetail = () => {
                   </svg>
                 </div>
               )}
+              {modal.type === "error" && (
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-error flex items-center justify-center shrink-0">
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-error-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              )}
               {modal.type === "success" && (
                 <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
@@ -265,9 +296,15 @@ const ForumPostDetail = () => {
                   </svg>
                 </div>
               )}
-              <h3 className="font-bold text-lg" id="modal-title">
-                Delete Comment
-              </h3>
+              {modal.type === "confirm" || modal.type == "success" ? (
+                <h3 className="font-bold text-lg" id="modal-title">
+                  Delete Comment
+                </h3>
+              ) : (
+                <h3 className="font-bold text-lg" id="modal-title">
+                  Comment Not Allowed
+                </h3>
+              )}
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end gap-3 mt-4">
