@@ -165,30 +165,13 @@ const getForumPosts = async (req, res) => {
     const skip = parseInt(page) * parseInt(limit);
     const take = parseInt(limit);
 
-    const generalPosts = await prisma.forum_posts.findMany({
-      where: {
-        topic: "general",
+    // Fetch all posts regardless of topic
+    const allPosts = await prisma.forum_posts.findMany({
+      skip: skip,
+      take: take,
+      orderBy: {
+        date_created: "desc"
       },
-      take: Math.ceil(take / 2),
-      skip: Math.floor(skip / 2),
-      orderBy: [{ date_created: "desc" }],
-      include: {
-        challenges: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-    });
-
-    const challengePosts = await prisma.forum_posts.findMany({
-      where: {
-        topic: "daily-challenge",
-      },
-      take: Math.ceil(take / 2),
-      skip: Math.floor(skip / 2),
-      orderBy: [{ date_created: "desc" }],
       include: {
         challenges: {
           select: {
@@ -199,17 +182,10 @@ const getForumPosts = async (req, res) => {
       },
     });
     
-    const forumPosts = [
-      ...generalPosts.map((post) => ({
-        ...post,
-        topic: "general",
-      })),
-      ...challengePosts.map((post) => ({
-        ...post,
-        topic: "daily-challenge",
-        challengeTitle: post.challenges?.title || null,
-      })),
-    ];
+    const forumPosts = allPosts.map((post) => ({
+      ...post,
+      challengeTitle: post.challenges?.title || null,
+    }));
 
     res.status(200).json(forumPosts);
   } catch (err) {

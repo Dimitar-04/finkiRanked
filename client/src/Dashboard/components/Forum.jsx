@@ -10,6 +10,9 @@ const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState({
     isOpen: false,
     message: "",
@@ -41,18 +44,38 @@ const Forum = () => {
     fetchPosts();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (pageNum = 0, append = false) => {
     try {
-      setLoading(true);
-      const data = await getForumPosts(0, postsPerPage);
+      if (!append) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const data = await getForumPosts(pageNum, postsPerPage);
       console.log("Fetched forum posts:", data);
       console.log("Total posts fetched:", data.length);
-      setPosts(data);
+
+      if (append) {
+        setPosts((prevPosts) => [...prevPosts, ...data]);
+      } else {
+        setPosts(data);
+      }
+
+      // Check if there are more posts to load
+      setHasMore(data.length === postsPerPage);
+      setPage(pageNum);
     } catch (error) {
       console.error("Error fetching forum posts:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const loadMore = async () => {
+    const nextPage = page + 1;
+    await fetchPosts(nextPage, true);
   };
 
   const handleDeletePost = async (postId) => {
@@ -110,7 +133,7 @@ const Forum = () => {
               {/* Scrollable Posts Content */}
               <div className=" overflow-y-auto">
                 <div className="p-4 sm:p-6 sm:pl-12 w-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
                     {posts.map((post) => (
                       <div
                         key={post.id}
@@ -221,6 +244,26 @@ const Forum = () => {
                       </div>
                     ))}
                   </div>
+
+                  {/* Load More Button */}
+                  {hasMore && (
+                    <div className="flex justify-center mt-6 sm:mt-8">
+                      <button
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        className="btn btn-tertiary"
+                      >
+                        {loadingMore ? (
+                          <>
+                            <span className="loading loading-spinner loading-sm mr-2"></span>
+                            Loading...
+                          </>
+                        ) : (
+                          "Load More"
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
