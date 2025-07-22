@@ -161,17 +161,147 @@ async function decrementPostCounter(userId) {
 
 const getForumPosts = async (req, res) => {
   try {
-    const { page = 0, limit = 20 } = req.query;
-    const skip = parseInt(page) * parseInt(limit);
-    const take = parseInt(limit);
+    console.log("Received query params:", req.query);
+    console.log("Request URL:", req.originalUrl);
+    
+    // Extract parameters with strict type checking and debug output
+    const page = req.query.page !== undefined ? parseInt(req.query.page) : 0;
+    const limit = req.query.limit !== undefined ? parseInt(req.query.limit) : 20;
+    
+    // Topic needs special handling
+    const topic = req.query.topic || null;
+    console.log(`Topic parameter received: "${topic}"`);
+    
+    const sort = req.query.sort || null;
+    const date = req.query.date || null;
+    const commentSort = req.query.commentSort || null;
+    
+    console.log("Parsed parameters:", { page, limit, topic, sort, date, commentSort });
+    
+    const skip = page * limit;
+    const take = limit;
 
-    // Fetch all posts regardless of topic
+    // Build filter conditions
+    const whereCondition = {};
+    
+    // Filter by topic if provided
+    if (topic && topic !== 'all') {
+      console.log(`Filtering by topic: "${topic}" (type: ${typeof topic})`);
+      
+      // Force string comparison with trim to handle potential whitespace issues
+      const trimmedTopic = topic.toString().trim();
+      console.log(`Trimmed topic: "${trimmedTopic}"`);
+      
+      // Debug all current topics in database
+      console.log("DEBUG - Will now run a direct DB query to check topics");
+      
+      try {
+        // This will log the actual filtered posts count directly from the database
+        const dbPosts = await prisma.forum_posts.findMany({
+          where: { topic: trimmedTopic },
+          select: { id: true }
+        });
+        console.log(`DIRECT DB QUERY: Found ${dbPosts.length} posts with topic "${trimmedTopic}"`);
+        
+        // Set the correct topic filter
+        whereCondition.topic = trimmedTopic;
+      } catch (err) {
+        console.error("Error in direct DB query:", err);
+        // Fallback to original behavior
+        whereCondition.topic = topic;
+      }
+      
+      console.log("Final whereCondition.topic set to:", whereCondition.topic);
+    }
+    
+    // Filter by specific date if provided
+    if (date) {
+      console.log(`Filtering by specific date: "${date}"`);
+      
+      try {
+        // Create a date object from the provided date string
+        const selectedDate = new Date(date);
+        
+        // Ensure the date is valid
+        if (isNaN(selectedDate.getTime())) {
+          console.error(`Invalid date provided: "${date}"`);
+        } else {
+          // Set to beginning of the day (midnight)
+          selectedDate.setHours(0, 0, 0, 0);
+          
+          // Calculate the end of the day (next day midnight)
+          const nextDay = new Date(selectedDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          
+          console.log(`Date range: ${selectedDate.toISOString()} to ${nextDay.toISOString()}`);
+          
+          // Add to where condition
+          whereCondition.date_created = {
+            gte: selectedDate,
+            lt: nextDay
+          };
+          
+          // Verify with a direct database query to check post count for this date
+          try {
+            const dateCheckResult = await prisma.forum_posts.count({
+              where: {
+                date_created: {
+                  gte: selectedDate,
+                  lt: nextDay
+                }
+              }
+            });
+            console.log(`DIRECT DB CHECK: Found ${dateCheckResult} posts on date ${date}`);
+          } catch (err) {
+            console.error("Error in direct DB date check:", err);
+          }
+        }
+      } catch (err) {
+        console.error(`Error processing date filter "${date}":`, err);
+      }
+    }
+    
+    console.log("Using where condition:", JSON.stringify(whereCondition));
+    
+    // Determine ordering - using an array to support multiple sorting criteria
+    let orderBy = [];
+    
+    // First, handle comment popularity sorting if specified
+    if (commentSort === 'most-popular') {
+      console.log("Applying MOST popular sorting");
+      orderBy.push({ comment_count: 'desc' });
+      
+      // Add date as secondary sort to make results consistent
+      orderBy.push({ date_created: 'desc' });
+      console.log("Added secondary date sorting (newest first) for consistency");
+    } else if (commentSort === 'least-popular') {
+      console.log("Applying LEAST popular sorting");
+      orderBy.push({ comment_count: 'asc' });
+      
+      // Add date as secondary sort to make results consistent
+      orderBy.push({ date_created: 'desc' });
+      console.log("Added secondary date sorting (newest first) for consistency");
+    } 
+    // Only apply date sorting as primary sort if comment sorting isn't specified
+    else {
+      // Always apply date sorting (either as primary or secondary criterion)
+      if (sort === 'oldest') {
+        console.log("Applying oldest first date sorting as primary criterion");
+        orderBy.push({ date_created: 'asc' });
+      } else {
+        console.log("Applying newest first date sorting as primary criterion");
+        orderBy.push({ date_created: 'desc' });
+      }
+    }
+    
+    console.log("Final sort order:", JSON.stringify(orderBy));
+
+    // Fetch posts with filters
     const allPosts = await prisma.forum_posts.findMany({
       skip: skip,
       take: take,
-      orderBy: {
-        date_created: "desc"
-      },
+      where: whereCondition,
+      orderBy: orderBy,
       include: {
         challenges: {
           select: {
@@ -187,6 +317,95 @@ const getForumPosts = async (req, res) => {
       challengeTitle: post.challenges?.title || null,
     }));
 
+    // Enhanced debug output
+    console.log(`Returning ${forumPosts.length} posts with filters:`, {
+      whereCondition,
+      orderBy,
+      skip,
+      take
+    });
+    
+    // Log topic distribution to help debug topic filtering issues
+    if (topic && topic !== 'all') {
+      const topicsInResult = {};
+      forumPosts.forEach(post => {
+        topicsInResult[post.topic] = (topicsInResult[post.topic] || 0) + 1;
+      });
+      
+      console.log("TOPIC DISTRIBUTION IN RESULTS:", topicsInResult);
+      
+      // Check if filtering was successful
+      const nonMatchingCount = forumPosts.filter(post => post.topic !== topic).length;
+      if (nonMatchingCount > 0) {
+        console.warn(`WARNING: Found ${nonMatchingCount} posts with wrong topic in results!`);
+      }
+    }
+    
+    // Log sorting analysis to help with debugging
+    if (forumPosts.length > 0) {
+      // Comment count analysis for popularity sort debugging
+      if (commentSort) {
+        console.log("COMMENT COUNT ANALYSIS:");
+        const counts = forumPosts.map(p => p.comment_count);
+        console.log(`- Min: ${Math.min(...counts)}, Max: ${Math.max(...counts)}`);
+      }
+      
+      // Date sorting and filtering analysis
+      console.log("DATE ANALYSIS:");
+      const dates = forumPosts.map(p => new Date(p.date_created).getTime());
+      
+      if (dates.length > 0) {
+        const minDate = new Date(Math.min(...dates));
+        const maxDate = new Date(Math.max(...dates));
+        console.log(`- Posts date range: ${minDate.toISOString()} to ${maxDate.toISOString()}`);
+        
+        // If specific date filter was applied, verify it's working
+        if (date) {
+          const filterDate = new Date(date);
+          filterDate.setHours(0, 0, 0, 0);
+          const nextDay = new Date(filterDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          
+          console.log(`- Specific date filter: ${filterDate.toISOString()} to ${nextDay.toISOString()}`);
+          
+          // Check if all posts are within the filtered date range
+          const postsInRange = forumPosts.filter(p => {
+            const postDate = new Date(p.date_created);
+            return postDate >= filterDate && postDate < nextDay;
+          });
+          
+          console.log(`- Posts matching date filter: ${postsInRange.length}/${forumPosts.length}`);
+          
+          if (postsInRange.length < forumPosts.length) {
+            console.warn('⚠️ WARNING: Some posts do not match the date filter!');
+          }
+        }
+      } else {
+        console.log('- No posts to analyze dates');
+      }
+      
+      // First three posts details
+      console.log(`FIRST THREE POSTS:`, forumPosts.slice(0, 3).map(p => ({
+        id: p.id,
+        topic: p.topic,
+        comments: p.comment_count,
+        date: new Date(p.date_created).toISOString().split('T')[0]
+      })));
+    }
+
+    // Set cache control headers to prevent caching
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    
+    // Add response information to help debug the filtering
+    res.set('X-Total-Posts', forumPosts.length.toString());
+    res.set('X-Filter-Topic', topic || 'none');
+    res.set('X-Filter-Applied', JSON.stringify(whereCondition));
+    res.set('X-Sort-Order', JSON.stringify(orderBy));
+    
+    console.log(`RESPONSE: Sending ${forumPosts.length} posts with filter:`, whereCondition);
+    
     res.status(200).json(forumPosts);
   } catch (err) {
     console.error("Server error:", err);
