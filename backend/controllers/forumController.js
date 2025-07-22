@@ -161,18 +161,17 @@ async function decrementPostCounter(userId) {
 
 const getForumPosts = async (req, res) => {
   try {
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    const { page = 0, limit = 20 } = req.query;
+    const skip = parseInt(page) * parseInt(limit);
+    const take = parseInt(limit);
 
     const generalPosts = await prisma.forum_posts.findMany({
       where: {
         topic: "general",
-        date_created: {
-          gte: fiveDaysAgo,
-        },
       },
-      take: 5,
-      orderBy: [{ comment_count: "desc" }, { date_created: "desc" }],
+      take: Math.ceil(take / 2),
+      skip: Math.floor(skip / 2),
+      orderBy: [{ date_created: "desc" }],
       include: {
         challenges: {
           select: {
@@ -186,12 +185,10 @@ const getForumPosts = async (req, res) => {
     const challengePosts = await prisma.forum_posts.findMany({
       where: {
         topic: "daily-challenge",
-        date_created: {
-          gte: fiveDaysAgo,
-        },
       },
-      take: 5,
-      orderBy: [{ comment_count: "desc" }, { date_created: "desc" }],
+      take: Math.ceil(take / 2),
+      skip: Math.floor(skip / 2),
+      orderBy: [{ date_created: "desc" }],
       include: {
         challenges: {
           select: {
@@ -201,6 +198,7 @@ const getForumPosts = async (req, res) => {
         },
       },
     });
+    
     const forumPosts = [
       ...generalPosts.map((post) => ({
         ...post,
@@ -209,7 +207,7 @@ const getForumPosts = async (req, res) => {
       ...challengePosts.map((post) => ({
         ...post,
         topic: "daily-challenge",
-        challengeTitle: post.challenges.title,
+        challengeTitle: post.challenges?.title || null,
       })),
     ];
 
