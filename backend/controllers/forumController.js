@@ -175,8 +175,9 @@ const getForumPosts = async (req, res) => {
     const sort = req.query.sort || null;
     const date = req.query.date || null;
     const commentSort = req.query.commentSort || null;
+    const search = req.query.search || null;
     
-    console.log("Parsed parameters:", { page, limit, topic, sort, date, commentSort });
+    console.log("Parsed parameters:", { page, limit, topic, sort, date, commentSort, search });
     
     const skip = page * limit;
     const take = limit;
@@ -259,6 +260,51 @@ const getForumPosts = async (req, res) => {
       } catch (err) {
         console.error(`Error processing date filter "${date}":`, err);
       }
+    }
+
+    // Filter by search text if provided
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      console.log(`Filtering by search text: "${searchTerm}"`);
+      
+      // Use Prisma's OR condition to search in both title and content
+      // Case-insensitive search using contains with mode: 'insensitive'
+      const searchCondition = {
+        OR: [
+          {
+            title: {
+              contains: searchTerm,
+              mode: 'insensitive'
+            }
+          },
+          {
+            content: {
+              contains: searchTerm,
+              mode: 'insensitive'
+            }
+          }
+        ]
+      };
+      
+      // If we already have other conditions, combine them with AND
+      if (Object.keys(whereCondition).length > 0) {
+        whereCondition.AND = [
+          { ...whereCondition },
+          searchCondition
+        ];
+        
+        // Clear the original conditions since they're now in AND
+        Object.keys(whereCondition).forEach(key => {
+          if (key !== 'AND') {
+            delete whereCondition[key];
+          }
+        });
+      } else {
+        // If no other conditions, just use the search condition
+        Object.assign(whereCondition, searchCondition);
+      }
+      
+      console.log("Search condition applied:", JSON.stringify(searchCondition));
     }
     
     console.log("Using where condition:", JSON.stringify(whereCondition));

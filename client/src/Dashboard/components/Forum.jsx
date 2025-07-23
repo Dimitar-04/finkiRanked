@@ -32,6 +32,7 @@ const Forum = () => {
     dateSort: "newest", // "newest", "oldest"
     selectedDate: null, // specific date filter
     commentSort: "none", // "none", "most-popular", "least-popular"
+    searchText: "", // text search in title and content
   };
 
   // Initialize filters state with the default values
@@ -256,7 +257,31 @@ const Forum = () => {
         }
       }
 
-      // 4. Apply date sorting if needed (and if comment sorting wasn't applied)
+      // 4. Apply text search filtering if needed
+      if (
+        filtersToApply.searchText &&
+        filtersToApply.searchText.trim() &&
+        data.length > 0
+      ) {
+        const searchTerm = filtersToApply.searchText.trim().toLowerCase();
+        console.log(`Applying client-side text search for: "${searchTerm}"`);
+
+        const beforeCount = data.length;
+        data = data.filter((post) => {
+          const titleMatch =
+            post.title && post.title.toLowerCase().includes(searchTerm);
+          const contentMatch =
+            post.content && post.content.toLowerCase().includes(searchTerm);
+          return titleMatch || contentMatch;
+        });
+
+        console.log(
+          `Client-side text search filtered: ${beforeCount} → ${data.length} posts`
+        );
+        appliedClientSideFiltering = true;
+      }
+
+      // 5. Apply date sorting if needed (and if comment sorting wasn't applied)
       if (
         filtersToApply.dateSort &&
         data.length > 1 &&
@@ -448,7 +473,7 @@ const Forum = () => {
 
         {/* Filter Navbar */}
         <div className="sticky top-[73px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
-          <div className="p-3 sm:p-4 sm:pl-12 w-full max-w-7xl mx-auto">
+          <div className="p-3 sm:p-4 sm:pl-12 w-full max-w-full mx-auto">
             {/* Mobile Filter Toggle */}
             <div className="flex items-center justify-between mb-3 lg:hidden">
               <h3 className="text-lg font-semibold">Filters</h3>
@@ -476,7 +501,23 @@ const Forum = () => {
 
             {/* Filter Controls */}
             <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 mb-3 max-w-6xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-3 max-w-full">
+                {/* Search Filter - Takes 2 columns to be wider */}
+                <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-2">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Search Posts
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Search titles and content..."
+                    value={filters.searchText}
+                    onChange={(e) =>
+                      setFilters({ ...filters, searchText: e.target.value })
+                    }
+                    className="input input-sm input-bordered w-full text-sm"
+                  />
+                </div>
+
                 {/* Topic Filter */}
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -576,22 +617,22 @@ const Forum = () => {
                 </div>
 
                 {/* Clear Filters & Apply Buttons */}
-                <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-2">
+                <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                     Actions
                   </label>
-                  <div className="flex gap-2 max-w-md">
+                  <div className="flex gap-1">
                     <button
                       onClick={clearFilters}
-                      className="cursor-pointer px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm font-medium flex-1 max-w-32"
+                      className="cursor-pointer px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium w-16"
                     >
                       Clear
                     </button>
                     <button
                       onClick={applyFilters}
-                      className="cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm font-medium flex-1 max-w-40"
+                      className="cursor-pointer px-2 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs font-medium w-16"
                     >
-                      Apply Filters
+                      Apply
                     </button>
                   </div>
                 </div>
@@ -605,6 +646,11 @@ const Forum = () => {
                     {filters.topic === "general"
                       ? "General"
                       : "Daily Challenge"}
+                  </span>
+                )}
+                {filters.searchText && filters.searchText.trim() && (
+                  <span className="badge badge-outline badge-sm">
+                    Search: "{filters.searchText.trim()}"
                   </span>
                 )}
                 {filters.dateSort !== "newest" && (

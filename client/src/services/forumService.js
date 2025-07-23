@@ -85,6 +85,22 @@ export const getForumPosts = async (page, limit, filters = null) => {
         console.log(`Expected behavior: First filter by ${filters.topic}, then sort by comment count`);
       }
     }
+
+    // Add text search filter
+    if (filters.searchText && filters.searchText.trim()) {
+      const searchTerm = encodeURIComponent(filters.searchText.trim());
+      console.log(`Adding text search filter: "${filters.searchText.trim()}"`);
+      url += `&search=${searchTerm}`;
+      
+      // Log combined filter details when using search with other filters
+      if (filters.topic && filters.topic !== 'all') {
+        console.log(`COMBINED FILTERS: Topic=${filters.topic} with text search="${filters.searchText.trim()}"`);
+      }
+      
+      if (filters.selectedDate) {
+        console.log(`COMBINED FILTERS: Text search="${filters.searchText.trim()}" with specific date filtering`);
+      }
+    }
   }
   
   console.log("Making API request to:", url);
