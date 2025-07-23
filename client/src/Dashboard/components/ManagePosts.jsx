@@ -17,10 +17,6 @@ const ManagePosts = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [submittedQuery, setSubmittedQuery] = useState("");
-  const [selectedDate, setSelectedDate] = useState(null);
-
   const [error, setError] = useState(null);
   const postsPerPage = 5;
 
@@ -33,6 +29,99 @@ const ManagePosts = () => {
     post: null,
   });
   const [isActionLoading, setIsActionLoading] = useState(false);
+
+  // Filter states
+  const defaultFilters = {
+    topic: "all", // "all", "general", "daily-challenge"
+    dateSort: "newest", // "newest", "oldest"
+    selectedDate: null, // specific date filter
+    searchText: "", // text search in title and content
+  };
+
+  const [filters, setFilters] = useState({ ...defaultFilters });
+  const [appliedFilters, setAppliedFilters] = useState({ ...defaultFilters });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Apply filters to posts
+  const applyFiltersToPendingPosts = (posts, activeFilters) => {
+    let filteredPosts = [...posts];
+
+    // 1. Apply text search filter
+    if (activeFilters.searchText && activeFilters.searchText.trim()) {
+      const searchTerm = activeFilters.searchText.trim().toLowerCase();
+      filteredPosts = filteredPosts.filter((post) => {
+        const titleMatch =
+          post.title && post.title.toLowerCase().includes(searchTerm);
+        const contentMatch =
+          post.content && post.content.toLowerCase().includes(searchTerm);
+        const authorMatch =
+          post.author_name &&
+          post.author_name.toLowerCase().includes(searchTerm);
+        return titleMatch || contentMatch || authorMatch;
+      });
+    }
+
+    // 2. Apply topic filter
+    if (activeFilters.topic && activeFilters.topic !== "all") {
+      filteredPosts = filteredPosts.filter(
+        (post) => post.topic === activeFilters.topic
+      );
+    }
+
+    // 3. Apply specific date filter
+    if (activeFilters.selectedDate) {
+      try {
+        const filterDate =
+          activeFilters.selectedDate instanceof Date
+            ? new Date(activeFilters.selectedDate)
+            : new Date(String(activeFilters.selectedDate));
+
+        if (!isNaN(filterDate.getTime())) {
+          filterDate.setHours(0, 0, 0, 0);
+          const nextDay = new Date(filterDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+
+          filteredPosts = filteredPosts.filter((post) => {
+            const postDate = new Date(post.created_at);
+            return postDate >= filterDate && postDate < nextDay;
+          });
+        }
+      } catch (err) {
+        console.error("Error in date filtering:", err);
+      }
+    }
+
+    // 4. Apply date sorting (comment sorting not applicable for pending posts)
+    if (activeFilters.dateSort) {
+      filteredPosts = filteredPosts.sort((a, b) => {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+
+        if (activeFilters.dateSort === "oldest") {
+          return dateA - dateB;
+        } else {
+          return dateB - dateA;
+        }
+      });
+    }
+
+    return filteredPosts;
+  };
+
+  // Apply all selected filters
+  const applyFilters = () => {
+    console.log("Applying filters:", filters);
+    const currentFilters = { ...filters };
+    setAppliedFilters(currentFilters);
+  };
+
+  // Clear all filters and reset to default
+  const clearFilters = () => {
+    console.log("Clearing filters, using defaults:", defaultFilters);
+    const freshDefaultFilters = { ...defaultFilters };
+    setFilters(freshDefaultFilters);
+    setAppliedFilters(freshDefaultFilters);
+  };
 
   const showModal = (message, type, postId = null, post = null) => {
     setModal({ isOpen: true, message, type, postId, post });
@@ -69,8 +158,8 @@ const ManagePosts = () => {
         pageToFetch,
         postsPerPage,
         user.id,
-        searchQuery,
-        selectedDate
+        null, // search - using client-side filtering instead
+        null // date - using client-side filtering instead
       );
 
       setPosts(data.posts);
@@ -86,21 +175,12 @@ const ManagePosts = () => {
     } finally {
       setIsFetching(false);
     }
-  }, [user?.id, searchQuery, selectedDate, page]);
+  }, [user?.id, page]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [submittedQuery, selectedDate]);
   useEffect(() => {
     fetchPostsData();
-  }, [submittedQuery, selectedDate, user?.id]);
+  }, [user?.id]);
 
-  const handleSearchKeyDown = (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      setSubmittedQuery(searchQuery);
-    }
-  };
   useEffect(() => {
     if (page > 0) {
       fetchPostsData(false);
@@ -169,6 +249,9 @@ const ManagePosts = () => {
     }
   };
 
+  // Apply filters to get filtered posts
+  const filteredPosts = applyFiltersToPendingPosts(posts, appliedFilters);
+
   const isLoading = authLoading || isFetching;
 
   return (
@@ -181,46 +264,188 @@ const ManagePosts = () => {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 lg:mb-10 text-center lg:text-left">
             Posts to be reviewed:
           </h1>
-          {/* Search and Filter Bar */}
-          <div className="mb-6 sm:mb-8 flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
-            <div className="relative w-full lg:w-2/5">
-              <input
-                type="text"
-                placeholder="Search by title..."
-                className="input input-bordered w-full pl-10 text-sm sm:text-base"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5 z-10 absolute top-1/2 left-3 transform -translate-y-1/2 text-base-content/40"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-              <DatePicker
-                className="p-2 w-full sm:w-auto min-w-0"
-                value={selectedDate}
-                onChange={(date) => setSelectedDate(date)}
-                placeholder="Search by date"
-              />
-              {selectedDate && (
+
+          {/* Filter System */}
+          <div className="bg-base-200 border-b border-base-300 shadow-sm rounded-lg mb-6">
+            <div className="p-3 sm:p-4 w-full max-w-full mx-auto">
+              {/* Mobile Filter Toggle */}
+              <div className="flex items-center justify-between mb-3 lg:hidden">
+                <h3 className="text-lg font-semibold">Filters</h3>
                 <button
-                  className="btn btn-sm text-red-500 cursor-pointer w-full sm:w-auto"
-                  onClick={() => setSelectedDate(null)}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="btn btn-sm btn-ghost"
                 >
-                  Clear date
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      showFilters ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </button>
-              )}
+              </div>
+
+              {/* Filter Controls */}
+              <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-5 gap-3 mb-3 max-w-full">
+                  {/* Search Filter - Takes 2 columns to be wider */}
+                  <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Search Posts
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Search titles, content, and authors..."
+                      value={filters.searchText}
+                      onChange={(e) =>
+                        setFilters({ ...filters, searchText: e.target.value })
+                      }
+                      className="input input-sm input-bordered w-full text-sm"
+                    />
+                  </div>
+
+                  {/* Topic Filter */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Topic
+                    </label>
+                    <select
+                      value={filters.topic}
+                      onChange={(e) =>
+                        setFilters({ ...filters, topic: e.target.value })
+                      }
+                      className="select select-sm select-bordered w-full text-sm"
+                    >
+                      <option value="all">All Topics</option>
+                      <option value="general">General</option>
+                      <option value="daily-challenge">Daily Challenge</option>
+                    </select>
+                  </div>
+
+                  {/* Date Sort */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Date Order
+                    </label>
+                    <select
+                      value={filters.dateSort}
+                      onChange={(e) =>
+                        setFilters({ ...filters, dateSort: e.target.value })
+                      }
+                      className="select select-sm select-bordered w-full text-sm"
+                    >
+                      <option value="newest">Most Recent</option>
+                      <option value="oldest">Oldest First</option>
+                    </select>
+                  </div>
+
+                  {/* Specific Date Filter */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Specific Date
+                    </label>
+                    <DatePicker
+                      className="input input-sm input-bordered w-full text-sm"
+                      selected={
+                        filters.selectedDate instanceof Date
+                          ? filters.selectedDate
+                          : filters.selectedDate
+                          ? new Date(filters.selectedDate)
+                          : null
+                      }
+                      onChange={(date) => {
+                        if (date) {
+                          try {
+                            const validDate = new Date(date);
+                            if (!isNaN(validDate.getTime())) {
+                              setFilters({
+                                ...filters,
+                                selectedDate: validDate,
+                              });
+                            } else {
+                              console.error("Invalid date selected:", date);
+                              setFilters({ ...filters, selectedDate: null });
+                            }
+                          } catch (err) {
+                            console.error("Error processing date:", err);
+                            setFilters({ ...filters, selectedDate: null });
+                          }
+                        } else {
+                          setFilters({ ...filters, selectedDate: null });
+                        }
+                      }}
+                      placeholder="Select date"
+                      maxDate={new Date()}
+                      dateFormat="MM/dd/yyyy"
+                      showYearDropdown
+                      showMonthDropdown
+                      isClearable={true}
+                    />
+                  </div>
+
+                  {/* Clear Filters & Apply Buttons */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
+                      Actions
+                    </label>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={clearFilters}
+                        className="cursor-pointer px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium w-16"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        onClick={applyFilters}
+                        className="cursor-pointer px-2 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs font-medium w-16"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Filters Display */}
+                <div className="flex flex-wrap gap-2">
+                  {filters.topic !== "all" && (
+                    <span className="badge badge-outline badge-sm">
+                      Topic:{" "}
+                      {filters.topic === "general"
+                        ? "General"
+                        : "Daily Challenge"}
+                    </span>
+                  )}
+                  {filters.searchText && filters.searchText.trim() && (
+                    <span className="badge badge-outline badge-sm">
+                      Search: "{filters.searchText.trim()}"
+                    </span>
+                  )}
+                  {filters.dateSort !== "newest" && (
+                    <span className="badge badge-outline badge-sm">
+                      Sort:{" "}
+                      {filters.dateSort === "oldest"
+                        ? "Oldest First"
+                        : "Most Recent"}
+                    </span>
+                  )}
+                  {filters.selectedDate && (
+                    <span className="badge badge-outline badge-sm">
+                      Date:{" "}
+                      {filters.selectedDate instanceof Date
+                        ? filters.selectedDate.toLocaleDateString()
+                        : new Date(filters.selectedDate).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -234,17 +459,49 @@ const ManagePosts = () => {
               <span className="loading loading-spinner loading-md sm:loading-lg"></span>
             </div>
           )}
-          {posts.length === 0 && !isLoading && !error && (
+          {filteredPosts.length === 0 && !isLoading && !error && (
             <div className="text-center text-gray-500 py-8 sm:py-10">
-              <p className="text-base sm:text-lg">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-base-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg
+                  className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-base-content/40"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  ></path>
+                </svg>
+              </div>
+              <p className="text-base sm:text-lg text-base-content/60">
                 No posts found matching your criteria.
               </p>
+              <p className="text-xs sm:text-sm text-base-content/40 mt-2">
+                {appliedFilters.searchText ||
+                appliedFilters.topic !== "all" ||
+                appliedFilters.selectedDate
+                  ? "Try adjusting your filters to see more posts."
+                  : "No posts are currently awaiting review."}
+              </p>
+              {(appliedFilters.searchText ||
+                appliedFilters.topic !== "all" ||
+                appliedFilters.selectedDate) && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm font-medium"
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           )}
 
           {!isLoading && (
             <div className="grid grid-cols-1 2xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <div
                   key={post.id}
                   className="p-4 sm:p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-full"
@@ -276,6 +533,20 @@ const ManagePosts = () => {
                       />
                     </button>
                   </div>
+
+                  {/* Topic Badge */}
+                  <div className="mb-2">
+                    <span
+                      className={`inline-block text-xs font-semibold px-2 py-1 rounded ${
+                        post.topic === "general"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {post.topic === "general" ? "General" : "Daily Challenge"}
+                    </span>
+                  </div>
+
                   <p className="text-xs sm:text-sm text-base-content/70 mb-2 sm:mb-3">
                     By {post.author_name} on{" "}
                     <span>
@@ -294,8 +565,11 @@ const ManagePosts = () => {
             </div>
           )}
 
-          {!isLoading && totalPages > 1 && (
+          {!isLoading && posts.length > 0 && totalPages > 1 && (
             <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-6 sm:mt-8 px-4">
+              <div className="text-sm text-base-content/60 mb-2 w-full text-center">
+                Showing {filteredPosts.length} of {posts.length} posts
+              </div>
               {Array.from({ length: totalPages }, (_, idx) => (
                 <button
                   key={idx + 1}
