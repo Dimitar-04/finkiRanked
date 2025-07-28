@@ -478,14 +478,6 @@ const UserPosts = () => {
                   <div className="animate-fadeIn">
                     {activeTab === "published" && (
                       <div>
-                        <div className="flex items-center mb-4 sm:mb-6">
-                          <div className="w-1 h-6 sm:h-8 bg-success rounded-full mr-2 sm:mr-4"></div>
-                          <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-base-content">
-                            Your Published Posts
-                          </h2>
-                          <div className="flex-1 h-px bg-gradient-to-r from-[#FFB800]/30 to-transparent ml-2 sm:ml-4"></div>
-                        </div>
-
                         {filteredApprovedPosts.length > 0 ? (
                           <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
                             {filteredApprovedPosts.map((post) => (

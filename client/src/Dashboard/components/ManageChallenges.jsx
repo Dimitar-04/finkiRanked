@@ -60,9 +60,11 @@ const ManageChallenges = () => {
             );
           }
         } else {
+          console.log(currentPage);
           const data = await getAllTasks(currentPage, PAGE_SIZE);
           setChallenges(data.challenges);
           setTotalPages(data.totalPages);
+          console.log(totalPages);
 
           if (calendarRef.current) {
             calendarRef.current.style.removeProperty(
@@ -99,6 +101,7 @@ const ManageChallenges = () => {
   };
   const handleViewAll = async () => {
     setLoading(true);
+    setSearchParams({});
     try {
       const data = await getAllTasks(1, PAGE_SIZE);
       setChallenges(data.challenges);
@@ -356,23 +359,36 @@ const ManageChallenges = () => {
                   </div>
                 </div>
               ))}
-              <button
-                className="block mx-auto  cursor-pointer hover:underline"
-                onClick={() => handleViewAll()}
-              >
-                View all challenges
-              </button>
+              {searchParams.get("date") && (
+                <button
+                  className="block mx-auto  cursor-pointer hover:underline"
+                  onClick={() => handleViewAll()}
+                >
+                  View all challenges
+                </button>
+              )}
             </div>
           ) : (
             <div className="text-center text-base-content/60 py-16">
               <p>No available challenges for the selected date.</p>
             </div>
           )}
-          {!loading && challenges.length > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: totalPages }, (_, idx) => (
+          {!loading && totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-8">
+              {/* Previous Arrow */}
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={loading || currentPage === 1}
+                title="Previous Page"
+              >
+                ←
+              </button>
+
+              {/* First 3 page numbers */}
+              {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
                 <button
-                  key={idx + 1}
+                  key={idx}
                   className={`btn btn-sm ${
                     currentPage === idx + 1 ? "border-amber-400" : "btn-ghost"
                   }`}
@@ -382,12 +398,53 @@ const ManageChallenges = () => {
                   {idx + 1}
                 </button>
               ))}
+
+              {/* Dots if more than 4 pages */}
+              {totalPages > 4 && (
+                <span className="px-2 text-gray-500">...</span>
+              )}
+
+              {/* Show current page if it's not in the first 3 or last */}
+              {currentPage > 2 && currentPage < totalPages - 1 && (
+                <button
+                  className="btn btn-sm border-amber-400"
+                  onClick={() => setCurrentPage(currentPage)}
+                  disabled={loading}
+                >
+                  {currentPage + 1}
+                </button>
+              )}
+
+              {/* Last page button if more than 3 pages */}
+              {totalPages > 3 && (
+                <button
+                  className={`btn btn-sm ${
+                    currentPage === totalPages - 1
+                      ? "border-amber-400"
+                      : "btn-ghost"
+                  }`}
+                  onClick={() => setCurrentPage(totalPages - 1)}
+                  disabled={loading}
+                >
+                  {totalPages}
+                </button>
+              )}
+
+              {/* Next Arrow */}
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={loading || currentPage >= totalPages}
+                title="Next Page"
+              >
+                →
+              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Modal (unchanged) */}
+      {/* Modal*/}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"

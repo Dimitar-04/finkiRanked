@@ -13,6 +13,7 @@ const Forum = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState({
@@ -25,21 +26,16 @@ const Forum = () => {
   const postsPerPage = 20;
   const { user } = useAuth();
 
-  // Filter states
-  // Default filters used throughout the component
   const defaultFilters = {
-    topic: "all", // "all", "general", "daily-challenge"
-    dateSort: "newest", // "newest", "oldest"
-    selectedDate: null, // specific date filter
-    commentSort: "none", // "none", "most-popular", "least-popular"
-    searchText: "", // text search in title and content
+    topic: "all",
+    dateSort: "newest",
+    selectedDate: null,
+    commentSort: "none",
+    searchText: "",
   };
 
-  // Initialize filters state with the default values
   const [filters, setFilters] = useState({ ...defaultFilters });
   const [showFilters, setShowFilters] = useState(false);
-
-  console.log(user);
 
   const showModal = (message, type = "info", postId = null) => {
     setModal({ isOpen: true, message, type, postId });
@@ -59,18 +55,7 @@ const Forum = () => {
 
   // Only fetch posts on component mount
   useEffect(() => {
-    // Always use the default filters for the initial fetch
-    console.log("Initial fetch with default filters");
     fetchPosts(0, false, { ...defaultFilters });
-
-    // Adding event listener to help with debugging
-    window.addEventListener("forumFilterDebug", () => {
-      console.log("Current filters:", filters);
-    });
-
-    return () => {
-      window.removeEventListener("forumFilterDebug", () => {});
-    };
   }, []);
 
   const fetchPosts = async (
@@ -85,282 +70,39 @@ const Forum = () => {
         setLoadingMore(true);
       }
 
-      // Use the provided filters or the current state
-      // Make sure to use a new object to avoid reference issues
       const filtersToApply = activeFilters
         ? { ...activeFilters }
         : { ...filters };
 
-      console.log(
-        `FETCH POSTS: Page=${pageNum}, Append=${append}, Filters:`,
-        JSON.stringify(filtersToApply)
-      );
-
-      // Validate filters to ensure they're not null or undefined
       Object.keys(filtersToApply).forEach((key) => {
         if (filtersToApply[key] === undefined) {
-          console.warn(`Filter value for ${key} is undefined, setting to null`);
           filtersToApply[key] = null;
         }
       });
-
-      console.log("Sending filters to API:", filtersToApply);
 
       const response = await getForumPosts(
         pageNum,
         postsPerPage,
         filtersToApply
       );
-      // The response is already the data due to the apiClient interceptor
-      let data = response || [];
-      console.log("Fetched forum posts:", data);
-      console.log("Total posts fetched:", data.length);
-      console.log("API returned data for filters:", filtersToApply);
-
-      // COMPREHENSIVE CLIENT-SIDE FILTERING WORKAROUND
-      // Apply client-side filtering for any filter that the server might have missed
-      let appliedClientSideFiltering = false;
-
-      // 1. Filter by topic if needed
-      if (
-        filtersToApply.topic &&
-        filtersToApply.topic !== "all" &&
-        data.length > 0
-      ) {
-        // Check if we need topic filtering by seeing if any posts don't match the requested topic
-        const nonMatchingPosts = data.some(
-          (post) => post.topic !== filtersToApply.topic
-        );
-
-        if (nonMatchingPosts) {
-          console.log(
-            "Applying client-side topic filtering for:",
-            filtersToApply.topic
-          );
-          const beforeCount = data.length;
-          data = data.filter((post) => post.topic === filtersToApply.topic);
-          console.log(
-            `Client-side topic filtered: ${beforeCount} → ${data.length} posts`
-          );
-          appliedClientSideFiltering = true;
-        }
-      }
-
-      // 2. Apply comment popularity sorting if needed
-      if (
-        filtersToApply.commentSort &&
-        filtersToApply.commentSort !== "none" &&
-        data.length > 1
-      ) {
-        // Check if the data is already properly sorted by comment count
-        const isAlreadySorted = (() => {
-          // For "most-popular", check if posts are sorted in descending order by comment_count
-          if (filtersToApply.commentSort === "most-popular") {
-            for (let i = 0; i < data.length - 1; i++) {
-              if (data[i].comment_count < data[i + 1].comment_count) {
-                return false; // Found an out-of-order pair
-              }
-            }
-          }
-          // For "least-popular", check if posts are sorted in ascending order by comment_count
-          else if (filtersToApply.commentSort === "least-popular") {
-            for (let i = 0; i < data.length - 1; i++) {
-              if (data[i].comment_count > data[i + 1].comment_count) {
-                return false; // Found an out-of-order pair
-              }
-            }
-          }
-          return true; // Data is properly sorted
-        })();
-
-        if (!isAlreadySorted) {
-          console.log(
-            `Applying client-side ${filtersToApply.commentSort} sorting`
-          );
-
-          data = [...data].sort((a, b) => {
-            if (filtersToApply.commentSort === "most-popular") {
-              // Sort by comment count (high to low), then by date (new to old)
-              return (
-                b.comment_count - a.comment_count ||
-                new Date(b.date_created) - new Date(a.date_created)
-              );
-            } else {
-              // Sort by comment count (low to high), then by date (new to old)
-              return (
-                a.comment_count - b.comment_count ||
-                new Date(b.date_created) - new Date(a.date_created)
-              );
-            }
-          });
-
-          console.log("Applied client-side popularity sorting");
-          appliedClientSideFiltering = true;
-        }
-      }
-
-      // 3. Apply specific date filtering if needed
-      if (filtersToApply.selectedDate && data.length > 0) {
-        console.log(
-          `Checking for specific date filtering:`,
-          filtersToApply.selectedDate
-        );
-
-        try {
-          // Create date objects for comparison (start and end of selected day)
-          // Handle both Date objects and string representations
-          const filterDate =
-            filtersToApply.selectedDate instanceof Date
-              ? new Date(filtersToApply.selectedDate)
-              : new Date(String(filtersToApply.selectedDate));
-
-          // Validate date before proceeding
-          if (!isNaN(filterDate.getTime())) {
-            filterDate.setHours(0, 0, 0, 0); // Start of day
-
-            const nextDay = new Date(filterDate);
-            nextDay.setDate(nextDay.getDate() + 1); // Start of next day
-
-            // Count posts outside the date range
-            const invalidDateCount = data.filter((post) => {
-              const postDate = new Date(post.date_created);
-              return postDate < filterDate || postDate >= nextDay;
-            }).length;
-
-            if (invalidDateCount > 0) {
-              console.log(
-                `Found ${invalidDateCount} posts outside of selected date. Applying client-side date filtering.`
-              );
-
-              // Filter to include only posts from the selected date
-              const beforeCount = data.length;
-              data = data.filter((post) => {
-                const postDate = new Date(post.date_created);
-                return postDate >= filterDate && postDate < nextDay;
-              });
-
-              console.log(
-                `Client-side date filtered: ${beforeCount} → ${data.length} posts`
-              );
-              appliedClientSideFiltering = true;
-            } else {
-              console.log("All posts already match the selected date filter");
-            }
-          } else {
-            console.error(
-              "Invalid date selected for filtering:",
-              filtersToApply.selectedDate
-            );
-          }
-        } catch (err) {
-          console.error("Error in date filtering:", err);
-        }
-      }
-
-      // 4. Apply text search filtering if needed
-      if (
-        filtersToApply.searchText &&
-        filtersToApply.searchText.trim() &&
-        data.length > 0
-      ) {
-        const searchTerm = filtersToApply.searchText.trim().toLowerCase();
-        console.log(`Applying client-side text search for: "${searchTerm}"`);
-
-        const beforeCount = data.length;
-        data = data.filter((post) => {
-          const titleMatch =
-            post.title && post.title.toLowerCase().includes(searchTerm);
-          const contentMatch =
-            post.content && post.content.toLowerCase().includes(searchTerm);
-          return titleMatch || contentMatch;
-        });
-
-        console.log(
-          `Client-side text search filtered: ${beforeCount} → ${data.length} posts`
-        );
-        appliedClientSideFiltering = true;
-      }
-
-      // 5. Apply date sorting if needed (and if comment sorting wasn't applied)
-      if (
-        filtersToApply.dateSort &&
-        data.length > 1 &&
-        (!filtersToApply.commentSort || filtersToApply.commentSort === "none")
-      ) {
-        // Check if the data is already properly sorted by date
-        const isDateSorted = (() => {
-          if (filtersToApply.dateSort === "oldest") {
-            // Check if sorted ascending by date (oldest first)
-            for (let i = 0; i < data.length - 1; i++) {
-              if (
-                new Date(data[i].date_created) >
-                new Date(data[i + 1].date_created)
-              ) {
-                return false;
-              }
-            }
-          } else {
-            // Check if sorted descending by date (newest first)
-            for (let i = 0; i < data.length - 1; i++) {
-              if (
-                new Date(data[i].date_created) <
-                new Date(data[i + 1].date_created)
-              ) {
-                return false;
-              }
-            }
-          }
-          return true;
-        })();
-
-        if (!isDateSorted) {
-          console.log(
-            `Applying client-side date sorting: ${filtersToApply.dateSort}`
-          );
-
-          data = [...data].sort((a, b) => {
-            const dateA = new Date(a.date_created);
-            const dateB = new Date(b.date_created);
-
-            if (filtersToApply.dateSort === "oldest") {
-              // Sort by date (oldest first)
-              return dateA - dateB;
-            } else {
-              // Sort by date (newest first)
-              return dateB - dateA;
-            }
-          });
-
-          console.log("Applied client-side date sorting");
-          appliedClientSideFiltering = true;
-        }
-      }
-
-      if (appliedClientSideFiltering) {
-        console.log(
-          "CLIENT-SIDE FILTERING APPLIED - Final post count:",
-          data.length
-        );
-      }
+      const { forumPosts, totalCount } = response;
+      setTotalPages(Math.max(1, Math.ceil(totalCount / postsPerPage)));
+      setHasMore(pageNum < Math.ceil(totalCount / postsPerPage) - 1);
 
       if (append) {
-        setPosts((prevPosts) => [...prevPosts, ...data]);
+        setPosts((prevPosts) => [...prevPosts, ...posts]);
       } else {
-        setPosts(data);
+        setPosts(forumPosts);
       }
 
-      // Check if there are more posts to load
-      setHasMore(data.length === postsPerPage);
       setPage(pageNum);
     } catch (error) {
       console.error("Error fetching forum posts:", error);
 
-      // Show error details in console for debugging
       if (error.response) {
         console.error("Error response:", error.response);
       }
 
-      // Set empty posts array if there was an error
       if (!append) {
         setPosts([]);
       }
@@ -370,32 +112,15 @@ const Forum = () => {
     }
   };
 
-  const loadMore = async () => {
-    const nextPage = page + 1;
-    // Explicitly pass current filters to ensure they're applied when loading more
-    await fetchPosts(nextPage, true, filters);
-  };
-
   // Apply all selected filters
   const applyFilters = async () => {
     // Make a copy of the current filters to ensure we're using the latest state
     const currentFilters = { ...filters };
-    console.log("Applying filters:", currentFilters);
 
-    // Show visual confirmation that filters are being applied
     setLoading(true);
 
-    // Log the current filter state
-    console.log("FILTER APPLICATION - Current filter state:", {
-      filters,
-      currentFilters,
-      page: 0,
-    });
-
-    // Reset to page 0 when applying new filters
     setPage(0);
 
-    // Force a small delay to ensure state updates have propagated
     setTimeout(async () => {
       try {
         console.log("Starting fetchPosts with filters:", currentFilters);
@@ -472,7 +197,7 @@ const Forum = () => {
         </div>
 
         {/* Filter Navbar */}
-        <div className="sticky top-[73px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
+        <div className="sticky top-[76px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
           <div className="p-3 sm:p-4 sm:pl-12 w-full max-w-full mx-auto">
             {/* Mobile Filter Toggle */}
             <div className="flex items-center justify-between mb-3 lg:hidden">
@@ -514,6 +239,11 @@ const Forum = () => {
                     onChange={(e) =>
                       setFilters({ ...filters, searchText: e.target.value })
                     }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        applyFilters();
+                      }
+                    }}
                     className="input input-sm input-bordered w-full text-sm"
                   />
                 </div>
@@ -523,12 +253,13 @@ const Forum = () => {
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Topic
                   </label>
+
                   <select
                     value={filters.topic}
                     onChange={(e) =>
                       setFilters({ ...filters, topic: e.target.value })
                     }
-                    className="select select-sm select-bordered w-full text-sm"
+                    className="select select-sm w-full text-sm select-rounded"
                   >
                     <option value="all">All Topics</option>
                     <option value="general">General</option>
@@ -541,6 +272,7 @@ const Forum = () => {
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Date Order
                   </label>
+
                   <select
                     value={filters.dateSort}
                     onChange={(e) =>
@@ -558,44 +290,49 @@ const Forum = () => {
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Specific Date
                   </label>
-                  <DatePicker
-                    className="input input-sm input-bordered w-full text-sm"
-                    selected={
-                      filters.selectedDate instanceof Date
-                        ? filters.selectedDate
-                        : filters.selectedDate
-                        ? new Date(filters.selectedDate)
-                        : null
-                    }
-                    onChange={(date) => {
-                      // Ensure we're storing a valid Date object
-                      if (date) {
-                        try {
-                          // Create a valid date object
-                          const validDate = new Date(date);
-                          // Check if it's a valid date
-                          if (!isNaN(validDate.getTime())) {
-                            setFilters({ ...filters, selectedDate: validDate });
-                          } else {
-                            console.error("Invalid date selected:", date);
+                  <div className="border rounded">
+                    <DatePicker
+                      className="input input-sm w-full text-sm  border-none rounded shadow-none focus:ring-0 focus:border-none "
+                      selected={
+                        filters.selectedDate instanceof Date
+                          ? filters.selectedDate
+                          : filters.selectedDate
+                          ? new Date(filters.selectedDate)
+                          : null
+                      }
+                      onChange={(date) => {
+                        // Ensure we're storing a valid Date object
+                        if (date) {
+                          try {
+                            // Create a valid date object
+                            const validDate = new Date(date);
+                            // Check if it's a valid date
+                            if (!isNaN(validDate.getTime())) {
+                              setFilters({
+                                ...filters,
+                                selectedDate: validDate,
+                              });
+                            } else {
+                              console.error("Invalid date selected:", date);
+                              setFilters({ ...filters, selectedDate: null });
+                            }
+                          } catch (err) {
+                            console.error("Error processing date:", err);
                             setFilters({ ...filters, selectedDate: null });
                           }
-                        } catch (err) {
-                          console.error("Error processing date:", err);
+                        } else {
+                          // Handle clearing the date
                           setFilters({ ...filters, selectedDate: null });
                         }
-                      } else {
-                        // Handle clearing the date
-                        setFilters({ ...filters, selectedDate: null });
-                      }
-                    }}
-                    placeholder="Select date"
-                    maxDate={new Date()}
-                    dateFormat="MM/dd/yyyy"
-                    showYearDropdown
-                    showMonthDropdown
-                    isClearable={true}
-                  />
+                      }}
+                      placeholder={filters.selectedDate || "Select date"}
+                      maxDate={new Date()}
+                      dateFormat="MM/dd/yyyy"
+                      showYearDropdown
+                      showMonthDropdown
+                      isClearable={true}
+                    />
+                  </div>
                 </div>
 
                 {/* Comment Sort */}
@@ -617,22 +354,28 @@ const Forum = () => {
                 </div>
 
                 {/* Clear Filters & Apply Buttons */}
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 w-full">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                     Actions
                   </label>
                   <div className="flex gap-1">
-                    <button
-                      onClick={clearFilters}
-                      className="cursor-pointer px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium w-16"
-                    >
-                      Clear
-                    </button>
+                    {(filters.topic !== "all" ||
+                      filters.dateSort !== "newest" ||
+                      filters.selectedDate ||
+                      filters.commentSort !== "none" ||
+                      (filters.searchText && filters.searchText.trim())) && (
+                      <button
+                        onClick={clearFilters}
+                        className="cursor-pointer px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+                      >
+                        Clear Filters
+                      </button>
+                    )}
                     <button
                       onClick={applyFilters}
-                      className="cursor-pointer px-2 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs font-medium w-16"
+                      className="cursor-pointer px-2 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs font-medium"
                     >
-                      Apply
+                      Apply Filters
                     </button>
                   </div>
                 </div>
@@ -641,39 +384,99 @@ const Forum = () => {
               {/* Active Filters Display */}
               <div className="flex flex-wrap gap-2">
                 {filters.topic !== "all" && (
-                  <span className="badge badge-outline badge-sm">
+                  <span className="badge badge-outline badge-sm flex items-center gap-1">
                     Topic:{" "}
                     {filters.topic === "general"
                       ? "General"
                       : "Daily Challenge"}
+                    <button
+                      type="button"
+                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                      onClick={() => {
+                        const newFilters = { ...filters, topic: "all" };
+                        setFilters(newFilters);
+                        fetchPosts(0, false, newFilters);
+                      }}
+                      aria-label="Remove topic filter"
+                    >
+                      ×
+                    </button>
                   </span>
                 )}
                 {filters.searchText && filters.searchText.trim() && (
-                  <span className="badge badge-outline badge-sm">
+                  <span className="badge badge-outline badge-sm flex items-center gap-1">
                     Search: "{filters.searchText.trim()}"
+                    <button
+                      type="button"
+                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                      onClick={() => {
+                        const newFilters = { ...filters, searchText: "" };
+                        setFilters(newFilters);
+                        fetchPosts(0, false, newFilters);
+                      }}
+                      aria-label="Remove search filter"
+                    >
+                      ×
+                    </button>
                   </span>
                 )}
                 {filters.dateSort !== "newest" && (
-                  <span className="badge badge-outline badge-sm">
+                  <span className="badge badge-outline badge-sm flex items-center gap-1">
                     Sort:{" "}
                     {filters.dateSort === "oldest"
                       ? "Oldest First"
                       : "Most Recent"}
+                    <button
+                      type="button"
+                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointerfocus:outline-none"
+                      onClick={() => {
+                        const newFilters = { ...filters, dateSort: "newest" };
+                        setFilters(newFilters);
+                        fetchPosts(0, false, newFilters);
+                      }}
+                      aria-label="Remove sort filter"
+                    >
+                      ×
+                    </button>
                   </span>
                 )}
                 {filters.selectedDate && (
-                  <span className="badge badge-outline badge-sm">
+                  <span className="badge badge-outline badge-sm flex items-center gap-1">
                     Date:{" "}
                     {filters.selectedDate instanceof Date
                       ? filters.selectedDate.toLocaleDateString()
                       : new Date(filters.selectedDate).toLocaleDateString()}
+                    <button
+                      type="button"
+                      className="ml-1 text-xs font-bold hover:text-error  hover:cursor-pointerfocus:outline-none"
+                      onClick={() => {
+                        const newFilters = { ...filters, selectedDate: null };
+                        setFilters(newFilters);
+                        fetchPosts(0, false, newFilters);
+                      }}
+                      aria-label="Remove date filter"
+                    >
+                      ×
+                    </button>
                   </span>
                 )}
                 {filters.commentSort !== "none" && (
-                  <span className="badge badge-outline badge-sm">
+                  <span className="badge badge-outline badge-sm flex items-center gap-1">
                     {filters.commentSort === "most-popular"
                       ? "Most Popular"
                       : "Least Popular"}
+                    <button
+                      type="button"
+                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                      onClick={() => {
+                        const newFilters = { ...filters, commentSort: "none" };
+                        setFilters(newFilters);
+                        fetchPosts(0, false, newFilters);
+                      }}
+                      aria-label="Remove popularity filter"
+                    >
+                      ×
+                    </button>
                   </span>
                 )}
               </div>
@@ -821,22 +624,70 @@ const Forum = () => {
                     </div>
                   )}
 
-                  {/* Load More Button */}
-                  {hasMore && (
-                    <div className="flex justify-center mt-6 sm:mt-8">
+                  {!loading && totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 mt-8">
                       <button
-                        onClick={loadMore}
-                        disabled={loadingMore}
-                        className="btn btn-tertiary"
+                        className="btn btn-sm btn-ghost"
+                        onClick={() => fetchPosts(page - 1, false, filters)}
+                        disabled={loading || page === 0}
+                        title="Previous Page"
                       >
-                        {loadingMore ? (
-                          <>
-                            <span className="loading loading-spinner loading-sm mr-2"></span>
-                            Loading...
-                          </>
-                        ) : (
-                          "Load More"
-                        )}
+                        ←
+                      </button>
+
+                      {Array.from(
+                        { length: Math.min(3, totalPages) },
+                        (_, idx) => (
+                          <button
+                            key={idx}
+                            className={`btn btn-sm ${
+                              page === idx ? "border-amber-400" : "btn-ghost"
+                            }`}
+                            onClick={() => fetchPosts(idx, false, filters)}
+                            disabled={loading}
+                          >
+                            {idx + 1}
+                          </button>
+                        )
+                      )}
+
+                      {totalPages > 3 && (
+                        <span className="px-2 text-gray-500">...</span>
+                      )}
+
+                      {page > 2 && page < totalPages - 1 && (
+                        <button
+                          className="btn btn-sm border-amber-400"
+                          onClick={() => fetchPosts(page, false, filters)}
+                          disabled={loading}
+                        >
+                          {page + 1}
+                        </button>
+                      )}
+
+                      {totalPages > 3 && (
+                        <button
+                          className={`btn btn-sm ${
+                            page === totalPages - 1
+                              ? "border-amber-400"
+                              : "btn-ghost"
+                          }`}
+                          onClick={() =>
+                            fetchPosts(totalPages - 1, false, filters)
+                          }
+                          disabled={loading}
+                        >
+                          {totalPages}
+                        </button>
+                      )}
+
+                      <button
+                        className="btn btn-sm btn-ghost"
+                        onClick={() => fetchPosts(page + 1, false, filters)}
+                        disabled={loading || page === totalPages - 1}
+                        title="Next Page"
+                      >
+                        →
                       </button>
                     </div>
                   )}
