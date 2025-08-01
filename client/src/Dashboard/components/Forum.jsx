@@ -7,12 +7,13 @@ import { getForumPosts, deleteForumPost } from "@/services/forumService";
 import { useAuth } from "@/contexts/AuthContext";
 import { DatePicker } from "react-daisyui-timetools";
 import "react-datepicker/dist/react-datepicker.css";
-
+import CalendarPopover from "./CalendarPopover";
 const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -134,8 +135,6 @@ const Forum = () => {
 
   // Clear all filters and reset to default
   const clearFilters = async () => {
-    console.log("Clearing filters, using defaults:", defaultFilters);
-
     // Show visual confirmation that filters are being cleared
     setLoading(true);
 
@@ -169,27 +168,28 @@ const Forum = () => {
       <div className="flex flex-col h-screen">
         {/* Sticky Header Section */}
         <div className="sticky top-0 z-10 bg-base-100 border-b border-base-300 shadow-sm">
-          <div className="p-4 sm:p-6 sm:pl-12 w-full">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center lg:text-left">
+          <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
+            <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 lg:gap-4">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center lg:text-left">
                 Forum Posts
               </h1>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 w-full lg:w-auto">
+              <div className="flex  xs:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
                 <button
                   onClick={() => {
                     navigate("/dashboard/create-post");
                   }}
-                  className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
                 >
-                  Create a Post
+                  <span className="xs:hidden">Crete Post</span>
                 </button>
                 <button
                   onClick={() => {
                     navigate("/dashboard/user-posts");
                   }}
-                  className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
                 >
-                  Your posts
+                  <span className="xs:hidden">My Posts</span>
+                  <span className="hidden xs:inline">Your Posts</span>
                 </button>
               </div>
             </div>
@@ -197,17 +197,37 @@ const Forum = () => {
         </div>
 
         {/* Filter Navbar */}
-        <div className="sticky top-[76px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
-          <div className="p-3 sm:p-4 sm:pl-12 w-full max-w-full mx-auto">
+        <div className="sticky top-[68px] sm:top-[76px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
+          <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
             {/* Mobile Filter Toggle */}
             <div className="flex items-center justify-between mb-3 lg:hidden">
-              <h3 className="text-lg font-semibold">Filters</h3>
+              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                Filters
+                {/* Active filter count indicator */}
+                {(filters.topic !== "all" ||
+                  filters.dateSort !== "newest" ||
+                  filters.selectedDate ||
+                  filters.commentSort !== "none" ||
+                  (filters.searchText && filters.searchText.trim())) && (
+                  <span className="badge badge-sm bg-yellow-500 text-black border-none">
+                    {
+                      [
+                        filters.topic !== "all",
+                        filters.dateSort !== "newest",
+                        filters.selectedDate,
+                        filters.commentSort !== "none",
+                        filters.searchText && filters.searchText.trim(),
+                      ].filter(Boolean).length
+                    }
+                  </span>
+                )}
+              </h3>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="btn btn-sm btn-ghost"
+                className="btn btn-sm btn-ghost px-2"
               >
                 <svg
-                  className={`w-4 h-4 transition-transform ${
+                  className={`w-5 h-5 transition-transform duration-200 ${
                     showFilters ? "rotate-180" : ""
                   }`}
                   fill="none"
@@ -225,140 +245,166 @@ const Forum = () => {
             </div>
 
             {/* Filter Controls */}
-            <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-3 max-w-full">
-                {/* Search Filter - Takes 2 columns to be wider */}
-                <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-2">
+            <div
+              className={`transition-all duration-300 ${
+                showFilters ? "block opacity-100" : "hidden opacity-0"
+              } lg:block lg:opacity-100`}
+            >
+              {/* Mobile-First Filter Layout */}
+              <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-3 mb-3 max-w-full">
+                {/* Search Filter - Full width on mobile, 2 cols on desktop */}
+                <div className="flex flex-col gap-1.5 lg:col-span-2">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Search Posts
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Search titles and content..."
-                    value={filters.searchText}
-                    onChange={(e) =>
-                      setFilters({ ...filters, searchText: e.target.value })
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        applyFilters();
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search titles and content..."
+                      value={filters.searchText}
+                      onChange={(e) =>
+                        setFilters({ ...filters, searchText: e.target.value })
                       }
-                    }}
-                    className="input input-sm input-bordered w-full text-sm"
-                  />
-                </div>
-
-                {/* Topic Filter */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Topic
-                  </label>
-
-                  <select
-                    value={filters.topic}
-                    onChange={(e) =>
-                      setFilters({ ...filters, topic: e.target.value })
-                    }
-                    className="select select-sm w-full text-sm select-rounded"
-                  >
-                    <option value="all">All Topics</option>
-                    <option value="general">General</option>
-                    <option value="daily-challenge">Daily Challenge</option>
-                  </select>
-                </div>
-
-                {/* Date Sort */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Date Order
-                  </label>
-
-                  <select
-                    value={filters.dateSort}
-                    onChange={(e) =>
-                      setFilters({ ...filters, dateSort: e.target.value })
-                    }
-                    className="select select-sm select-bordered w-full text-sm"
-                  >
-                    <option value="newest">Most Recent</option>
-                    <option value="oldest">Oldest First</option>
-                  </select>
-                </div>
-
-                {/* Specific Date Filter */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Specific Date
-                  </label>
-                  <div className="border rounded">
-                    <DatePicker
-                      className="input input-sm w-full text-sm  border-none rounded shadow-none focus:ring-0 focus:border-none "
-                      selected={
-                        filters.selectedDate instanceof Date
-                          ? filters.selectedDate
-                          : filters.selectedDate
-                          ? new Date(filters.selectedDate)
-                          : null
-                      }
-                      onChange={(date) => {
-                        // Ensure we're storing a valid Date object
-                        if (date) {
-                          try {
-                            // Create a valid date object
-                            const validDate = new Date(date);
-                            // Check if it's a valid date
-                            if (!isNaN(validDate.getTime())) {
-                              setFilters({
-                                ...filters,
-                                selectedDate: validDate,
-                              });
-                            } else {
-                              console.error("Invalid date selected:", date);
-                              setFilters({ ...filters, selectedDate: null });
-                            }
-                          } catch (err) {
-                            console.error("Error processing date:", err);
-                            setFilters({ ...filters, selectedDate: null });
-                          }
-                        } else {
-                          // Handle clearing the date
-                          setFilters({ ...filters, selectedDate: null });
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          applyFilters();
                         }
                       }}
-                      placeholder={filters.selectedDate || "Select date"}
-                      maxDate={new Date()}
-                      dateFormat="MM/dd/yyyy"
-                      showYearDropdown
-                      showMonthDropdown
-                      isClearable={true}
+                      className="input input-sm input-bordered w-full text-sm pl-9 pr-3"
+                    />
+                    <svg
+                      className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Mobile: 2-column grid for selects */}
+                <div className="grid grid-cols-2 gap-3 lg:contents">
+                  {/* Topic Filter */}
+                  <div className="flex flex-col gap-1.5 lg:col-span-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Topic
+                    </label>
+                    <select
+                      value={filters.topic}
+                      onChange={(e) =>
+                        setFilters({ ...filters, topic: e.target.value })
+                      }
+                      className="select select-sm select-bordered w-full text-sm"
+                    >
+                      <option value="all">All Topics</option>
+                      <option value="general">General</option>
+                      <option value="daily-challenge">Daily Challenge</option>
+                    </select>
+                  </div>
+
+                  {/* Date Sort */}
+                  <div className="flex flex-col gap-1.5 lg:col-span-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Date Order
+                    </label>
+                    <select
+                      value={filters.dateSort}
+                      onChange={(e) =>
+                        setFilters({ ...filters, dateSort: e.target.value })
+                      }
+                      className="select select-sm select-bordered w-full text-sm"
+                    >
+                      <option value="newest">Most Recent</option>
+                      <option value="oldest">Oldest First</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Mobile: Single column for date picker and popularity */}
+                <div className="space-y-3 lg:space-y-0 lg:contents">
+                  <div className="flex flex-col gap-1.5 lg:col-span-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Popularity
+                    </label>
+                    <select
+                      value={filters.commentSort}
+                      onChange={(e) =>
+                        setFilters({ ...filters, commentSort: e.target.value })
+                      }
+                      className="select select-sm select-bordered w-full text-sm"
+                    >
+                      <option value="none">No Sorting</option>
+                      <option value="most-popular">Most Popular</option>
+                      <option value="least-popular">Least Popular</option>
+                    </select>
+                  </div>
+                  {/* Specific Date Filter */}
+                  <div className="realtive flex flex-col gap-1.5 lg:col-span-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Specific Date
+                    </label>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        readOnly // Makes the input non-editable by typing
+                        onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
+                        value={
+                          filters.selectedDate
+                            ? new Date(filters.selectedDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )
+                            : "" // Use empty string so placeholder is visible
+                        }
+                        placeholder="Select date"
+                        // Style to match other inputs and add cursor-pointer
+                        className="input input-sm input-bordered w-full text-sm pl-9 pr-3 cursor-pointer"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        // Position the icon inside the input field
+                        className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    {/* Render the popover here */}
+                    <CalendarPopover
+                      isOpen={isCalendarOpen}
+                      onClose={() => setIsCalendarOpen(false)}
+                      selectedDate={filters.selectedDate}
+                      onDateSelect={(date) => {
+                        setFilters({ ...filters, selectedDate: date });
+                      }}
                     />
                   </div>
                 </div>
 
-                {/* Comment Sort */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Popularity
-                  </label>
-                  <select
-                    value={filters.commentSort}
-                    onChange={(e) =>
-                      setFilters({ ...filters, commentSort: e.target.value })
-                    }
-                    className="select select-sm select-bordered w-full text-sm"
-                  >
-                    <option value="none">No Sorting</option>
-                    <option value="most-popular">Most Popular</option>
-                    <option value="least-popular">Least Popular</option>
-                  </select>
-                </div>
-
-                {/* Clear Filters & Apply Buttons */}
-                <div className="flex flex-col gap-1 w-full">
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-1.5 lg:col-span-1">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                     Actions
                   </label>
-                  <div className="flex gap-1">
+                  <div className="flex gap-2">
                     {(filters.topic !== "all" ||
                       filters.dateSort !== "newest" ||
                       filters.selectedDate ||
@@ -366,29 +412,33 @@ const Forum = () => {
                       (filters.searchText && filters.searchText.trim())) && (
                       <button
                         onClick={clearFilters}
-                        className="cursor-pointer px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+                        className="cursor-pointer px-2.5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
                       >
-                        Clear Filters
+                        <span className="lg:hidden">Clear</span>
+                        <span className="hidden lg:inline">Clear Filters</span>
                       </button>
                     )}
                     <button
                       onClick={applyFilters}
-                      className="cursor-pointer px-2 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs font-medium"
+                      className="cursor-pointer px-2.5 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
                     >
-                      Apply Filters
+                      <span className="lg:hidden">Apply</span>
+                      <span className="hidden lg:inline">Apply Filters</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Active Filters Display */}
-              <div className="flex flex-wrap gap-2">
+              {/* Active Filters Display - Improved Mobile Layout */}
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {filters.topic !== "all" && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1">
-                    Topic:{" "}
-                    {filters.topic === "general"
-                      ? "General"
-                      : "Daily Challenge"}
+                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                    <span className="text-xs">Topic:</span>
+                    <span className="font-medium text-xs">
+                      {filters.topic === "general"
+                        ? "General"
+                        : "Daily Challenge"}
+                    </span>
                     <button
                       type="button"
                       className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
@@ -404,8 +454,11 @@ const Forum = () => {
                   </span>
                 )}
                 {filters.searchText && filters.searchText.trim() && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1">
-                    Search: "{filters.searchText.trim()}"
+                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                    <span className="text-xs">Search:</span>
+                    <span className="font-medium text-xs truncate">
+                      "{filters.searchText.trim()}"
+                    </span>
                     <button
                       type="button"
                       className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
@@ -421,14 +474,16 @@ const Forum = () => {
                   </span>
                 )}
                 {filters.dateSort !== "newest" && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1">
-                    Sort:{" "}
-                    {filters.dateSort === "oldest"
-                      ? "Oldest First"
-                      : "Most Recent"}
+                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                    <span className="text-xs">Sort:</span>
+                    <span className="font-medium text-xs">
+                      {filters.dateSort === "oldest"
+                        ? "Oldest First"
+                        : "Most Recent"}
+                    </span>
                     <button
                       type="button"
-                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointerfocus:outline-none"
+                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
                       onClick={() => {
                         const newFilters = { ...filters, dateSort: "newest" };
                         setFilters(newFilters);
@@ -441,14 +496,21 @@ const Forum = () => {
                   </span>
                 )}
                 {filters.selectedDate && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1">
-                    Date:{" "}
-                    {filters.selectedDate instanceof Date
-                      ? filters.selectedDate.toLocaleDateString()
-                      : new Date(filters.selectedDate).toLocaleDateString()}
+                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                    <span className="text-xs">Date:</span>
+                    <span className="font-medium text-xs">
+                      {new Date(filters.selectedDate).toLocaleDateString(
+                        "en-US",
+                        {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
+                    </span>
                     <button
                       type="button"
-                      className="ml-1 text-xs font-bold hover:text-error  hover:cursor-pointerfocus:outline-none"
+                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
                       onClick={() => {
                         const newFilters = { ...filters, selectedDate: null };
                         setFilters(newFilters);
@@ -461,10 +523,12 @@ const Forum = () => {
                   </span>
                 )}
                 {filters.commentSort !== "none" && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1">
-                    {filters.commentSort === "most-popular"
-                      ? "Most Popular"
-                      : "Least Popular"}
+                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                    <span className="font-medium text-xs">
+                      {filters.commentSort === "most-popular"
+                        ? "Most Popular"
+                        : "Least Popular"}
+                    </span>
                     <button
                       type="button"
                       className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
@@ -485,7 +549,7 @@ const Forum = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 ">
+        <div className="flex-1">
           {loading ? (
             <div className="flex justify-center items-center h-full">
               <span className="loading loading-spinner loading-md sm:loading-lg"></span>
@@ -493,55 +557,55 @@ const Forum = () => {
           ) : (
             <div className="h-full">
               {/* Scrollable Posts Content */}
-              <div className=" overflow-y-auto">
-                <div className="p-4 sm:p-6 sm:pl-12 w-full">
+              <div className="overflow-y-auto">
+                <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
                   {posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <div className="text-2xl font-semibold text-gray-400 mb-2">
+                      <div className="text-xl sm:text-2xl font-semibold text-gray-400 mb-2">
                         No posts found
                       </div>
-                      <p className="text-gray-500 text-center">
+                      <p className="text-gray-500 text-center text-sm sm:text-base">
                         There are no posts that match your selected filters.
                       </p>
                       <button
                         onClick={clearFilters}
-                        className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm font-medium"
+                        className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm font-medium transition-colors duration-200"
                       >
                         Clear Filters
                       </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2   lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                       {posts.map((post) => (
                         <div
                           key={post.id}
-                          className="p-3 sm:p-4 lg:p-6 rounded-lg shadow-sm hover:shadow-md transition relative bg-base-200 h-full flex flex-col"
+                          className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 border h-full flex flex-col"
                         >
-                          {(post.author_name === user.name ||
-                            post.author_name === user.username ||
-                            user.isModerator) && (
-                            <button
-                              className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-gray-600 transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                showModal(
-                                  "Are you sure you want to delete this post? This action cannot be undone.",
-                                  "confirm",
-                                  post.id
-                                );
-                              }}
-                            >
-                              <img
-                                src={trashIcon}
-                                alt="Delete"
-                                className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6"
-                              />
-                            </button>
-                          )}
+                          <div className="card-body p-3 sm:p-4 lg:p-5 xl:p-6 flex flex-col h-full relative">
+                            {(post.author_name === user.name ||
+                              post.author_name === user.username ||
+                              user.isModerator) && (
+                              <button
+                                className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  showModal(
+                                    "Are you sure you want to delete this post? This action cannot be undone.",
+                                    "confirm",
+                                    post.id
+                                  );
+                                }}
+                              >
+                                <img
+                                  src={trashIcon}
+                                  alt="Delete"
+                                  className="w-4 h-4 sm:w-5 sm:h-5"
+                                />
+                              </button>
+                            )}
 
-                          <div className="flex items-center gap-2 sm:gap-4 mt-2 pr-8 sm:pr-10">
                             <h3
-                              className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 cursor-pointer hover:underline line-clamp-2 text-center sm:text-left w-full"
+                              className="card-title text-base sm:text-lg lg:text-xl mb-2 text-base-content line-clamp-2 hover:underline cursor-pointer pr-8"
                               onClick={() => {
                                 navigate(`/dashboard/forum-detail/${post.id}`, {
                                   state: { post },
@@ -550,74 +614,73 @@ const Forum = () => {
                             >
                               {post.title}
                             </h3>
-                          </div>
 
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <p className="text-xs sm:text-sm text-gray-500 flex flex-col sm:flex-row items-center sm:justify-start gap-0 sm:gap-2">
-                              <span>
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-3">
+                              <p className="text-xs sm:text-sm text-base-content/70">
                                 By{" "}
-                                <span className="font-semibold underline">
+                                <span className="font-semibold">
                                   {post.author_name}
                                 </span>
-                              </span>
-                              <span className="hidden sm:inline mx-1 text-gray-400">
-                                •
-                              </span>
-                              <span className="italic text-gray-400">
-                                {new Date(post.date_created).toLocaleDateString(
-                                  "en-US",
-                                  {
+                                <span className="mx-1">·</span>
+                                <span className="italic">
+                                  {new Date(
+                                    post.date_created
+                                  ).toLocaleDateString("en-US", {
                                     year: "numeric",
                                     month: "short",
                                     day: "numeric",
-                                  }
-                                )}
+                                  })}
+                                </span>
+                              </p>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
+                              <span
+                                className={`inline-block text-xs sm:text-sm font-semibold px-2 py-1 rounded ${
+                                  post.topic === "general"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-green-100 text-green-800"
+                                }`}
+                              >
+                                {post.topic === "general"
+                                  ? "General"
+                                  : "Daily Challenge"}
                               </span>
+                              {post.challengeTitle && (
+                                <span className="inline-block bg-yellow-100 text-yellow-800 text-xs sm:text-sm font-semibold px-2 py-1 rounded">
+                                  {post.challengeTitle}
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="hidden sm:block text-sm text-base-content/80 line-clamp-3 flex-grow">
+                              {post.content && post.content.length > 100
+                                ? post.content.slice(0, 100) + "..."
+                                : post.content}
                             </p>
 
-                            {/* Topic Badge */}
-                            <span
-                              className={`inline-block text-xs font-semibold px-2 py-1 rounded ${
-                                post.topic === "general"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-green-100 text-green-800"
-                              }`}
-                            >
-                              {post.topic === "general"
-                                ? "General"
-                                : "Daily Challenge"}
-                            </span>
-
-                            {/* Challenge Title Badge */}
-                            {post.challengeTitle && (
-                              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded">
-                                {post.challengeTitle}
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="mt-2 text-gray-400 text-sm sm:text-base line-clamp-3 text-center sm:text-left flex-grow">
-                            {post.content && post.content.length > 100
-                              ? post.content.slice(0, 100) + "..."
-                              : post.content}
-                          </p>
-
-                          <div
-                            className="mt-3 sm:mt-4 flex justify-center sm:justify-end items-center gap-2 cursor-pointer"
-                            onClick={(e) => {
-                              navigate(`/dashboard/forum-detail/${post.id}`, {
-                                state: { post },
-                              });
-                            }}
-                          >
-                            <p className="text-sm sm:text-base">
-                              {post.comment_count}
-                            </p>
-                            <img
-                              src={commentIcon}
-                              alt="Comment"
-                              className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 hover:opacity-80"
-                            />
+                            <div className="card-actions justify-end mt-4">
+                              <div
+                                className="flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+                                onClick={() => {
+                                  navigate(
+                                    `/dashboard/forum-detail/${post.id}`,
+                                    {
+                                      state: { post },
+                                    }
+                                  );
+                                }}
+                              >
+                                <p className="text-xs sm:text-sm font-medium">
+                                  {post.comment_count}
+                                </p>
+                                <img
+                                  src={commentIcon}
+                                  alt="Comment"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 hover:opacity-80"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -625,9 +688,9 @@ const Forum = () => {
                   )}
 
                   {!loading && totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-2 mt-8">
+                    <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
                       <button
-                        className="btn btn-sm btn-ghost"
+                        className="btn btn-sm btn-ghost px-2 sm:px-3"
                         onClick={() => fetchPosts(page - 1, false, filters)}
                         disabled={loading || page === 0}
                         title="Previous Page"
@@ -640,7 +703,7 @@ const Forum = () => {
                         (_, idx) => (
                           <button
                             key={idx}
-                            className={`btn btn-sm ${
+                            className={`btn btn-sm px-2 sm:px-3 ${
                               page === idx ? "border-amber-400" : "btn-ghost"
                             }`}
                             onClick={() => fetchPosts(idx, false, filters)}
@@ -652,12 +715,14 @@ const Forum = () => {
                       )}
 
                       {totalPages > 3 && (
-                        <span className="px-2 text-gray-500">...</span>
+                        <span className="px-1 sm:px-2 text-gray-500 text-sm">
+                          ...
+                        </span>
                       )}
 
                       {page > 2 && page < totalPages - 1 && (
                         <button
-                          className="btn btn-sm border-amber-400"
+                          className="btn btn-sm border-amber-400 px-2 sm:px-3"
                           onClick={() => fetchPosts(page, false, filters)}
                           disabled={loading}
                         >
@@ -667,7 +732,7 @@ const Forum = () => {
 
                       {totalPages > 3 && (
                         <button
-                          className={`btn btn-sm ${
+                          className={`btn btn-sm px-2 sm:px-3 ${
                             page === totalPages - 1
                               ? "border-amber-400"
                               : "btn-ghost"
@@ -682,7 +747,7 @@ const Forum = () => {
                       )}
 
                       <button
-                        className="btn btn-sm btn-ghost"
+                        className="btn btn-sm btn-ghost px-2 sm:px-3"
                         onClick={() => fetchPosts(page + 1, false, filters)}
                         disabled={loading || page === totalPages - 1}
                         title="Next Page"

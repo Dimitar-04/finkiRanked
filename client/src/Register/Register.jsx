@@ -117,12 +117,14 @@ const Register = () => {
     <div className="h-screen bg-base-100">
       <div
         data-theme="luxury"
-        className="flex flex-col items-center justify-center h-screen overflow-y-auto"
+        className="flex flex-col items-center justify-center h-screen overflow-y-auto p-4"
       >
-        <h1 className="text-4xl font-bold mb-6">Create an account</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-center">
+          Create an account
+        </h1>
         <form
           onSubmit={handleSubmit}
-          className="fieldset bg-base-200 border-base-300 rounded-box w-96 border p-8 space-y-6"
+          className="fieldset bg-base-200 border-base-300 rounded-box w-full max-w-sm border p-6 sm:p-8 space-y-4 sm:space-y-6"
         >
           <div>
             <label className="label text-lg" htmlFor="name">
@@ -134,7 +136,7 @@ const Register = () => {
               type="text"
               value={formData.name}
               onChange={handleInputChange}
-              className="input input-lg w-full"
+              className="input input-md sm:input-lg w-full"
               placeholder="John Doe"
               disabled={loading || googleLoading}
             />
@@ -153,7 +155,7 @@ const Register = () => {
               type="text"
               value={formData.username}
               onChange={handleInputChange}
-              className="input input-lg w-full"
+              className="input input-md sm:input-lg w-full"
               placeholder="User123"
               disabled={loading || googleLoading}
             />
@@ -172,7 +174,7 @@ const Register = () => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="input input-lg w-full"
+              className="input input-md sm:input-lg w-full"
               placeholder="user123@students.finki.ukim.mk"
               disabled={loading || googleLoading}
             />
@@ -190,7 +192,7 @@ const Register = () => {
                 id="password"
                 name="password"
                 type={showPassword.password ? "text" : "password"}
-                className="input input-lg w-full pr-14"
+                className="input input-md sm:input-lg w-full"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleInputChange}
@@ -273,7 +275,7 @@ const Register = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="input input-lg w-full"
+                className="input input-md sm:input-lg w-full"
                 placeholder="Confirm Password"
                 disabled={loading || googleLoading}
               />
@@ -336,7 +338,7 @@ const Register = () => {
 
           <button
             type="submit"
-            className="btn bg-black btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl w-full flex items-center justify-center"
+            className="btn bg-black btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl w-full flex items-center justify-center"
             disabled={loading || googleLoading}
           >
             {loading ? (
@@ -350,7 +352,7 @@ const Register = () => {
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="btn btn-outline w-full flex items-center justify-center"
+              className="btn btn-outline  btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-x w-full flex items-center justify-center"
               disabled={loading || googleLoading}
             >
               {googleLoading ? (

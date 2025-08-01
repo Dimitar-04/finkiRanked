@@ -39,12 +39,12 @@ const Login = () => {
   return (
     <div
       data-theme="luxury"
-      className="flex flex-col items-center justify-center h-screen"
+      className="flex flex-col items-center justify-center h-screen p-4"
     >
-      <h1 className="text-4xl font-bold mb-6">Log in</h1>
+      <h1 className="text-3xl sm:text-4xl font-bold mb-6">Log in</h1>
       <form
         onSubmit={handleSubmit}
-        className="fieldset bg-base-200 border-base-300 rounded-box w-96 border p-8 space-y-6"
+        className="fieldset bg-base-200 border-base-300 rounded-box w-full max-w-sm border p-6 sm:p-8 space-y-4 sm:space-y-6"
       >
         <div>
           <label className="label text-lg" htmlFor="email">
@@ -53,7 +53,7 @@ const Login = () => {
           <input
             id="email"
             type="email"
-            className="input input-lg w-full"
+            className="input input-md sm:input-lg w-full"
             placeholder="user123@students.finki.ukim.mk"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -70,7 +70,7 @@ const Login = () => {
             <input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="input input-lg w-full pr-14"
+              className="input input-md sm:input-lg w-full"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -128,7 +128,7 @@ const Login = () => {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="btn btn-outline w-full flex items-center justify-center"
+            className="btn btn-outline btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-x w-full flex items-center justify-center"
             disabled={loading || googleLoading}
           >
             {googleLoading ? (
@@ -168,7 +168,7 @@ const Login = () => {
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         <button
           type="submit"
-          className="btn bg-black btn-xs sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl"
+          className="btn bg-black btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl"
           disabled={loading || googleLoading}
         >
           {loading ? (

@@ -111,11 +111,6 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
-.custom-datepicker input {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
 
 @layer base {
   * {

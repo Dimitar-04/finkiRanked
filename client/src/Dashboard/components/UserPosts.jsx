@@ -133,7 +133,7 @@ const UserPosts = () => {
           ]);
 
           setApprovedPosts(approvedData);
-          console.log(approvedData);
+
           setPendingPosts(pendingData);
         } catch (error) {
           console.error("Error fetching user posts:", error);
