@@ -229,7 +229,7 @@ const Task = () => {
                   </svg>
                 </div>
                 <h1 className="card-title text-4xl font-bold mb-6">
-                  Challenge for {today}
+                  Challenge for {new Date().toLocaleDateString("en-GB")}
                 </h1>
                 <div className="divider"></div>
                 <div className="space-y-6 text-lg">

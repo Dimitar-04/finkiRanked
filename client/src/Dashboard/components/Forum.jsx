@@ -180,7 +180,7 @@ const Forum = () => {
                   }}
                   className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
                 >
-                  <span className="xs:hidden">Crete Post</span>
+                  <span className="xs:hidden">Create Post</span>
                 </button>
                 <button
                   onClick={() => {

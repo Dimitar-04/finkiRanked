@@ -1,17 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logoIcon from "../../assets/images/logoIcon.png";
 import logoText from "../../assets/images/logoText.png";
 import pp from "../../assets/images/pp.svg";
 import RankBadgeNav from "@/utils/RankBadgeForNavbar";
 import { useAuth } from "@/contexts/AuthContext";
+const useIsDesktop = () => {
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return isDesktop;
+};
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  const isDesktop = useIsDesktop();
   const isActive = (path) => {
     if (path === "/dashboard" && location.pathname === "/dashboard") {
       return true;
@@ -21,6 +34,7 @@ export default function Navbar() {
       (location.pathname === "/dashboard/forum" ||
         location.pathname === "/dashboard/forum/create-post" ||
         location.pathname === "/dashboard/create-post" ||
+        (location.pathname === "/dashboard/user-posts" && isDesktop) ||
         location.pathname.startsWith("/dashboard/forum-detail/"))
     ) {
       return true;

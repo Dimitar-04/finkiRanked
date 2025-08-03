@@ -5,6 +5,7 @@ const ForumController = require("./forumController");
 const filter = require("leo-profanity");
 const safeWords = require("../filters/safeWords");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
+const { resetPostCheckCounter } = require("../services/forumCountersReset");
 const {
   sendApprovalEmail,
   sendDeletionEmail,
@@ -54,7 +55,7 @@ const createReviewPost = async (req, res) => {
       }
     }
 
-    await resetPostCheckCoutner(authorId);
+    await resetPostCheckCounter(authorId);
     return res.status(201).json({
       message: "Post submitted for moderator approval",
     });
@@ -63,21 +64,16 @@ const createReviewPost = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-async function resetPostCheckCoutner(userId) {
+
+const resetCheckCounter = async (req, res) => {
   try {
-    await prisma.users.update({
-      where: { id: userId },
-      data: {
-        postCheckCounter: 0,
-      },
-    });
-  } catch (error) {
-    console.error(
-      `Failed to decrement post counter for user ${userId}:`,
-      error
-    );
+    const { userId } = req.params;
+    await resetPostCheckCounter(userId);
+    res.status(200).json({ message: "Post check counter reset successfully" });
+  } catch (e) {
+    console.error("Error resetting post check counter:", e);
   }
-}
+};
 
 const getReviewPosts = async (req, res) => {
   try {
@@ -271,4 +267,5 @@ module.exports = {
   deleteReviewPost,
   approveReviewPost,
   getPendingPosts,
+  resetCheckCounter,
 };

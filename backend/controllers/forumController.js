@@ -8,6 +8,7 @@ const safeWords = require("../filters/safeWords");
 const { analyzePostContent } = require("../ai/processRequestAi");
 const { createReviewPost } = require("./reviewController");
 const verifyModeratorStatus = require("../services/checkModeratorStatus");
+const { resetPostCheckCounter } = require("../services/forumCountersReset");
 const {
   sendDeletedFromForumEmail,
   sendDeletedCommentEmail,
@@ -27,6 +28,7 @@ const createForumPost = async (req, res) => {
     });
     const postCounter = user.postCounter;
     const postCheckCounter = user.postCheckCounter;
+    console.log("Post check:", postCheckCounter);
 
     if (postCounter >= -11) {
       const post = new ForumPost({
@@ -66,6 +68,7 @@ const createForumPost = async (req, res) => {
         return res.status(202).json({
           message:
             "Would you like to send this post to moderator for approval?",
+          reason: "USER_FLAGGED",
         });
       } else if (
         !(
@@ -112,7 +115,7 @@ const createForumPost = async (req, res) => {
 
       post.id = savedPost.id;
       await decrementPostCounter(authorId);
-      await resetPostCheckCoutner(authorId);
+      await resetPostCheckCounter(authorId);
       res.status(201).json({
         message: "Forum post created successfully",
         post: savedPost,
@@ -127,21 +130,6 @@ const createForumPost = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-async function resetPostCheckCoutner(userId) {
-  try {
-    await prisma.users.update({
-      where: { id: userId },
-      data: {
-        postCheckCounter: 0,
-      },
-    });
-  } catch (error) {
-    console.error(
-      `Failed to decrement post counter for user ${userId}:`,
-      error
-    );
-  }
-}
 
 async function decrementPostCounter(userId) {
   try {
@@ -568,5 +556,5 @@ module.exports = {
   getComments,
 
   deleteComment,
-  resetPostCheckCoutner,
+  resetPostCheckCounter,
 };

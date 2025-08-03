@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createForumPost } from "@/services/forumService";
 import { useAuth } from "@/contexts/AuthContext";
-import { createApprovalForumPost } from "@/services/reviewService";
+import {
+  createApprovalForumPost,
+  discardApprovalForumPost,
+} from "@/services/reviewService";
 import { getTasksForForumPost } from "@/services/taskService";
 const CreatePost = () => {
   const [title, setTitle] = useState("");
@@ -85,14 +88,12 @@ const CreatePost = () => {
             : null,
       };
       const res = await createForumPost(postData);
-      if (res.message.includes("moderator approval")) {
-        showModal(res.message, "pending");
-      } else if (
-        res.message ===
-        "Would you like to send this post to moderator for approval?"
-      ) {
+      if (res.reason === "USER_FLAGGED") {
+        console.log(res.message);
         setPendingModerator(true);
         showModal(res.message, "moderatorPrompt");
+      } else if (res.message.includes("moderator approval")) {
+        showModal(res.message, "pending");
       } else {
         showModal("Post created successfully!", "success");
       }
@@ -149,6 +150,7 @@ const CreatePost = () => {
         );
       }
     } else {
+      discardApprovalForumPost(user.id);
       setModal({ isOpen: false, message: "", type: "" });
     }
   };
@@ -421,6 +423,7 @@ const CreatePost = () => {
                 </label>
                 <input
                   type="text"
+                  disabled={isSubmitting}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter your post title"
@@ -441,6 +444,7 @@ const CreatePost = () => {
                   placeholder="Write your post content here..."
                   className="textarea textarea-bordered min-h-[250px] sm:min-h-[300px] lg:min-h-[400px] w-full text-sm sm:text-base leading-relaxed focus:textarea-primary p-3 sm:p-4"
                   required
+                  disabled={isSubmitting}
                 ></textarea>
               </div>
             </div>
@@ -517,6 +521,23 @@ const CreatePost = () => {
                   </svg>
                 </div>
               )}
+              {modal.type == "moderatorPrompt" && (
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-warning flex items-center justify-center shrink-0">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <circle cx="12" cy="17" r="1" fill="currentColor" />
+                  </svg>
+                </div>
+              )}
               {(modal.type === "auth" || modal.type === "error") && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
@@ -548,29 +569,14 @@ const CreatePost = () => {
                 {modal.type === "pending" && "Pending Approval"}
                 {modal.type === "auth" && "Authentication Required"}
                 {modal.type === "error" && "Error"}
+                {modal.type === "moderatorPrompt" &&
+                  "We found your recent posts inappropriate"}
               </h3>
             </div>
-            <div className="py-3 sm:py-4 flex items-center gap-3">
-              {modal.type === "moderatorPrompt" && (
-                <span className="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 aspect-square rounded-full text-warning">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <circle cx="12" cy="17" r="1" fill="currentColor" />
-                  </svg>
-                </span>
-              )}
-              <span className="font-bold text-sm sm:text-base">
+            <div className="flex py-3 sm:py-4  items-center gap-3 ">
+              <p className="font-bold text-sm sm:text-base whitespace-pre-line ">
                 {modal.message}
-              </span>
+              </p>
             </div>
             <div className="flex justify-end gap-2 mt-6 sm:mt-8">
               {modal.type === "moderatorPrompt" ? (

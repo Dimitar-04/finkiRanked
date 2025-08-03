@@ -30,6 +30,9 @@ export const deleteReviewPost = async (postId, userId) => {
 export const createApprovalForumPost = async (postData) => {
   return await apiClient.post("/review/posts/approval", postData);
 };
+export const discardApprovalForumPost = async (userId) => {
+  return await apiClient.put(`/review/posts/approval/${userId}`);
+};
 export const approveReviewPost = async (postId, postData, userId) => {
   return await apiClient.post(`/review/posts/${postId}/${userId}`, postData);
 };

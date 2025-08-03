@@ -175,7 +175,7 @@ const UserPosts = () => {
                   onClick={() => {
                     navigate("/dashboard/create-post");
                   }}
-                  className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
                 >
                   Create a Post
                 </button>
@@ -183,7 +183,7 @@ const UserPosts = () => {
                   onClick={() => {
                     navigate("/dashboard/forum");
                   }}
-                  className="cursor-pointer px-4 py-2 sm:px-6 sm:py-3 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm sm:text-base font-medium w-full lg:w-auto lg:whitespace-nowrap"
+                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
                 >
                   View Forum
                 </button>
