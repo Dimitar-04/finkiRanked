@@ -1,16 +1,21 @@
-import React from "react";
+import React, { use } from "react";
 import logoIcon from "../../assets/images/logoIcon.png";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@/contexts/AuthContext";
 const Footer = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   return (
     <footer className="footer footer-horizontal footer-center bg-base-100 text-base-content rounded p-10 b">
       <nav className="grid grid-flow-col gap-4">
         <a
           className="link link-hover"
           onClick={() => {
-            navigate("/register");
+            if (user) {
+              navigate("/dashboard");
+            } else {
+              navigate("/register");
+            }
           }}
         >
           Register
@@ -18,7 +23,11 @@ const Footer = () => {
         <a
           className="link link-hover"
           onClick={() => {
-            navigate("/login");
+            if (user) {
+              navigate("/dashboard");
+            } else {
+              navigate("/login");
+            }
           }}
         >
           Log In
@@ -29,7 +38,7 @@ const Footer = () => {
             navigate("/dashboard");
           }}
         >
-          Attempt a challenge
+          Attempt the challenge
         </a>
         <a
           className="link link-hover"

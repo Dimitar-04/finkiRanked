@@ -203,7 +203,6 @@ const sendHourlyReviewNotification = async (userEmail, posts) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Moderator email sent successfully to ${userEmail}`);
   } catch (error) {
     console.error(`Failed to send approval email to ${userEmail}:`, error);
   }

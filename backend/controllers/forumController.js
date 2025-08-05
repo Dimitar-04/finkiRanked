@@ -148,103 +148,56 @@ async function decrementPostCounter(userId) {
 }
 
 const getForumPosts = async (req, res) => {
-  console.log("BACKEND called");
   try {
-    // Extract parameters with strict type checking and debug output
-    const page = req.query.page !== undefined ? parseInt(req.query.page) : 0;
-    const limit =
-      req.query.limit !== undefined ? parseInt(req.query.limit) : 20;
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 20;
+    const commentSort = req.query.commentSort;
+    const topic = req.query.topic?.trim();
+    const date = req.query.date;
 
-    // Topic needs special handling
-    const topic = req.query.topic || null;
-
-    const sort = req.query.sort || null;
-    const date = req.query.date || null;
-    const commentSort = req.query.commentSort || null;
-    const search = req.query.search || null;
-
+    const search = req.query.search?.trim();
+    const sort = req.query.sort;
     const skip = page * limit;
     const take = limit;
 
-    // Build filter conditions
-    const whereCondition = {};
+    const filters = [];
 
-    // Filter by topic if provided
     if (topic && topic !== "all") {
-      const trimmedTopic = topic.trim();
-
-      whereCondition.topic = trimmedTopic;
+      filters.push({ topic });
     }
 
-    // Filter by specific date if provided
     if (date) {
       const selectedDate = new Date(date);
-
-      // Ensure the date is valid
-      if (isNaN(selectedDate.getTime())) {
+      if (!isNaN(selectedDate.getTime())) {
+        filters.push({ date_created: selectedDate });
+      } else {
         console.error(`Invalid date provided: "${date}"`);
-      } else {
-        whereCondition.date_created = selectedDate;
       }
     }
 
-    // Filter by search text if provided
-    if (search && search.trim()) {
-      const searchTerm = search.trim();
-
-      // Use Prisma's OR condition to search in both title and content
-      // Case-insensitive search using contains with mode: 'insensitive'
-      const searchCondition = {
+    if (search) {
+      filters.push({
         OR: [
-          {
-            title: {
-              contains: searchTerm,
-              mode: "insensitive",
-            },
-          },
-          {
-            content: {
-              contains: searchTerm,
-              mode: "insensitive",
-            },
-          },
+          { title: { contains: search, mode: "insensitive" } },
+          { content: { contains: search, mode: "insensitive" } },
         ],
-      };
-
-      // If we already have other conditions, combine them with AND
-      if (Object.keys(whereCondition).length > 0) {
-        whereCondition.AND = [{ ...whereCondition }, searchCondition];
-
-        // Clear the original conditions since they're now in AND
-        Object.keys(whereCondition).forEach((key) => {
-          if (key !== "AND") {
-            delete whereCondition[key];
-          }
-        });
-      } else {
-        // If no other conditions, just use the search condition
-        Object.assign(whereCondition, searchCondition);
-      }
+      });
     }
+
+    // Combine filters with AND if there are any
+    const whereCondition = filters.length > 0 ? { AND: filters } : {};
 
     // Determine ordering - using an array to support multiple sorting criteria
     let orderBy = [];
 
-    // First, handle comment popularity sorting if specified
     if (commentSort === "most-popular") {
       orderBy.push({ comment_count: "desc" });
 
-      // Add date as secondary sort to make results consistent
       orderBy.push({ date_created: "desc" });
     } else if (commentSort === "least-popular") {
       orderBy.push({ comment_count: "asc" });
-
-      // Add date as secondary sort to make results consistent
       orderBy.push({ date_created: "desc" });
-    }
-    // Only apply date sorting as primary sort if comment sorting isn't specified
-    else {
-      // Always apply date sorting (either as primary or secondary criterion)
+    } else {
       if (sort === "oldest") {
         orderBy.push({ date_created: "asc" });
       } else {
@@ -276,26 +229,6 @@ const getForumPosts = async (req, res) => {
       ...post,
       challengeTitle: post.challenges?.title || null,
     }));
-
-    // Enhanced debug output
-
-    // Log topic distribution to help debug topic filtering issues
-    if (topic && topic !== "all") {
-      const topicsInResult = {};
-      forumPosts.forEach((post) => {
-        topicsInResult[post.topic] = (topicsInResult[post.topic] || 0) + 1;
-      });
-
-      // Check if filtering was successful
-      const nonMatchingCount = forumPosts.filter(
-        (post) => post.topic !== topic
-      ).length;
-      if (nonMatchingCount > 0) {
-        console.warn(
-          `WARNING: Found ${nonMatchingCount} posts with wrong topic in results!`
-        );
-      }
-    }
 
     // Set cache control headers to prevent caching
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");

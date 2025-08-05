@@ -63,7 +63,7 @@ const CalendarPopover = ({ isOpen, onClose, onDateSelect, selectedDate }) => {
   return (
     <div
       ref={popoverRef}
-      className="absolute top-10 mt-2 right-50 z-20 bg-base-200 rounded-lg shadow-xl p-4 border border-base-300 w-[320px]"
+      className="absolute top-10 mt-2  z-30 bg-base-200 rounded-lg shadow-xl p-4 border border-base-300 w-[320px]"
     >
       <calendar-date
         ref={calendarRef}

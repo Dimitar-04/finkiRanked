@@ -30,11 +30,8 @@ export const getForumPosts = async (page, limit, filters = null) => {
             ? filters.selectedDate
             : new Date(String(filters.selectedDate));
 
-        // Validate the date before proceeding
         if (!isNaN(dateObj.getTime())) {
-          const formattedDate = dateObj.toISOString().split("T")[0];
-
-          url += `&date=${formattedDate}`;
+          url += `&date=${dateObj}`;
 
           // Log combined filter details when using specific date with other filters
         } else {

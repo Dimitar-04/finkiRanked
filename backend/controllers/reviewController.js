@@ -124,12 +124,23 @@ const getReviewPosts = async (req, res) => {
           orderBy: {
             created_at: "asc",
           },
+          include: {
+            challenges: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
         }),
       ]);
 
       const totalPages = Math.ceil(totalPosts / parseInt(limit));
-
-      res.status(200).json({ posts, totalPages });
+      const reviewPosts = posts.map((post) => ({
+        ...post,
+        challengeTitle: post.challenges?.title,
+      }));
+      res.status(200).json({ posts: reviewPosts, totalPages });
     } catch (dbError) {
       console.error("Database query error:", dbError);
       res.status(500).json({ error: "Error fetching posts from database" });

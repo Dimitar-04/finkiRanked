@@ -24,7 +24,7 @@ const Forum = () => {
     postId: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
-  const postsPerPage = 20;
+  const postsPerPage = 10;
   const { user } = useAuth();
 
   const defaultFilters = {
@@ -164,116 +164,20 @@ const Forum = () => {
   };
 
   return (
-    <div data-theme="luxury" className="min-h-screen bg-base-100">
-      <div className="flex flex-col h-screen">
-        {/* Sticky Header Section */}
-        <div className="sticky top-0 z-10 bg-base-100 border-b border-base-300 shadow-sm">
-          <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
-            <div className="flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 lg:gap-4">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center lg:text-left">
-                Forum Posts
-              </h1>
-              <div className="flex  xs:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
-                <button
-                  onClick={() => {
-                    navigate("/dashboard/create-post");
-                  }}
-                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
-                >
-                  <span className="xs:hidden">Create Post</span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/dashboard/user-posts");
-                  }}
-                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
-                >
-                  <span className="xs:hidden">My Posts</span>
-                  <span className="hidden xs:inline">Your Posts</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Navbar */}
-        <div className="sticky top-[68px] sm:top-[76px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
-          <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
-            {/* Mobile Filter Toggle */}
-            <div className="flex items-center justify-between mb-3 lg:hidden">
-              <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                Filters
-                {/* Active filter count indicator */}
-                {(filters.topic !== "all" ||
-                  filters.dateSort !== "newest" ||
-                  filters.selectedDate ||
-                  filters.commentSort !== "none" ||
-                  (filters.searchText && filters.searchText.trim())) && (
-                  <span className="badge badge-sm bg-yellow-500 text-black border-none">
-                    {
-                      [
-                        filters.topic !== "all",
-                        filters.dateSort !== "newest",
-                        filters.selectedDate,
-                        filters.commentSort !== "none",
-                        filters.searchText && filters.searchText.trim(),
-                      ].filter(Boolean).length
-                    }
-                  </span>
-                )}
-              </h3>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="btn btn-sm btn-ghost px-2"
-              >
-                <svg
-                  className={`w-5 h-5 transition-transform duration-200 ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Filter Controls */}
-            <div
-              className={`transition-all duration-300 ${
-                showFilters ? "block opacity-100" : "hidden opacity-0"
-              } lg:block lg:opacity-100`}
-            >
-              {/* Mobile-First Filter Layout */}
-              <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-3 mb-3 max-w-full">
-                {/* Search Filter - Full width on mobile, 2 cols on desktop */}
-                <div className="flex flex-col gap-1.5 lg:col-span-2">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Search Posts
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search titles and content..."
-                      value={filters.searchText}
-                      onChange={(e) =>
-                        setFilters({ ...filters, searchText: e.target.value })
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          applyFilters();
-                        }
-                      }}
-                      className="input input-sm input-bordered w-full text-sm pl-9 pr-3"
-                    />
+    <div data-theme="luxury" className="flex flex-col h-screen bg-base-100">
+      <div className="flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-20 bg-base-100">
+          <div className="flex flex-col">
+            {/* Sticky Header Section */}
+            <div className=" border-base-300 shadow-sm">
+              <div className="flex xs:flex-row gap-2 sm:gap-3 w-full lg:w-auto justify-end p-2">
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => navigate("/dashboard/create-post")}
+                    className="btn bg-[#FFB800] text-black btn-sm gap-1"
+                  >
                     <svg
-                      className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -282,483 +186,608 @@ const Forum = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        d="M12 4v16m8-8H4"
                       />
                     </svg>
-                  </div>
-                </div>
-
-                {/* Mobile: 2-column grid for selects */}
-                <div className="grid grid-cols-2 gap-3 lg:contents">
-                  {/* Topic Filter */}
-                  <div className="flex flex-col gap-1.5 lg:col-span-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Topic
-                    </label>
-                    <select
-                      value={filters.topic}
-                      onChange={(e) =>
-                        setFilters({ ...filters, topic: e.target.value })
-                      }
-                      className="select select-sm select-bordered w-full text-sm"
+                    <span className="hidden sm:inline">Create Post</span>
+                  </button>
+                  <button
+                    onClick={() => navigate("/dashboard/user-posts")}
+                    className="btn btn-outline btn-sm gap-1"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <option value="all">All Topics</option>
-                      <option value="general">General</option>
-                      <option value="daily-challenge">Daily Challenge</option>
-                    </select>
-                  </div>
-
-                  {/* Date Sort */}
-                  <div className="flex flex-col gap-1.5 lg:col-span-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Date Order
-                    </label>
-                    <select
-                      value={filters.dateSort}
-                      onChange={(e) =>
-                        setFilters({ ...filters, dateSort: e.target.value })
-                      }
-                      className="select select-sm select-bordered w-full text-sm"
-                    >
-                      <option value="newest">Most Recent</option>
-                      <option value="oldest">Oldest First</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Mobile: Single column for date picker and popularity */}
-                <div className="space-y-3 lg:space-y-0 lg:contents">
-                  <div className="flex flex-col gap-1.5 lg:col-span-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Popularity
-                    </label>
-                    <select
-                      value={filters.commentSort}
-                      onChange={(e) =>
-                        setFilters({ ...filters, commentSort: e.target.value })
-                      }
-                      className="select select-sm select-bordered w-full text-sm"
-                    >
-                      <option value="none">No Sorting</option>
-                      <option value="most-popular">Most Popular</option>
-                      <option value="least-popular">Least Popular</option>
-                    </select>
-                  </div>
-                  {/* Specific Date Filter */}
-                  <div className="realtive flex flex-col gap-1.5 lg:col-span-1">
-                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Specific Date
-                    </label>
-
-                    <div className="relative">
-                      <input
-                        type="text"
-                        readOnly // Makes the input non-editable by typing
-                        onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
-                        value={
-                          filters.selectedDate
-                            ? new Date(filters.selectedDate).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )
-                            : "" // Use empty string so placeholder is visible
-                        }
-                        placeholder="Select date"
-                        // Style to match other inputs and add cursor-pointer
-                        className="input input-sm input-bordered w-full text-sm pl-9 pr-3 cursor-pointer"
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                       />
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        // Position the icon inside the input field
-                        className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    {/* Render the popover here */}
-                    <CalendarPopover
-                      isOpen={isCalendarOpen}
-                      onClose={() => setIsCalendarOpen(false)}
-                      selectedDate={filters.selectedDate}
-                      onDateSelect={(date) => {
-                        setFilters({ ...filters, selectedDate: date });
-                      }}
-                    />
-                  </div>
+                    </svg>
+                    <span className="hidden sm:inline">Your Posts</span>
+                  </button>
                 </div>
+              </div>
+            </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-1.5 lg:col-span-1">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
-                    Actions
-                  </label>
-                  <div className="flex gap-2">
+            {/* Filter Navbar */}
+            <div className="border-b border-base-300 shadow-sm">
+              <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
+                {/* Mobile Filter Toggle */}
+                <div className="flex items-center justify-between mb-3 lg:hidden ">
+                  <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                    Filters
+                    {/* Active filter count indicator */}
                     {(filters.topic !== "all" ||
                       filters.dateSort !== "newest" ||
                       filters.selectedDate ||
                       filters.commentSort !== "none" ||
                       (filters.searchText && filters.searchText.trim())) && (
-                      <button
-                        onClick={clearFilters}
-                        className="cursor-pointer px-2.5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
-                      >
-                        <span className="lg:hidden">Clear</span>
-                        <span className="hidden lg:inline">Clear Filters</span>
-                      </button>
+                      <span className="badge badge-sm bg-yellow-500 text-black border-none">
+                        {
+                          [
+                            filters.topic !== "all",
+                            filters.dateSort !== "newest",
+                            filters.selectedDate,
+                            filters.commentSort !== "none",
+                            filters.searchText && filters.searchText.trim(),
+                          ].filter(Boolean).length
+                        }
+                      </span>
                     )}
-                    <button
-                      onClick={applyFilters}
-                      className="cursor-pointer px-2.5 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                  </h3>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="btn btn-sm btn-ghost px-2"
+                  >
+                    <svg
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        showFilters ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <span className="lg:hidden">Apply</span>
-                      <span className="hidden lg:inline">Apply Filters</span>
-                    </button>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Filter Controls */}
+                <div
+                  className={`transition-all duration-300 ${
+                    showFilters ? "block opacity-100" : "hidden opacity-0"
+                  } lg:block lg:opacity-100`}
+                >
+                  {/* Mobile-First Filter Layout */}
+                  <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-3 mb-3 max-w-full">
+                    {/* Search Filter - Full width on mobile, 2 cols on desktop */}
+                    <div className="flex flex-col gap-1.5 lg:col-span-2">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Search Posts
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Search titles and content..."
+                          value={filters.searchText}
+                          onChange={(e) =>
+                            setFilters({
+                              ...filters,
+                              searchText: e.target.value,
+                            })
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              applyFilters();
+                            }
+                          }}
+                          className="input input-sm input-bordered w-full text-sm pl-9 pr-3"
+                        />
+                        <svg
+                          className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Mobile: 2-column grid for selects */}
+                    <div className="grid grid-cols-2 gap-3 lg:contents">
+                      {/* Topic Filter */}
+                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Topic
+                        </label>
+                        <select
+                          value={filters.topic}
+                          onChange={(e) =>
+                            setFilters({ ...filters, topic: e.target.value })
+                          }
+                          className="select select-sm select-bordered w-full text-sm"
+                        >
+                          <option value="all">All Topics</option>
+                          <option value="general">General</option>
+                          <option value="daily-challenge">
+                            Daily Challenge
+                          </option>
+                        </select>
+                      </div>
+
+                      {/* Date Sort */}
+                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Date Order
+                        </label>
+                        <select
+                          value={filters.dateSort}
+                          onChange={(e) =>
+                            setFilters({ ...filters, dateSort: e.target.value })
+                          }
+                          className="select select-sm select-bordered w-full text-sm"
+                        >
+                          <option value="newest">Most Recent</option>
+                          <option value="oldest">Oldest First</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Mobile: Single column for date picker and popularity */}
+                    <div className="space-y-3 lg:space-y-0 lg:contents">
+                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Popularity
+                        </label>
+                        <select
+                          value={filters.commentSort}
+                          onChange={(e) =>
+                            setFilters({
+                              ...filters,
+                              commentSort: e.target.value,
+                            })
+                          }
+                          className="select select-sm select-bordered w-full text-sm"
+                        >
+                          <option value="none">No Sorting</option>
+                          <option value="most-popular">Most Popular</option>
+                          <option value="least-popular">Least Popular</option>
+                        </select>
+                      </div>
+                      {/* Specific Date Filter */}
+                      <div className="relative flex flex-col gap-1.5 lg:col-span-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Specific Date
+                        </label>
+
+                        <div className="relative">
+                          <input
+                            type="text"
+                            readOnly // Makes the input non-editable by typing
+                            onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
+                            value={
+                              filters.selectedDate
+                                ? new Date(
+                                    filters.selectedDate
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                : "" // Use empty string so placeholder is visible
+                            }
+                            placeholder="Select date"
+                            // Style to match other inputs and add cursor-pointer
+                            className="input input-sm input-bordered w-full text-sm pl-9 pr-3 cursor-pointer"
+                          />
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            // Position the icon inside the input field
+                            className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                        {/* Render the popover here */}
+                        <CalendarPopover
+                          isOpen={isCalendarOpen}
+                          onClose={() => setIsCalendarOpen(false)}
+                          selectedDate={filters.selectedDate}
+                          onDateSelect={(date) => {
+                            setFilters({ ...filters, selectedDate: date });
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-1.5 lg:col-span-1">
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
+                        Actions
+                      </label>
+                      <div className="flex gap-2">
+                        {(filters.topic !== "all" ||
+                          filters.dateSort !== "newest" ||
+                          filters.selectedDate ||
+                          filters.commentSort !== "none" ||
+                          (filters.searchText &&
+                            filters.searchText.trim())) && (
+                          <button
+                            onClick={clearFilters}
+                            className="cursor-pointer px-2.5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                          >
+                            <span className="lg:hidden">Clear Filters</span>
+                            <span className="hidden lg:inline">
+                              Clear Filters
+                            </span>
+                          </button>
+                        )}
+                        <button
+                          onClick={applyFilters}
+                          className="cursor-pointer px-2.5 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                        >
+                          <span className="lg:hidden">Apply Filters</span>
+                          <span className="hidden lg:inline">
+                            Apply Filters
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Filters Display - Improved Mobile Layout */}
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                    {filters.topic !== "all" && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                        <span className="text-xs">Topic:</span>
+                        <span className="font-medium text-xs">
+                          {filters.topic === "general"
+                            ? "General"
+                            : "Daily Challenge"}
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                          onClick={() => {
+                            const newFilters = { ...filters, topic: "all" };
+                            setFilters(newFilters);
+                            fetchPosts(0, false, newFilters);
+                          }}
+                          aria-label="Remove topic filter"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.searchText && filters.searchText.trim() && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                        <span className="text-xs">Search:</span>
+                        <span className="font-medium text-xs truncate">
+                          "{filters.searchText.trim()}"
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                          onClick={() => {
+                            const newFilters = { ...filters, searchText: "" };
+                            setFilters(newFilters);
+                            fetchPosts(0, false, newFilters);
+                          }}
+                          aria-label="Remove search filter"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.dateSort !== "newest" && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                        <span className="text-xs">Sort:</span>
+                        <span className="font-medium text-xs">
+                          {filters.dateSort === "oldest"
+                            ? "Oldest First"
+                            : "Most Recent"}
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                          onClick={() => {
+                            const newFilters = {
+                              ...filters,
+                              dateSort: "newest",
+                            };
+                            setFilters(newFilters);
+                            fetchPosts(0, false, newFilters);
+                          }}
+                          aria-label="Remove sort filter"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.selectedDate && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                        <span className="text-xs">Date:</span>
+                        <span className="font-medium text-xs">
+                          {new Date(filters.selectedDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                          onClick={() => {
+                            const newFilters = {
+                              ...filters,
+                              selectedDate: null,
+                            };
+                            setFilters(newFilters);
+                            fetchPosts(0, false, newFilters);
+                          }}
+                          aria-label="Remove date filter"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.commentSort !== "none" && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                        <span className="font-medium text-xs">
+                          {filters.commentSort === "most-popular"
+                            ? "Most Popular"
+                            : "Least Popular"}
+                        </span>
+                        <button
+                          type="button"
+                          className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                          onClick={() => {
+                            const newFilters = {
+                              ...filters,
+                              commentSort: "none",
+                            };
+                            setFilters(newFilters);
+                            fetchPosts(0, false, newFilters);
+                          }}
+                          aria-label="Remove popularity filter"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>
-
-              {/* Active Filters Display - Improved Mobile Layout */}
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {filters.topic !== "all" && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                    <span className="text-xs">Topic:</span>
-                    <span className="font-medium text-xs">
-                      {filters.topic === "general"
-                        ? "General"
-                        : "Daily Challenge"}
-                    </span>
-                    <button
-                      type="button"
-                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                      onClick={() => {
-                        const newFilters = { ...filters, topic: "all" };
-                        setFilters(newFilters);
-                        fetchPosts(0, false, newFilters);
-                      }}
-                      aria-label="Remove topic filter"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.searchText && filters.searchText.trim() && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
-                    <span className="text-xs">Search:</span>
-                    <span className="font-medium text-xs truncate">
-                      "{filters.searchText.trim()}"
-                    </span>
-                    <button
-                      type="button"
-                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                      onClick={() => {
-                        const newFilters = { ...filters, searchText: "" };
-                        setFilters(newFilters);
-                        fetchPosts(0, false, newFilters);
-                      }}
-                      aria-label="Remove search filter"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.dateSort !== "newest" && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                    <span className="text-xs">Sort:</span>
-                    <span className="font-medium text-xs">
-                      {filters.dateSort === "oldest"
-                        ? "Oldest First"
-                        : "Most Recent"}
-                    </span>
-                    <button
-                      type="button"
-                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                      onClick={() => {
-                        const newFilters = { ...filters, dateSort: "newest" };
-                        setFilters(newFilters);
-                        fetchPosts(0, false, newFilters);
-                      }}
-                      aria-label="Remove sort filter"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.selectedDate && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                    <span className="text-xs">Date:</span>
-                    <span className="font-medium text-xs">
-                      {new Date(filters.selectedDate).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        }
-                      )}
-                    </span>
-                    <button
-                      type="button"
-                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                      onClick={() => {
-                        const newFilters = { ...filters, selectedDate: null };
-                        setFilters(newFilters);
-                        fetchPosts(0, false, newFilters);
-                      }}
-                      aria-label="Remove date filter"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-                {filters.commentSort !== "none" && (
-                  <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                    <span className="font-medium text-xs">
-                      {filters.commentSort === "most-popular"
-                        ? "Most Popular"
-                        : "Least Popular"}
-                    </span>
-                    <button
-                      type="button"
-                      className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                      onClick={() => {
-                        const newFilters = { ...filters, commentSort: "none" };
-                        setFilters(newFilters);
-                        fetchPosts(0, false, newFilters);
-                      }}
-                      aria-label="Remove popularity filter"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1">
+        <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
           {loading ? (
             <div className="flex justify-center items-center h-full">
               <span className="loading loading-spinner loading-md sm:loading-lg"></span>
             </div>
           ) : (
-            <div className="h-full">
-              {/* Scrollable Posts Content */}
-              <div className="overflow-y-auto">
-                <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
-                  {posts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <div className="text-xl sm:text-2xl font-semibold text-gray-400 mb-2">
-                        No posts found
-                      </div>
-                      <p className="text-gray-500 text-center text-sm sm:text-base">
-                        There are no posts that match your selected filters.
-                      </p>
-                      <button
-                        onClick={clearFilters}
-                        className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm font-medium transition-colors duration-200"
-                      >
-                        Clear Filters
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                      {posts.map((post) => (
-                        <div
-                          key={post.id}
-                          className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 border h-full flex flex-col"
+            <>
+              {posts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="text-xl sm:text-2xl font-semibold text-gray-400 mb-2">
+                    No posts found
+                  </div>
+                  <p className="text-gray-500 text-center text-sm sm:text-base">
+                    There are no posts that match your selected filters.
+                  </p>
+                  <button
+                    onClick={clearFilters}
+                    className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm font-medium transition-colors duration-200"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              ) : (
+                // Replace your current grid container with this responsive grid
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-2 3xl:grid-cols-4 gap-4 lg:gap-6">
+                  {posts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 border h-full flex flex-col"
+                    >
+                      <div className="card-body p-3 sm:p-4 lg:p-5 xl:p-6 flex flex-col h-full relative">
+                        {(post.author_name === user.name ||
+                          post.author_name === user.username ||
+                          user.isModerator) && (
+                          <button
+                            className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              showModal(
+                                "Are you sure you want to delete this post? This action cannot be undone.",
+                                "confirm",
+                                post.id
+                              );
+                            }}
+                          >
+                            <img
+                              src={trashIcon}
+                              alt="Delete"
+                              className="w-4 h-4 sm:w-5 sm:h-5"
+                            />
+                          </button>
+                        )}
+
+                        <h3
+                          className="card-title text-base sm:text-lg lg:text-xl mb-2 text-base-content line-clamp-2 hover:underline cursor-pointer pr-8"
+                          onClick={() => {
+                            navigate(`/dashboard/forum-detail/${post.id}`, {
+                              state: { post },
+                            });
+                          }}
                         >
-                          <div className="card-body p-3 sm:p-4 lg:p-5 xl:p-6 flex flex-col h-full relative">
-                            {(post.author_name === user.name ||
-                              post.author_name === user.username ||
-                              user.isModerator) && (
-                              <button
-                                className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  showModal(
-                                    "Are you sure you want to delete this post? This action cannot be undone.",
-                                    "confirm",
-                                    post.id
-                                  );
-                                }}
-                              >
-                                <img
-                                  src={trashIcon}
-                                  alt="Delete"
-                                  className="w-4 h-4 sm:w-5 sm:h-5"
-                                />
-                              </button>
-                            )}
+                          {post.title}
+                        </h3>
 
-                            <h3
-                              className="card-title text-base sm:text-lg lg:text-xl mb-2 text-base-content line-clamp-2 hover:underline cursor-pointer pr-8"
-                              onClick={() => {
-                                navigate(`/dashboard/forum-detail/${post.id}`, {
-                                  state: { post },
-                                });
-                              }}
-                            >
-                              {post.title}
-                            </h3>
-
-                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-3">
-                              <p className="text-xs sm:text-sm text-base-content/70">
-                                By{" "}
-                                <span className="font-semibold">
-                                  {post.author_name}
-                                </span>
-                                <span className="mx-1">·</span>
-                                <span className="italic">
-                                  {new Date(
-                                    post.date_created
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </span>
-                              </p>
-                            </div>
-
-                            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3">
-                              <span
-                                className={`inline-block text-xs sm:text-sm font-semibold px-2 py-1 rounded ${
-                                  post.topic === "general"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-green-100 text-green-800"
-                                }`}
-                              >
-                                {post.topic === "general"
-                                  ? "General"
-                                  : "Daily Challenge"}
-                              </span>
-                              {post.challengeTitle && (
-                                <span className="inline-block bg-yellow-100 text-yellow-800 text-xs sm:text-sm font-semibold px-2 py-1 rounded">
-                                  {post.challengeTitle}
-                                </span>
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                          <span
+                            className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${
+                              post.topic === "general"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {post.topic === "general"
+                              ? "General"
+                              : "Daily Challenge"}
+                          </span>
+                          {post.challengeTitle && (
+                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1.5 py-0.5 rounded">
+                              {post.challengeTitle}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-3">
+                          <p className="text-xs sm:text-sm text-base-content/70">
+                            By{" "}
+                            <span className="font-semibold">
+                              {post.author_name}
+                            </span>
+                            <span className="mx-1">·</span>
+                            <span className="italic">
+                              {new Date(post.date_created).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
                               )}
-                            </div>
+                            </span>
+                          </p>
+                        </div>
 
-                            <p className="hidden sm:block text-sm text-base-content/80 line-clamp-3 flex-grow">
-                              {post.content && post.content.length > 100
-                                ? post.content.slice(0, 100) + "..."
-                                : post.content}
+                        <p className="hidden sm:block text-sm text-base-content/80 line-clamp-3 flex-grow">
+                          {post.content && post.content.length > 100
+                            ? post.content.slice(0, 100) + "..."
+                            : post.content}
+                        </p>
+
+                        <div className="card-actions justify-end mt-4">
+                          <div
+                            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+                            onClick={() => {
+                              navigate(`/dashboard/forum-detail/${post.id}`, {
+                                state: { post },
+                              });
+                            }}
+                          >
+                            <p className="text-xs sm:text-sm font-medium">
+                              {post.comment_count}
                             </p>
-
-                            <div className="card-actions justify-end mt-4">
-                              <div
-                                className="flex items-center gap-1.5 sm:gap-2 cursor-pointer"
-                                onClick={() => {
-                                  navigate(
-                                    `/dashboard/forum-detail/${post.id}`,
-                                    {
-                                      state: { post },
-                                    }
-                                  );
-                                }}
-                              >
-                                <p className="text-xs sm:text-sm font-medium">
-                                  {post.comment_count}
-                                </p>
-                                <img
-                                  src={commentIcon}
-                                  alt="Comment"
-                                  className="w-4 h-4 sm:w-5 sm:h-5 hover:opacity-80"
-                                />
-                              </div>
-                            </div>
+                            <img
+                              src={commentIcon}
+                              alt="Comment"
+                              className="w-4 h-4 sm:w-5 sm:h-5 hover:opacity-80"
+                            />
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  )}
-
-                  {!loading && totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
-                      <button
-                        className="btn btn-sm btn-ghost px-2 sm:px-3"
-                        onClick={() => fetchPosts(page - 1, false, filters)}
-                        disabled={loading || page === 0}
-                        title="Previous Page"
-                      >
-                        ←
-                      </button>
-
-                      {Array.from(
-                        { length: Math.min(3, totalPages) },
-                        (_, idx) => (
-                          <button
-                            key={idx}
-                            className={`btn btn-sm px-2 sm:px-3 ${
-                              page === idx ? "border-amber-400" : "btn-ghost"
-                            }`}
-                            onClick={() => fetchPosts(idx, false, filters)}
-                            disabled={loading}
-                          >
-                            {idx + 1}
-                          </button>
-                        )
-                      )}
-
-                      {totalPages > 3 && (
-                        <span className="px-1 sm:px-2 text-gray-500 text-sm">
-                          ...
-                        </span>
-                      )}
-
-                      {page > 2 && page < totalPages - 1 && (
-                        <button
-                          className="btn btn-sm border-amber-400 px-2 sm:px-3"
-                          onClick={() => fetchPosts(page, false, filters)}
-                          disabled={loading}
-                        >
-                          {page + 1}
-                        </button>
-                      )}
-
-                      {totalPages > 3 && (
-                        <button
-                          className={`btn btn-sm px-2 sm:px-3 ${
-                            page === totalPages - 1
-                              ? "border-amber-400"
-                              : "btn-ghost"
-                          }`}
-                          onClick={() =>
-                            fetchPosts(totalPages - 1, false, filters)
-                          }
-                          disabled={loading}
-                        >
-                          {totalPages}
-                        </button>
-                      )}
-
-                      <button
-                        className="btn btn-sm btn-ghost px-2 sm:px-3"
-                        onClick={() => fetchPosts(page + 1, false, filters)}
-                        disabled={loading || page === totalPages - 1}
-                        title="Next Page"
-                      >
-                        →
-                      </button>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            </div>
+              )}
+
+              {!loading && (
+                <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
+                  <button
+                    className="btn btn-sm btn-ghost px-2 sm:px-3"
+                    onClick={() => fetchPosts(page - 1, false, filters)}
+                    disabled={loading || page === 0}
+                    title="Previous Page"
+                  >
+                    ←
+                  </button>
+
+                  {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
+                    <button
+                      key={idx}
+                      className={`btn btn-sm px-2 sm:px-3 ${
+                        page === idx ? "border-amber-400" : "btn-ghost"
+                      }`}
+                      onClick={() => fetchPosts(idx, false, filters)}
+                      disabled={loading}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+
+                  {totalPages > 3 && (
+                    <span className="px-1 sm:px-2 text-gray-500 text-sm">
+                      ...
+                    </span>
+                  )}
+
+                  {page > 2 && page < totalPages - 1 && (
+                    <button
+                      className="btn btn-sm border-amber-400 px-2 sm:px-3"
+                      onClick={() => fetchPosts(page, false, filters)}
+                      disabled={loading}
+                    >
+                      {page + 1}
+                    </button>
+                  )}
+
+                  {totalPages > 3 && (
+                    <button
+                      className={`btn btn-sm px-2 sm:px-3 ${
+                        page === totalPages - 1
+                          ? "border-amber-400"
+                          : "btn-ghost"
+                      }`}
+                      onClick={() => fetchPosts(totalPages - 1, false, filters)}
+                      disabled={loading}
+                    >
+                      {totalPages}
+                    </button>
+                  )}
+
+                  <button
+                    className="btn btn-sm btn-ghost px-2 sm:px-3"
+                    onClick={() => fetchPosts(page + 1, false, filters)}
+                    disabled={loading || page === totalPages - 1}
+                    title="Next Page"
+                  >
+                    →
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
