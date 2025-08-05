@@ -344,7 +344,9 @@ const Forum = () => {
                           className="select select-sm select-bordered w-full text-sm"
                         >
                           <option value="newest">Most Recent</option>
-                          <option value="oldest">Oldest First</option>
+                          <option value="past-week">Past Week</option>
+                          <option value="past-month">Past Month</option>
+                          <option value="past-year">Past Year</option>
                         </select>
                       </div>
                     </div>

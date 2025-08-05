@@ -127,6 +127,9 @@ const ManagePosts = () => {
     setModal({ isOpen: true, message, type, postId, post });
   };
 
+  const openViewPostModal = (post) => {
+    showModal("", "view-post", post.id, post);
+  };
   const closeModal = () => {
     setModal({
       isOpen: false,
@@ -656,7 +659,10 @@ const ManagePosts = () => {
                 key={post.id}
                 className="p-4 sm:p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-full"
               >
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20">
+                <h1
+                  className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20"
+                  onClick={() => openViewPostModal(post)}
+                >
                   {post.title}
                 </h1>
                 <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex gap-1 sm:gap-2">
@@ -714,7 +720,9 @@ const ManagePosts = () => {
                   </span>
                 </p>
                 <p className="text-sm sm:text-base text-base-content/90 whitespace-pre-line break-words">
-                  {post.content}
+                  {post.content && post.content.length > 100
+                    ? post.content.slice(0, 100) + "..."
+                    : post.content}
                 </p>
               </div>
             ))}
@@ -750,7 +758,7 @@ const ManagePosts = () => {
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6  w-full max-w-sm sm:max-w-md mx-4">
+          <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6  w-full max-w-xl sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               {(modal.type === "approve" || modal.type === "success") && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0">
@@ -796,9 +804,37 @@ const ManagePosts = () => {
                   "Approve Post"}
               </h3>
             </div>
-            <div className="flex py-3 sm:py-4 items-center gap-3">
-              <p>{modal.message}</p>
-            </div>
+            {modal.type === "view-post" && modal.post ? (
+              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                <h3
+                  className="font-bold text-xl sm:text-2xl text-base-content"
+                  id="modal-title"
+                >
+                  {modal.post.title}
+                </h3>
+                <p className="text-sm text-base-content/70">
+                  By {modal.post.author_name}
+                  <span className="mx-1.5">·</span>
+                  <span className="italic">
+                    {new Date(modal.post.created_at).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  </span>
+                </p>
+                <div className="text-base text-base-content/90 whitespace-pre-line break-words pt-4 border-t border-base-300">
+                  {modal.post.content}
+                </div>
+              </div>
+            ) : (
+              <div className="flex py-3 sm:py-4 items-center gap-3">
+                <p>{modal.message}</p>
+              </div>
+            )}
             <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
               {modal.type === "approve" || modal.type === "delete" ? (
                 <>

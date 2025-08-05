@@ -147,6 +147,22 @@ async function decrementPostCounter(userId) {
   }
 }
 
+const scorePosts = (posts) => {
+  const now = new Date();
+  return posts
+    .map((post) => {
+      const createdAt = new Date(post.date_created);
+      const daysSince = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+      const commentCount = post.comment_count || 0;
+      const score = commentCount * 2 - daysSince;
+      return {
+        ...post,
+        score,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+};
+
 const getForumPosts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 0;
@@ -161,7 +177,7 @@ const getForumPosts = async (req, res) => {
     const take = limit;
 
     const filters = [];
-
+    let orderBy = [];
     if (topic && topic !== "all") {
       filters.push({ topic });
     }
@@ -174,7 +190,23 @@ const getForumPosts = async (req, res) => {
         console.error(`Invalid date provided: "${date}"`);
       }
     }
-
+    if (sort === "past-week" || sort === "past-month" || sort === "past-year") {
+      const fromDate = new Date();
+      if (sort === "past-week") {
+        fromDate.setDate(fromDate.getDate() - 7);
+      } else if (sort === "past-month") {
+        fromDate.setDate(fromDate.getDate() - 30);
+      } else if (sort === "past-year") {
+        fromDate.setDate(fromDate.getDate() - 365);
+      }
+      filters.push({
+        date_created: {
+          gte: fromDate,
+        },
+      });
+    } else if (!commentSort) {
+      orderBy.push({ date_created: "desc" });
+    }
     if (search) {
       filters.push({
         OR: [
@@ -187,9 +219,6 @@ const getForumPosts = async (req, res) => {
     // Combine filters with AND if there are any
     const whereCondition = filters.length > 0 ? { AND: filters } : {};
 
-    // Determine ordering - using an array to support multiple sorting criteria
-    let orderBy = [];
-
     if (commentSort === "most-popular") {
       orderBy.push({ comment_count: "desc" });
 
@@ -197,12 +226,6 @@ const getForumPosts = async (req, res) => {
     } else if (commentSort === "least-popular") {
       orderBy.push({ comment_count: "asc" });
       orderBy.push({ date_created: "desc" });
-    } else {
-      if (sort === "oldest") {
-        orderBy.push({ date_created: "asc" });
-      } else {
-        orderBy.push({ date_created: "desc" });
-      }
     }
 
     const totalCount = await prisma.forum_posts.count({
@@ -225,10 +248,16 @@ const getForumPosts = async (req, res) => {
       },
     });
 
-    const forumPosts = allPosts.map((post) => ({
+    let forumPosts = allPosts.map((post) => ({
       ...post,
       challengeTitle: post.challenges?.title || null,
     }));
+    if (
+      (sort === "past-week" || sort === "past-month" || sort == "past-year") &&
+      !commentSort
+    ) {
+      forumPosts = scorePosts(forumPosts).map(({ score, ...post }) => post);
+    }
 
     // Set cache control headers to prevent caching
     res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
