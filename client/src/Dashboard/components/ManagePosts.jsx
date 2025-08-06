@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-
+import { useSearchParams } from "react-router-dom";
 import doneAll from "../../assets/images/done-all.svg";
 import trashIcon from "../../assets/images/delete.svg";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "cally";
 const ManagePosts = () => {
   const [posts, setPosts] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [isFetching, setIsFetching] = useState(false);
@@ -32,14 +33,22 @@ const ManagePosts = () => {
 
   // Filter states
   const defaultFilters = {
-    topic: "all", // "all", "general", "daily-challenge"
-    dateSort: "newest", // "newest", "oldest"
-    selectedDate: null, // specific date filter
-    searchText: "", // text search in title and content
+    topic: "all",
+    dateSort: "newest",
+    selectedDate: null,
+    searchText: "",
   };
 
-  const [filters, setFilters] = useState({ ...defaultFilters });
-  const [appliedFilters, setAppliedFilters] = useState({ ...defaultFilters });
+  const [filters, setFilters] = useState(() => {
+    const initialFilters = { ...defaultFilters };
+    for (const [key, value] of searchParams.entries()) {
+      if (key in initialFilters) {
+        initialFilters[key] = value;
+      }
+    }
+    return initialFilters;
+  });
+
   const [showFilters, setShowFilters] = useState(false);
 
   // Apply filters to posts
@@ -108,20 +117,35 @@ const ManagePosts = () => {
     return filteredPosts;
   };
 
-  // Apply all selected filters
   const applyFilters = () => {
-    console.log("Applying filters:", filters);
-    const currentFilters = { ...filters };
-    setAppliedFilters(currentFilters);
-  };
+    const newSearchParams = new URLSearchParams();
 
-  // Clear all filters and reset to default
+    for (const [key, value] of Object.entries(filters)) {
+      if (value && value.toString() !== defaultFilters[key]?.toString()) {
+        newSearchParams.set(key, value);
+      }
+    }
+    setSearchParams(newSearchParams);
+  };
+  const handleRemoveFilter = (filterKey) => {
+    const newFilters = { ...filters, [filterKey]: defaultFilters[filterKey] };
+    setFilters(newFilters);
+
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete(filterKey);
+    setSearchParams(newSearchParams);
+  };
   const clearFilters = () => {
-    console.log("Clearing filters, using defaults:", defaultFilters);
     const freshDefaultFilters = { ...defaultFilters };
     setFilters(freshDefaultFilters);
-    setAppliedFilters(freshDefaultFilters);
+    setSearchParams({});
   };
+  const activeFilters = { ...defaultFilters };
+  for (const [key, value] of searchParams.entries()) {
+    if (key in activeFilters) {
+      activeFilters[key] = value;
+    }
+  }
 
   const showModal = (message, type, postId = null, post = null) => {
     setModal({ isOpen: true, message, type, postId, post });
@@ -246,14 +270,8 @@ const ManagePosts = () => {
     }
   };
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < totalPages) {
-      setPage(newPage);
-    }
-  };
-
   // Apply filters to get filtered posts
-  const filteredPosts = applyFiltersToPendingPosts(posts, appliedFilters);
+  const filteredPosts = applyFiltersToPendingPosts(posts, activeFilters);
 
   const isLoading = authLoading || isFetching;
 
@@ -502,18 +520,14 @@ const ManagePosts = () => {
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="text-xs">Topic:</span>
                         <span className="font-medium text-xs">
-                          {appliedFilters.topic === "general"
+                          {filters.topic === "general"
                             ? "General"
                             : "Daily Challenge"}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = { ...filters, topic: "all" };
-                            setFilters(newFilters);
-                            applyFiltersToPendingPosts(posts, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("topic")}
                           aria-label="Remove topic filter"
                         >
                           ×
@@ -529,11 +543,7 @@ const ManagePosts = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = { ...filters, searchText: "" };
-                            setFilters(newFilters);
-                            applyFiltersToPendingPosts(posts, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("searchText")}
                           aria-label="Remove search filter"
                         >
                           ×
@@ -551,14 +561,7 @@ const ManagePosts = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = {
-                              ...filters,
-                              dateSort: "newest",
-                            };
-                            setFilters(newFilters);
-                            applyFiltersToPendingPosts(posts, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("dateSort")}
                           aria-label="Remove sort filter"
                         >
                           ×
@@ -581,14 +584,7 @@ const ManagePosts = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = {
-                              ...filters,
-                              selectedDate: null,
-                            };
-                            setFilters(newFilters);
-                            applyFiltersToPendingPosts(posts, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("selectedDate")}
                           aria-label="Remove date filter"
                         >
                           ×
@@ -633,15 +629,15 @@ const ManagePosts = () => {
               No posts found matching your criteria.
             </p>
             <p className="text-xs sm:text-sm text-base-content/40 mt-2">
-              {appliedFilters.searchText ||
-              appliedFilters.topic !== "all" ||
-              appliedFilters.selectedDate
+              {activeFilters.searchText ||
+              activeFilters.topic !== "all" ||
+              activeFilters.selectedDate
                 ? "Try adjusting your filters to see more posts."
                 : "No posts are currently awaiting review."}
             </p>
-            {(appliedFilters.searchText ||
-              appliedFilters.topic !== "all" ||
-              appliedFilters.selectedDate) && (
+            {(activeFilters.searchText ||
+              activeFilters.topic !== "all" ||
+              activeFilters.selectedDate) && (
               <button
                 onClick={clearFilters}
                 className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm font-medium"
@@ -660,12 +656,12 @@ const ManagePosts = () => {
                 className="p-4 sm:p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-full"
               >
                 <h1
-                  className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20"
+                  className="text-lg text-sm sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20 cursor-pointer"
                   onClick={() => openViewPostModal(post)}
                 >
                   {post.title}
                 </h1>
-                <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex gap-1 sm:gap-2">
+                <div className="absolute gap-3 top-3 sm:top-4 right-3 sm:right-4 flex gap-1 sm:gap-2">
                   <button
                     title="Approve Post"
                     className="btn btn-xs sm:btn-sm btn-success btn-circle"
@@ -720,8 +716,8 @@ const ManagePosts = () => {
                   </span>
                 </p>
                 <p className="text-sm sm:text-base text-base-content/90 whitespace-pre-line break-words">
-                  {post.content && post.content.length > 100
-                    ? post.content.slice(0, 100) + "..."
+                  {post.content && post.content.length > 60
+                    ? post.content.slice(0, 60) + "..."
                     : post.content}
                 </p>
               </div>

@@ -25,6 +25,7 @@ const ForumPostDetail = () => {
   const location = useLocation();
   const statePost = useState(location.state?.post || {});
   const fromPath = location.state?.from || "/dashboard/forum";
+  const fromForumSearchPrams = location.state?.fromForumSearch;
   const post = statePost[0];
   const [posting, setPosting] = useState(false);
   const { user } = useAuth();
@@ -136,7 +137,12 @@ const ForumPostDetail = () => {
         <div className="w-full  max-w-2xl">
           <button
             className="btn btn-ghost mb-4"
-            onClick={() => navigate(fromPath)}
+            onClick={() => {
+              const targetUrl = fromForumSearchPrams
+                ? `${fromPath}?${fromForumSearchPrams}`
+                : fromPath;
+              navigate(targetUrl);
+            }}
           >
             ← Back to {fromPath.includes("user-posts") ? "Your Posts" : "Forum"}
           </button>

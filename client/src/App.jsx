@@ -14,6 +14,7 @@ import DashboardLayout from "./Dashboard/DashboardLayout";
 import Logout from "./Dashboard/components/Logout";
 import ManageChallenges from "./Dashboard/components/ManageChallenges";
 import CreateNewChallenge from "./Dashboard/components/CreateNewChallenge";
+// import { ForumSearchParamsProvider } from "./contexts/ForumSearchParamsContext";
 
 import UserPosts from "./Dashboard/components/userPosts";
 export default function App() {

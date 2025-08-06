@@ -245,7 +245,7 @@ const approveReviewPost = async (req, res) => {
       content: postToApprove.content,
       authorName: postToApprove.author_name,
       authorId: postToApprove.author_id,
-      dateCreated: postToApprove.created_at,
+      dateCreated: new Date(),
       commentCount: postToApprove.comment_count || 0,
       topic: postToApprove.topic,
       challengeId: postToApprove.challenge_id,

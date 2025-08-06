@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import commentIcon from "../../assets/images/comment.svg";
 import trashIcon from "../../assets/images/delete.svg"; // Add this import
 import Navbar from "./Navbar";
@@ -8,14 +8,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { DatePicker } from "react-daisyui-timetools";
 import "react-datepicker/dist/react-datepicker.css";
 import CalendarPopover from "./CalendarPopover";
+// import { useForumSearchParams } from "../../contexts/ForumSearchParamsContext";
 const Forum = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [forumSearchParams, setForumSearchParams] = useSearchParams();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState({
     isOpen: false,
@@ -35,7 +37,15 @@ const Forum = () => {
     searchText: "",
   };
 
-  const [filters, setFilters] = useState({ ...defaultFilters });
+  const [filters, setFilters] = useState(() => {
+    const initialFilters = { ...defaultFilters };
+    for (const [key, value] of forumSearchParams.entries()) {
+      if (key in initialFilters) {
+        initialFilters[key] = value;
+      }
+    }
+    return initialFilters;
+  });
   const [showFilters, setShowFilters] = useState(false);
 
   const showModal = (message, type = "info", postId = null) => {
@@ -55,112 +65,124 @@ const Forum = () => {
   };
 
   // Only fetch posts on component mount
-  useEffect(() => {
-    fetchPosts(0, false, { ...defaultFilters });
-  }, []);
 
-  const fetchPosts = async (
-    pageNum = 0,
-    append = false,
-    activeFilters = null
-  ) => {
-    try {
-      if (!append) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-
-      const filtersToApply = activeFilters
-        ? { ...activeFilters }
-        : { ...filters };
-
-      Object.keys(filtersToApply).forEach((key) => {
-        if (filtersToApply[key] === undefined) {
-          filtersToApply[key] = null;
+  const fetchPosts = useCallback(
+    async (pageNum = 0, append = false, activeFilters = null) => {
+      try {
+        if (!append) {
+          setLoading(true);
+        } else {
+          setLoadingMore(true);
         }
-      });
 
-      const response = await getForumPosts(
-        pageNum,
-        postsPerPage,
-        filtersToApply
-      );
-      const { forumPosts, totalCount } = response;
-      setTotalPages(Math.max(1, Math.ceil(totalCount / postsPerPage)));
-      setHasMore(pageNum < Math.ceil(totalCount / postsPerPage) - 1);
+        const filtersToApply = activeFilters
+          ? { ...activeFilters }
+          : { ...filters };
 
-      if (append) {
-        setPosts((prevPosts) => [...prevPosts, ...posts]);
-      } else {
-        setPosts(forumPosts);
+        Object.keys(filtersToApply).forEach((key) => {
+          if (filtersToApply[key] === undefined) {
+            filtersToApply[key] = null;
+          }
+        });
+
+        const response = await getForumPosts(
+          pageNum,
+          postsPerPage,
+          filtersToApply
+        );
+        const { forumPosts, totalCount } = response;
+        setTotalPages(Math.max(1, Math.ceil(totalCount / postsPerPage)));
+        setHasMore(pageNum < Math.ceil(totalCount / postsPerPage) - 1);
+
+        if (append) {
+          setPosts((prevPosts) => [...prevPosts, ...posts]);
+        } else {
+          setPosts(forumPosts);
+        }
+
+        setPage(pageNum);
+      } catch (error) {
+        console.error("Error fetching forum posts:", error);
+
+        if (error.response) {
+          console.error("Error response:", error.response);
+        }
+
+        if (!append) {
+          setPosts([]);
+        }
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-
-      setPage(pageNum);
-    } catch (error) {
-      console.error("Error fetching forum posts:", error);
-
-      if (error.response) {
-        console.error("Error response:", error.response);
+    },
+    [postsPerPage]
+  );
+  useEffect(() => {
+    const pageFromUrl = parseInt(forumSearchParams.get("page") || "1", 10);
+    const filtersFromUrl = { ...defaultFilters };
+    for (const [key, value] of forumSearchParams.entries()) {
+      if (key in filtersFromUrl) {
+        filtersFromUrl[key] = value;
       }
-
-      if (!append) {
-        setPosts([]);
-      }
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
     }
-  };
+
+    setFilters(filtersFromUrl);
+    fetchPosts(pageFromUrl, false, filtersFromUrl);
+  }, [forumSearchParams, fetchPosts]);
 
   // Apply all selected filters
-  const applyFilters = async () => {
-    // Make a copy of the current filters to ensure we're using the latest state
-    const currentFilters = { ...filters };
+  const applyFilters = () => {
+    const newSearchParams = new URLSearchParams();
 
-    setLoading(true);
-
-    setPage(0);
-
-    setTimeout(async () => {
-      try {
-        console.log("Starting fetchPosts with filters:", currentFilters);
-        await fetchPosts(0, false, currentFilters);
-        console.log("Filters applied successfully");
-      } catch (err) {
-        console.error("Error applying filters:", err);
+    for (const [key, value] of Object.entries(filters)) {
+      if (value && value !== defaultFilters[key]) {
+        newSearchParams.set(key, value);
       }
-    }, 100);
+    }
+    newSearchParams.set("page", "1");
+    setForumSearchParams(newSearchParams);
+  };
+  const handleRemoveFilter = (filterKeyToRemove) => {
+    const newSearchParams = new URLSearchParams(forumSearchParams);
+    const newFilters = {
+      ...filters,
+      [filterKeyToRemove]: defaultFilters[filterKeyToRemove],
+    };
+    newSearchParams.delete(filterKeyToRemove);
+    newSearchParams.set("page", "1");
+    setForumSearchParams(newSearchParams);
+    setFilters(newFilters);
   };
 
-  // Clear all filters and reset to default
   const clearFilters = async () => {
-    // Show visual confirmation that filters are being cleared
     setLoading(true);
 
-    // Update the filters state with a fresh copy of default filters
     const freshDefaultFilters = { ...defaultFilters };
     setFilters(freshDefaultFilters);
+    setForumSearchParams({ page: "1" });
 
-    // Reset to page 0 and fetch with default filters after a small delay
-    setPage(0);
+    setPage(1);
 
-    // Force a small delay to ensure state updates have propagated
-    setTimeout(async () => {
-      await fetchPosts(0, false, freshDefaultFilters);
-    }, 100);
+    await fetchPosts(1, false, freshDefaultFilters);
   };
 
   const handleDeletePost = async (postId) => {
     try {
       await deleteForumPost(postId);
 
-      // Refresh the posts after deletion with current filters
-      await fetchPosts(0, false, { ...filters });
+      await fetchPosts(1, false, { ...filters });
       showModal("Post deleted successfully.", "success");
     } catch (error) {
       console.error("Error deleting post:", error);
     }
+  };
+  const formatFilterLabel = (value) => {
+    if (!value) return "";
+    return value
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   return (
@@ -464,8 +486,7 @@ const Forum = () => {
                   {/* Active Filters Display - Improved Mobile Layout */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {filters.topic !== "all" && (
-                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                        <span className="text-xs">Topic:</span>
+                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {filters.topic === "general"
                             ? "General"
@@ -474,11 +495,7 @@ const Forum = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = { ...filters, topic: "all" };
-                            setFilters(newFilters);
-                            fetchPosts(0, false, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("topic")}
                           aria-label="Remove topic filter"
                         >
                           ×
@@ -486,19 +503,14 @@ const Forum = () => {
                       </span>
                     )}
                     {filters.searchText && filters.searchText.trim() && (
-                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
-                        <span className="text-xs">Search:</span>
+                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1 max-w-[200px]">
                         <span className="font-medium text-xs truncate">
                           "{filters.searchText.trim()}"
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = { ...filters, searchText: "" };
-                            setFilters(newFilters);
-                            fetchPosts(0, false, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("searchText")}
                           aria-label="Remove search filter"
                         >
                           ×
@@ -506,24 +518,14 @@ const Forum = () => {
                       </span>
                     )}
                     {filters.dateSort !== "newest" && (
-                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                        <span className="text-xs">Sort:</span>
+                      <span className="badge badge-outline flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
-                          {filters.dateSort === "oldest"
-                            ? "Oldest First"
-                            : "Most Recent"}
+                          {formatFilterLabel(filters.dateSort)}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = {
-                              ...filters,
-                              dateSort: "newest",
-                            };
-                            setFilters(newFilters);
-                            fetchPosts(0, false, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("dateSort")}
                           aria-label="Remove sort filter"
                         >
                           ×
@@ -531,8 +533,7 @@ const Forum = () => {
                       </span>
                     )}
                     {filters.selectedDate && (
-                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                        <span className="text-xs">Date:</span>
+                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {new Date(filters.selectedDate).toLocaleDateString(
                             "en-US",
@@ -546,14 +547,7 @@ const Forum = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = {
-                              ...filters,
-                              selectedDate: null,
-                            };
-                            setFilters(newFilters);
-                            fetchPosts(0, false, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("selectedDate")}
                           aria-label="Remove date filter"
                         >
                           ×
@@ -561,7 +555,7 @@ const Forum = () => {
                       </span>
                     )}
                     {filters.commentSort !== "none" && (
-                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {filters.commentSort === "most-popular"
                             ? "Most Popular"
@@ -570,14 +564,7 @@ const Forum = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => {
-                            const newFilters = {
-                              ...filters,
-                              commentSort: "none",
-                            };
-                            setFilters(newFilters);
-                            fetchPosts(0, false, newFilters);
-                          }}
+                          onClick={() => handleRemoveFilter("commentSort")}
                           aria-label="Remove popularity filter"
                         >
                           ×
@@ -645,18 +632,21 @@ const Forum = () => {
                           </button>
                         )}
 
-                        <h3
-                          className="card-title text-base sm:text-lg lg:text-xl mb-2 text-base-content line-clamp-2 hover:underline cursor-pointer pr-8"
+                        <h1
+                          className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20 cursor-pointer"
                           onClick={() => {
                             navigate(`/dashboard/forum-detail/${post.id}`, {
-                              state: { post },
+                              state: {
+                                post,
+                                fromForumSearch: forumSearchParams.toString(),
+                              },
                             });
                           }}
                         >
                           {post.title}
-                        </h3>
+                        </h1>
 
-                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-0.5">
                           <span
                             className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${
                               post.topic === "general"
@@ -674,29 +664,28 @@ const Forum = () => {
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-3">
-                          <p className="text-xs sm:text-sm text-base-content/70">
-                            By{" "}
-                            <span className="font-semibold">
-                              {post.author_name}
-                            </span>
-                            <span className="mx-1">·</span>
-                            <span className="italic">
-                              {new Date(post.date_created).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )}
-                            </span>
-                          </p>
-                        </div>
 
-                        <p className="hidden sm:block text-sm text-base-content/80 line-clamp-3 flex-grow">
-                          {post.content && post.content.length > 100
-                            ? post.content.slice(0, 100) + "..."
+                        <p className="text-xs sm:text-sm text-base-content/70 mb-2 sm:mb-6">
+                          By{" "}
+                          <span className="font-semibold">
+                            {post.author_name}
+                          </span>
+                          <span className="mx-1">·</span>
+                          <span className="italic">
+                            {new Date(post.date_created).toLocaleDateString(
+                              "en-US",
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </span>
+                        </p>
+
+                        <p className="hidden sm:block text-lg text-base-content/80 line-clamp-1">
+                          {post.content && post.content.length > 60
+                            ? post.content.slice(0, 60) + "..."
                             : post.content}
                         </p>
 
@@ -729,8 +718,12 @@ const Forum = () => {
                 <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
                   <button
                     className="btn btn-sm btn-ghost px-2 sm:px-3"
-                    onClick={() => fetchPosts(page - 1, false, filters)}
-                    disabled={loading || page === 0}
+                    onClick={() => {
+                      const newPage = page - 1;
+                      forumSearchParams.set("page", newPage.toString());
+                      setForumSearchParams(forumSearchParams);
+                    }}
+                    disabled={loading || page === 1}
                     title="Previous Page"
                   >
                     ←
@@ -740,9 +733,12 @@ const Forum = () => {
                     <button
                       key={idx}
                       className={`btn btn-sm px-2 sm:px-3 ${
-                        page === idx ? "border-amber-400" : "btn-ghost"
+                        page - 1 === idx ? "border-amber-400" : "btn-ghost"
                       }`}
-                      onClick={() => fetchPosts(idx, false, filters)}
+                      onClick={() => {
+                        forumSearchParams.set("page", (idx + 1).toString());
+                        setForumSearchParams(forumSearchParams);
+                      }}
                       disabled={loading}
                     >
                       {idx + 1}
@@ -758,7 +754,10 @@ const Forum = () => {
                   {page > 2 && page < totalPages - 1 && (
                     <button
                       className="btn btn-sm border-amber-400 px-2 sm:px-3"
-                      onClick={() => fetchPosts(page, false, filters)}
+                      onClick={() => {
+                        forumSearchParams.set("page", page.toString());
+                        setForumSearchParams(forumSearchParams);
+                      }}
                       disabled={loading}
                     >
                       {page + 1}
@@ -768,11 +767,12 @@ const Forum = () => {
                   {totalPages > 3 && (
                     <button
                       className={`btn btn-sm px-2 sm:px-3 ${
-                        page === totalPages - 1
-                          ? "border-amber-400"
-                          : "btn-ghost"
+                        page === totalPages ? "border-amber-400" : "btn-ghost"
                       }`}
-                      onClick={() => fetchPosts(totalPages - 1, false, filters)}
+                      onClick={() => {
+                        forumSearchParams.set("page", totalPages.toString());
+                        setForumSearchParams(forumSearchParams);
+                      }}
                       disabled={loading}
                     >
                       {totalPages}
@@ -781,8 +781,12 @@ const Forum = () => {
 
                   <button
                     className="btn btn-sm btn-ghost px-2 sm:px-3"
-                    onClick={() => fetchPosts(page + 1, false, filters)}
-                    disabled={loading || page === totalPages - 1}
+                    onClick={() => {
+                      const newPage = page + 1;
+                      forumSearchParams.set("page", newPage.toString());
+                      setForumSearchParams(forumSearchParams);
+                    }}
+                    disabled={loading || page === totalPages}
                     title="Next Page"
                   >
                     →
