@@ -1,20 +1,28 @@
 import apiClient from "./apiClient";
 
-export const getReviewPosts = async (page, limit, userId, search, date) => {
+export const getReviewPosts = async (page, limit, userId, filters) => {
   const params = new URLSearchParams({
     page,
     limit,
     userId,
   });
 
-  if (search) {
-    params.append("search", search);
+  if (filters) {
+    if (filters.searchText) {
+      params.append("search", filters.searchText);
+    }
+    if (filters.selectedDate) {
+      const dateFormatted = new Date(filters.selectedDate);
+      console.log("service", dateFormatted);
+      params.append("date", dateFormatted);
+    }
+    if (filters.topic && filters.topic !== "all") {
+      params.append("topic", filters.topic);
+    }
+    if (filters.dateSort) {
+      params.append("dateSort", filters.dateSort);
+    }
   }
-  if (date) {
-    const dateFormated = new Date(date);
-    params.append("date", dateFormated.toISOString().split("T")[0]);
-  }
-
   try {
     return await apiClient.get(`/review/posts?${params.toString()}`);
   } catch (error) {

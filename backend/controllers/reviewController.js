@@ -11,6 +11,7 @@ const {
   sendDeletionEmail,
   sendModeratorManyPendingPostsEmail,
 } = require("../services/emailService");
+const { equal } = require("assert");
 
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName, topic, challengeId } = req.body;
@@ -77,7 +78,14 @@ const resetCheckCounter = async (req, res) => {
 
 const getReviewPosts = async (req, res) => {
   try {
-    const { page = 0, limit = 5, search = "", date = "" } = req.query;
+    const {
+      page = 0,
+      limit = 5,
+      search = "",
+      date = "",
+      topic = "all",
+      dateSort = "newest",
+    } = req.query;
     const skip = parseInt(page) * parseInt(limit);
     const userId = req.query.userId;
     const hasModeratorStatus = await verifyModeratorStatus(userId);
@@ -92,23 +100,31 @@ const getReviewPosts = async (req, res) => {
       };
       if (search) {
         whereClause.AND.push({
-          title: {
-            contains: search,
-            mode: "insensitive",
-          },
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { content: { contains: search, mode: "insensitive" } },
+            { author_name: { contains: search, mode: "insensitive" } },
+          ],
         });
       }
       if (date) {
+        // Create a start date (e.g., 2025-08-07T00:00:00.000Z)
         const startDate = new Date(date);
-        startDate.setUTCHours(0, 0, 0, 0);
-
-        const endDate = new Date(date);
-        endDate.setUTCHours(23, 59, 59, 999);
+        // Create an end date for the next day
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 1);
 
         whereClause.AND.push({
           created_at: {
-            gte: startDate,
-            lte: endDate,
+            gte: startDate, // Greater than or equal to the start of the day
+            lt: endDate, // Less than the start of the next day
+          },
+        });
+      }
+      if (topic && topic !== "all") {
+        whereClause.AND.push({
+          topic: {
+            equals: topic,
           },
         });
       }
@@ -122,7 +138,7 @@ const getReviewPosts = async (req, res) => {
           skip,
           take: parseInt(limit),
           orderBy: {
-            created_at: "asc",
+            created_at: dateSort === "oldest" ? "asc" : "desc",
           },
           include: {
             challenges: {

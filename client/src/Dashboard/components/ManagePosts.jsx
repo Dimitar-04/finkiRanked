@@ -19,7 +19,7 @@ const ManagePosts = () => {
   const [isFetching, setIsFetching] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [error, setError] = useState(null);
-  const postsPerPage = 5;
+  const postsPerPage = 10;
 
   const { user, loading: authLoading } = useAuth();
   const [modal, setModal] = useState({
@@ -51,72 +51,6 @@ const ManagePosts = () => {
 
   const [showFilters, setShowFilters] = useState(false);
 
-  // Apply filters to posts
-  const applyFiltersToPendingPosts = (posts, activeFilters) => {
-    let filteredPosts = [...posts];
-
-    // 1. Apply text search filter
-    if (activeFilters.searchText && activeFilters.searchText.trim()) {
-      const searchTerm = activeFilters.searchText.trim().toLowerCase();
-      filteredPosts = filteredPosts.filter((post) => {
-        const titleMatch =
-          post.title && post.title.toLowerCase().includes(searchTerm);
-        const contentMatch =
-          post.content && post.content.toLowerCase().includes(searchTerm);
-        const authorMatch =
-          post.author_name &&
-          post.author_name.toLowerCase().includes(searchTerm);
-        return titleMatch || contentMatch || authorMatch;
-      });
-    }
-
-    // 2. Apply topic filter
-    if (activeFilters.topic && activeFilters.topic !== "all") {
-      filteredPosts = filteredPosts.filter(
-        (post) => post.topic === activeFilters.topic
-      );
-    }
-
-    // 3. Apply specific date filter
-    if (activeFilters.selectedDate) {
-      try {
-        const filterDate =
-          activeFilters.selectedDate instanceof Date
-            ? new Date(activeFilters.selectedDate)
-            : new Date(String(activeFilters.selectedDate));
-
-        if (!isNaN(filterDate.getTime())) {
-          filterDate.setHours(0, 0, 0, 0);
-          const nextDay = new Date(filterDate);
-          nextDay.setDate(nextDay.getDate() + 1);
-
-          filteredPosts = filteredPosts.filter((post) => {
-            const postDate = new Date(post.created_at);
-            return postDate >= filterDate && postDate < nextDay;
-          });
-        }
-      } catch (err) {
-        console.error("Error in date filtering:", err);
-      }
-    }
-
-    // 4. Apply date sorting (comment sorting not applicable for pending posts)
-    if (activeFilters.dateSort) {
-      filteredPosts = filteredPosts.sort((a, b) => {
-        const dateA = new Date(a.created_at);
-        const dateB = new Date(b.created_at);
-
-        if (activeFilters.dateSort === "oldest") {
-          return dateA - dateB;
-        } else {
-          return dateB - dateA;
-        }
-      });
-    }
-
-    return filteredPosts;
-  };
-
   const applyFilters = () => {
     const newSearchParams = new URLSearchParams();
 
@@ -125,6 +59,8 @@ const ManagePosts = () => {
         newSearchParams.set(key, value);
       }
     }
+    newSearchParams.set("page", "1");
+    setPage(1);
     setSearchParams(newSearchParams);
   };
   const handleRemoveFilter = (filterKey) => {
@@ -133,12 +69,15 @@ const ManagePosts = () => {
 
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.delete(filterKey);
+    newSearchParams.set("page", "1");
+    setPage(1);
     setSearchParams(newSearchParams);
   };
   const clearFilters = () => {
     const freshDefaultFilters = { ...defaultFilters };
     setFilters(freshDefaultFilters);
-    setSearchParams({});
+    setSearchParams({ page: "1" });
+    setPage(1);
   };
   const activeFilters = { ...defaultFilters };
   for (const [key, value] of searchParams.entries()) {
@@ -174,51 +113,53 @@ const ManagePosts = () => {
     setIsActionLoading(false);
   };
 
-  const fetchPostsData = useCallback(async () => {
-    if (authLoading || !user?.id) return;
-
-    setIsFetching(true);
-    setError(null);
-    const pageToFetch = page - 1;
-    try {
-      const data = await getReviewPosts(
-        pageToFetch,
-        postsPerPage,
-        user.id,
-        null, // search - using client-side filtering instead
-        null // date - using client-side filtering instead
-      );
-
-      setPosts(data.posts);
-      setTotalPages(data.totalPages);
-    } catch (err) {
-      console.error("Error fetching review posts:", err);
-      setPosts([]);
-      setTotalPages(0);
-      setError(
-        err.response?.data?.error ||
-          "Failed to fetch posts. You may not have permission."
-      );
-    } finally {
-      setIsFetching(false);
-    }
-  }, [user?.id, page]);
-
   useEffect(() => {
+    const fetchPostsData = async () => {
+      if (authLoading || !user?.id) return;
+
+      setIsFetching(true);
+      setError(null);
+
+      const filtersForApi = {
+        searchText: searchParams.get("searchText") || "",
+        topic: searchParams.get("topic") || "all",
+        selectedDate: searchParams.get("selectedDate") || null,
+        dateSort: searchParams.get("dateSort") || "newest",
+      };
+
+      try {
+        const currentPage = parseInt(searchParams.get("page") || "1", 10);
+        setPage(currentPage);
+
+        const data = await getReviewPosts(
+          currentPage - 1,
+          postsPerPage,
+          user.id,
+          filtersForApi
+        );
+
+        setPosts(data.posts);
+        setTotalPages(data.totalPages);
+      } catch (err) {
+        console.error("Error fetching review posts:", err);
+        setPosts([]);
+        setTotalPages(0);
+        setError(
+          err.response?.data?.error ||
+            "Failed to fetch posts. You may not have permission."
+        );
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
     fetchPostsData();
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (page > 0) {
-      fetchPostsData(false);
-    }
-  }, [page]);
+  }, [user?.id, authLoading, searchParams]);
 
   const handleDeletePost = async (postId) => {
     try {
-      console.log(postId.id);
       await deleteReviewPost(postId, user.id);
-      fetchPostsData();
+      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
       showModal("Post deleted successfully.", "deleted");
     } catch (err) {
       console.error("Error deleting review post:", err);
@@ -238,7 +179,7 @@ const ManagePosts = () => {
       };
 
       await approveReviewPost(postToApprove.id, postDataForApproval, user.id);
-      fetchPostsData();
+      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
       showModal("Post approved successfully.", "success");
     } catch (err) {
       console.error("Error approving post:", err);
@@ -269,9 +210,6 @@ const ManagePosts = () => {
       );
     }
   };
-
-  // Apply filters to get filtered posts
-  const filteredPosts = applyFiltersToPendingPosts(posts, activeFilters);
 
   const isLoading = authLoading || isFetching;
 
@@ -608,7 +546,7 @@ const ManagePosts = () => {
             <span className="loading loading-spinner loading-md sm:loading-lg"></span>
           </div>
         )}
-        {filteredPosts.length === 0 && !isLoading && !error && (
+        {posts.length === 0 && !isLoading && !error && (
           <div className="text-center text-gray-500 py-8 sm:py-10">
             <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-base-300 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -650,7 +588,7 @@ const ManagePosts = () => {
 
         {!isLoading && (
           <div className=" grid grid-cols-1 2xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 md:p-6 md:pl-12 w-full">
-            {filteredPosts.map((post) => (
+            {posts.map((post) => (
               <div
                 key={post.id}
                 className="p-4 sm:p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-full"
@@ -725,23 +663,81 @@ const ManagePosts = () => {
           </div>
         )}
 
-        {!isLoading && posts.length > 0 && totalPages > 1 && (
-          <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-6 sm:mt-8 px-4">
-            <div className="text-sm text-base-content/60 mb-2 w-full text-center">
-              Showing {filteredPosts.length} of {posts.length} posts
-            </div>
-            {Array.from({ length: totalPages }, (_, idx) => (
+        {!isLoading && posts.length > 0 && totalPages >= 1 && (
+          <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 mb-6 sm:mt-8">
+            <button
+              className="btn btn-sm btn-ghost px-2 sm:px-3"
+              onClick={() => {
+                const newPage = page - 1;
+                searchParams.set("page", newPage.toString());
+                setSearchParams(searchParams);
+              }}
+              disabled={isLoading || page === 1}
+              title="Previous Page"
+            >
+              ←
+            </button>
+
+            {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
               <button
-                key={idx + 1}
-                className={`btn btn-xs sm:btn-sm ${
-                  page === idx + 1 ? "border-amber-400" : "btn-ghost"
+                key={idx}
+                className={`btn btn-sm px-2 sm:px-3 ${
+                  page - 1 === idx ? "border-amber-400" : "btn-ghost"
                 }`}
-                onClick={() => setPage(idx + 1)}
+                onClick={() => {
+                  searchParams.set("page", (idx + 1).toString());
+                  setSearchParams(searchParams);
+                }}
                 disabled={isLoading}
               >
                 {idx + 1}
               </button>
             ))}
+
+            {totalPages > 3 && (
+              <span className="px-1 sm:px-2 text-gray-500 text-sm">...</span>
+            )}
+
+            {page > 2 && page < totalPages - 1 && (
+              <button
+                className="btn btn-sm border-amber-400 px-2 sm:px-3"
+                onClick={() => {
+                  searchParams.set("page", page.toString());
+                  setSearchParams(searchParams);
+                }}
+                disabled={isLoading}
+              >
+                {page + 1}
+              </button>
+            )}
+
+            {totalPages > 3 && (
+              <button
+                className={`btn btn-sm px-2 sm:px-3 ${
+                  page === totalPages ? "border-amber-400" : "btn-ghost"
+                }`}
+                onClick={() => {
+                  searchParams.set("page", totalPages.toString());
+                  setSearchParams(searchParams);
+                }}
+                disabled={isLoading}
+              >
+                {totalPages}
+              </button>
+            )}
+
+            <button
+              className="btn btn-sm btn-ghost px-2 sm:px-3"
+              onClick={() => {
+                const newPage = page + 1;
+                searchParams.set("page", newPage.toString());
+                setSearchParams(searchParams);
+              }}
+              disabled={isLoading || page === totalPages}
+              title="Next Page"
+            >
+              →
+            </button>
           </div>
         )}
       </div>

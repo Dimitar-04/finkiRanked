@@ -165,7 +165,6 @@ const scorePosts = (posts) => {
 
 const getForumPosts = async (req, res) => {
   try {
-    console.log("Called");
     const page = parseInt(req.query.page) - 1 || 0;
     const limit = parseInt(req.query.limit) || 20;
     const commentSort = req.query.commentSort;

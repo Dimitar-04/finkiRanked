@@ -26,7 +26,7 @@ const Forum = () => {
     postId: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
-  const postsPerPage = 10;
+  const postsPerPage = 6;
   const { user } = useAuth();
 
   const defaultFilters = {
