@@ -89,11 +89,13 @@ const ManageChallenges = () => {
     const newFilters = { ...filters, [filterKey]: defaultFilters[filterKey] };
     setFilters(newFilters);
 
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.delete(filterKey);
-    newSearchParams.set('page', '1');
-    setCurrentPage(1);
-    setSearchParams(newSearchParams);
+    if (searchParams.has(filterKey)) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete(filterKey);
+      setCurrentPage(1);
+      newSearchParams.set('page', '1');
+      setSearchParams(newSearchParams);
+    }
   };
 
   const clearFilters = () => {
