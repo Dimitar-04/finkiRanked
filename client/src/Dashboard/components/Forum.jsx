@@ -612,8 +612,7 @@ const Forum = () => {
                   </button>
                 </div>
               ) : (
-                // Replace your current grid container with this responsive grid
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 l:gird-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4 lg:gap-6">
                   {posts.map((post) => (
                     <div
                       key={post.id}
