@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
-import doneAll from "../../assets/images/done-all.svg";
-import trashIcon from "../../assets/images/delete.svg";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import doneAll from '../../assets/images/done-all.svg';
+import trashIcon from '../../assets/images/delete.svg';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   getReviewPosts,
   deleteReviewPost,
   approveReviewPost,
-} from "@/services/reviewService";
-import CalendarPopover from "./CalendarPopover";
-import "react-datepicker/dist/react-datepicker.css";
-import "cally";
+} from '@/services/reviewService';
+import CalendarPopover from './CalendarPopover';
+import 'react-datepicker/dist/react-datepicker.css';
+import 'cally';
 const ManagePosts = () => {
   const [posts, setPosts] = useState([]);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,8 +24,8 @@ const ManagePosts = () => {
   const { user, loading: authLoading } = useAuth();
   const [modal, setModal] = useState({
     isOpen: false,
-    message: "",
-    type: "",
+    message: '',
+    type: '',
     postId: null,
     post: null,
   });
@@ -33,10 +33,10 @@ const ManagePosts = () => {
 
   // Filter states
   const defaultFilters = {
-    topic: "all",
-    dateSort: "newest",
+    topic: 'all',
+    dateSort: 'newest',
     selectedDate: null,
-    searchText: "",
+    searchText: '',
   };
 
   const [filters, setFilters] = useState(() => {
@@ -59,7 +59,7 @@ const ManagePosts = () => {
         newSearchParams.set(key, value);
       }
     }
-    newSearchParams.set("page", "1");
+    newSearchParams.set('page', '1');
     setPage(1);
     setSearchParams(newSearchParams);
   };
@@ -67,16 +67,18 @@ const ManagePosts = () => {
     const newFilters = { ...filters, [filterKey]: defaultFilters[filterKey] };
     setFilters(newFilters);
 
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.delete(filterKey);
-    newSearchParams.set("page", "1");
-    setPage(1);
-    setSearchParams(newSearchParams);
+    if (searchParams.has(filterKey)) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete(filterKey);
+      setPage(1);
+      newSearchParams.set('page', '1');
+      setSearchParams(newSearchParams);
+    }
   };
   const clearFilters = () => {
     const freshDefaultFilters = { ...defaultFilters };
     setFilters(freshDefaultFilters);
-    setSearchParams({ page: "1" });
+    setSearchParams({ page: '1' });
     setPage(1);
   };
   const activeFilters = { ...defaultFilters };
@@ -91,13 +93,13 @@ const ManagePosts = () => {
   };
 
   const openViewPostModal = (post) => {
-    showModal("", "view-post", post.id, post);
+    showModal('', 'view-post', post.id, post);
   };
   const closeModal = () => {
     setModal({
       isOpen: false,
-      message: "",
-      type: "",
+      message: '',
+      type: '',
       postId: null,
       post: null,
     });
@@ -105,9 +107,9 @@ const ManagePosts = () => {
 
   const confirmAction = async () => {
     setIsActionLoading(true);
-    if (modal.type === "delete" && modal.postId) {
+    if (modal.type === 'delete' && modal.postId) {
       await handleDeletePost(modal.postId);
-    } else if (modal.type === "approve" && modal.post) {
+    } else if (modal.type === 'approve' && modal.post) {
       await handleApprovePost(modal.post);
     }
     setIsActionLoading(false);
@@ -121,14 +123,14 @@ const ManagePosts = () => {
       setError(null);
 
       const filtersForApi = {
-        searchText: searchParams.get("searchText") || "",
-        topic: searchParams.get("topic") || "all",
-        selectedDate: searchParams.get("selectedDate") || null,
-        dateSort: searchParams.get("dateSort") || "newest",
+        searchText: searchParams.get('searchText') || '',
+        topic: searchParams.get('topic') || 'all',
+        selectedDate: searchParams.get('selectedDate') || null,
+        dateSort: searchParams.get('dateSort') || 'newest',
       };
 
       try {
-        const currentPage = parseInt(searchParams.get("page") || "1", 10);
+        const currentPage = parseInt(searchParams.get('page') || '1', 10);
         setPage(currentPage);
 
         const data = await getReviewPosts(
@@ -141,12 +143,12 @@ const ManagePosts = () => {
         setPosts(data.posts);
         setTotalPages(data.totalPages);
       } catch (err) {
-        console.error("Error fetching review posts:", err);
+        console.error('Error fetching review posts:', err);
         setPosts([]);
         setTotalPages(0);
         setError(
           err.response?.data?.error ||
-            "Failed to fetch posts. You may not have permission."
+            'Failed to fetch posts. You may not have permission.'
         );
       } finally {
         setIsFetching(false);
@@ -160,11 +162,11 @@ const ManagePosts = () => {
     try {
       await deleteReviewPost(postId, user.id);
       setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
-      showModal("Post deleted successfully.", "deleted");
+      showModal('Post deleted successfully.', 'deleted');
     } catch (err) {
-      console.error("Error deleting review post:", err);
+      console.error('Error deleting review post:', err);
       setError(
-        err.response?.data?.message || err.message || "Failed to delete post."
+        err.response?.data?.message || err.message || 'Failed to delete post.'
       );
     }
   };
@@ -179,32 +181,34 @@ const ManagePosts = () => {
       };
 
       await approveReviewPost(postToApprove.id, postDataForApproval, user.id);
-      setPosts((prevPosts) => prevPosts.filter((p) => p.id !== postId));
-      showModal("Post approved successfully.", "success");
+      setPosts((prevPosts) =>
+        prevPosts.filter((p) => p.id !== postToApprove.id)
+      );
+      showModal('Post approved successfully.', 'success');
     } catch (err) {
-      console.error("Error approving post:", err);
+      console.error('Error approving post:', err);
       setError(
-        err.response?.data?.message || err.message || "Failed to approve post."
+        err.response?.data?.message || err.message || 'Failed to approve post.'
       );
       showModal(
-        err.response?.data?.message || err.message || "Failed to approve post.",
-        "error"
+        err.response?.data?.message || err.message || 'Failed to approve post.',
+        'error'
       );
     }
   };
 
   const openConfirmationModal = (type, item) => {
-    if (type === "delete") {
+    if (type === 'delete') {
       showModal(
         `Are you sure you want to delete post with title "${item.title}"? This action cannot be undone.`,
-        "delete",
+        'delete',
         item.id,
         item
       );
-    } else if (type === "approve") {
+    } else if (type === 'approve') {
       showModal(
         `Are you sure you want to approve post with title "${item.title}"? It will be published to the forum.`,
-        "approve",
+        'approve',
         item.id,
         item
       );
@@ -232,18 +236,17 @@ const ManagePosts = () => {
                   <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     Filters
                     {/* Active filter count indicator */}
-                    {(filters.topic !== "all" ||
-                      filters.dateSort !== "newest" ||
+                    {(filters.topic !== 'all' ||
+                      filters.dateSort !== 'newest' ||
                       filters.selectedDate ||
-                      filters.commentSort !== "none" ||
                       (filters.searchText && filters.searchText.trim())) && (
                       <span className="badge badge-sm bg-yellow-500 text-black border-none">
                         {
                           [
-                            filters.topic !== "all",
-                            filters.dateSort !== "newest",
+                            filters.topic !== 'all',
+                            filters.dateSort !== 'newest',
                             filters.selectedDate,
-                            filters.commentSort !== "none",
+                            filters.commentSort !== 'none',
                             filters.searchText && filters.searchText.trim(),
                           ].filter(Boolean).length
                         }
@@ -256,7 +259,7 @@ const ManagePosts = () => {
                   >
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        showFilters ? "rotate-180" : ""
+                        showFilters ? 'rotate-180' : ''
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -275,13 +278,13 @@ const ManagePosts = () => {
                 {/* Filter Controls */}
                 <div
                   className={`transition-all duration-300 ${
-                    showFilters ? "block opacity-100" : "hidden opacity-0"
+                    showFilters ? 'block opacity-100' : 'hidden opacity-0'
                   } lg:block lg:opacity-100`}
                 >
-                  {/* Mobile-First Filter Layout */}
-                  <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-3 mb-3 max-w-full">
+                  {/* Mobile-First Filter Layout - Compact Version */}
+                  <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
                     {/* Search Filter - Full width on mobile, 2 cols on desktop */}
-                    <div className="flex flex-col gap-1.5 lg:col-span-2">
+                    <div className="flex flex-col gap-1 lg:col-span-2">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Search Posts
                       </label>
@@ -297,14 +300,14 @@ const ManagePosts = () => {
                             })
                           }
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") {
+                            if (e.key === 'Enter') {
                               applyFilters();
                             }
                           }}
-                          className="input input-sm input-bordered w-full text-sm pl-9 pr-3"
+                          className="input input-sm input-bordered w-full text-xs pl-8 pr-2 h-8"
                         />
                         <svg
-                          className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -320,9 +323,9 @@ const ManagePosts = () => {
                     </div>
 
                     {/* Mobile: 2-column grid for selects */}
-                    <div className="grid grid-cols-2 gap-3 lg:contents">
+                    <div className="grid grid-cols-2 gap-2 lg:contents">
                       {/* Topic Filter */}
-                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                      <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Topic
                         </label>
@@ -331,7 +334,7 @@ const ManagePosts = () => {
                           onChange={(e) =>
                             setFilters({ ...filters, topic: e.target.value })
                           }
-                          className="select select-sm select-bordered w-full text-sm"
+                          className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
                         >
                           <option value="all">All Topics</option>
                           <option value="general">General</option>
@@ -342,7 +345,7 @@ const ManagePosts = () => {
                       </div>
 
                       {/* Date Sort */}
-                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                      <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Date Order
                         </label>
@@ -354,7 +357,7 @@ const ManagePosts = () => {
                               dateSort: e.target.value,
                             })
                           }
-                          className="select select-sm select-bordered w-full text-sm"
+                          className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
                         >
                           <option value="newest">Most Recent</option>
                           <option value="oldest">Oldest First</option>
@@ -363,9 +366,9 @@ const ManagePosts = () => {
                     </div>
 
                     {/* Mobile: Single column for date picker and popularity */}
-                    <div className="space-y-3 lg:space-y-0 lg:contents">
+                    <div className="space-y-2 lg:space-y-0 lg:contents">
                       {/* Specific Date Filter */}
-                      <div className="relative flex flex-col gap-1.5 lg:col-span-1">
+                      <div className="relative flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Specific Date
                         </label>
@@ -379,21 +382,21 @@ const ManagePosts = () => {
                               filters.selectedDate
                                 ? new Date(
                                     filters.selectedDate
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
+                                  ).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
                                   })
-                                : "" // Use empty string so placeholder is visible
+                                : '' // Use empty string so placeholder is visible
                             }
                             placeholder="Select date"
                             // Style to match other inputs and add cursor-pointer
-                            className="input input-sm input-bordered w-full text-sm pl-9 pr-3 cursor-pointer"
+                            className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
                           />
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             // Position the icon inside the input field
-                            className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -402,7 +405,7 @@ const ManagePosts = () => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                             />
                           </svg>
                         </div>
@@ -414,24 +417,25 @@ const ManagePosts = () => {
                           onDateSelect={(date) => {
                             setFilters({ ...filters, selectedDate: date });
                           }}
+                          isFromManageChallenges={false}
                         />
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col gap-1.5 lg:col-span-1">
+                    <div className="flex flex-col gap-1 lg:col-span-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                         Actions
                       </label>
-                      <div className="flex gap-2">
-                        {(filters.topic !== "all" ||
-                          filters.dateSort !== "newest" ||
+                      <div className="flex gap-1.5">
+                        {(filters.topic !== 'all' ||
+                          filters.dateSort !== 'newest' ||
                           filters.selectedDate ||
                           (filters.searchText &&
                             filters.searchText.trim())) && (
                           <button
                             onClick={clearFilters}
-                            className="cursor-pointer px-2.5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                            className="cursor-pointer px-2 py-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
                           >
                             <span className="lg:hidden">Clear Filters</span>
                             <span className="hidden lg:inline">
@@ -441,7 +445,7 @@ const ManagePosts = () => {
                         )}
                         <button
                           onClick={applyFilters}
-                          className="cursor-pointer px-2.5 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                          className="cursor-pointer px-2 py-1.5 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
                         >
                           <span className="lg:hidden">Apply Filters</span>
                           <span className="hidden lg:inline">
@@ -454,18 +458,17 @@ const ManagePosts = () => {
 
                   {/* Active Filters Display - Improved Mobile Layout */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {filters.topic !== "all" && (
+                    {filters.topic !== 'all' && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                        <span className="text-xs">Topic:</span>
                         <span className="font-medium text-xs">
-                          {filters.topic === "general"
-                            ? "General"
-                            : "Daily Challenge"}
+                          {filters.topic === 'general'
+                            ? 'General'
+                            : 'Daily Challenge'}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("topic")}
+                          onClick={() => handleRemoveFilter('topic')}
                           aria-label="Remove topic filter"
                         >
                           ×
@@ -474,32 +477,30 @@ const ManagePosts = () => {
                     )}
                     {filters.searchText && filters.searchText.trim() && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
-                        <span className="text-xs">Search:</span>
                         <span className="font-medium text-xs truncate">
                           "{filters.searchText.trim()}"
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("searchText")}
+                          onClick={() => handleRemoveFilter('searchText')}
                           aria-label="Remove search filter"
                         >
                           ×
                         </button>
                       </span>
                     )}
-                    {filters.dateSort !== "newest" && (
+                    {filters.dateSort !== 'newest' && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                        <span className="text-xs">Sort:</span>
                         <span className="font-medium text-xs">
-                          {filters.dateSort === "oldest"
-                            ? "Oldest First"
-                            : "Most Recent"}
+                          {filters.dateSort === 'oldest'
+                            ? 'Oldest First'
+                            : 'Most Recent'}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("dateSort")}
+                          onClick={() => handleRemoveFilter('dateSort')}
                           aria-label="Remove sort filter"
                         >
                           ×
@@ -508,21 +509,20 @@ const ManagePosts = () => {
                     )}
                     {filters.selectedDate && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
-                        <span className="text-xs">Date:</span>
                         <span className="font-medium text-xs">
                           {new Date(filters.selectedDate).toLocaleDateString(
-                            "en-US",
+                            'en-US',
                             {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
                             }
                           )}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("selectedDate")}
+                          onClick={() => handleRemoveFilter('selectedDate')}
                           aria-label="Remove date filter"
                         >
                           ×
@@ -568,13 +568,13 @@ const ManagePosts = () => {
             </p>
             <p className="text-xs sm:text-sm text-base-content/40 mt-2">
               {activeFilters.searchText ||
-              activeFilters.topic !== "all" ||
+              activeFilters.topic !== 'all' ||
               activeFilters.selectedDate
-                ? "Try adjusting your filters to see more posts."
-                : "No posts are currently awaiting review."}
+                ? 'Try adjusting your filters to see more posts.'
+                : 'No posts are currently awaiting review.'}
             </p>
             {(activeFilters.searchText ||
-              activeFilters.topic !== "all" ||
+              activeFilters.topic !== 'all' ||
               activeFilters.selectedDate) && (
               <button
                 onClick={clearFilters}
@@ -587,7 +587,7 @@ const ManagePosts = () => {
         )}
 
         {!isLoading && (
-          <div className=" grid grid-cols-1 2xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 md:p-6 md:pl-12 w-full">
+          <div className=" grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 md:p-6 md:pl-12 w-full">
             {posts.map((post) => (
               <div
                 key={post.id}
@@ -603,7 +603,7 @@ const ManagePosts = () => {
                   <button
                     title="Approve Post"
                     className="btn btn-xs sm:btn-sm btn-success btn-circle"
-                    onClick={() => openConfirmationModal("approve", post)}
+                    onClick={() => openConfirmationModal('approve', post)}
                   >
                     <img
                       src={doneAll}
@@ -614,7 +614,7 @@ const ManagePosts = () => {
                   <button
                     title="Delete Post"
                     className="btn btn-xs sm:btn-sm btn-error btn-circle"
-                    onClick={() => openConfirmationModal("delete", post)}
+                    onClick={() => openConfirmationModal('delete', post)}
                   >
                     <img
                       src={trashIcon}
@@ -628,12 +628,12 @@ const ManagePosts = () => {
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                   <span
                     className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${
-                      post.topic === "general"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-green-100 text-green-800"
+                      post.topic === 'general'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
                     }`}
                   >
-                    {post.topic === "general" ? "General" : "Daily Challenge"}
+                    {post.topic === 'general' ? 'General' : 'Daily Challenge'}
                   </span>
                   {post.challengeTitle && (
                     <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1.5 py-0.5 rounded">
@@ -646,16 +646,16 @@ const ManagePosts = () => {
                   By {post.author_name}
                   <span className="mx-1">·</span>
                   <span className="italic">
-                    {new Date(post.created_at).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
+                    {new Date(post.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
                     })}
                   </span>
                 </p>
                 <p className="text-sm sm:text-base text-base-content/90 whitespace-pre-line break-words">
                   {post.content && post.content.length > 60
-                    ? post.content.slice(0, 60) + "..."
+                    ? post.content.slice(0, 60) + '...'
                     : post.content}
                 </p>
               </div>
@@ -669,7 +669,7 @@ const ManagePosts = () => {
               className="btn btn-sm btn-ghost px-2 sm:px-3"
               onClick={() => {
                 const newPage = page - 1;
-                searchParams.set("page", newPage.toString());
+                searchParams.set('page', newPage.toString());
                 setSearchParams(searchParams);
               }}
               disabled={isLoading || page === 1}
@@ -682,10 +682,10 @@ const ManagePosts = () => {
               <button
                 key={idx}
                 className={`btn btn-sm px-2 sm:px-3 ${
-                  page - 1 === idx ? "border-amber-400" : "btn-ghost"
+                  page - 1 === idx ? 'border-amber-400' : 'btn-ghost'
                 }`}
                 onClick={() => {
-                  searchParams.set("page", (idx + 1).toString());
+                  searchParams.set('page', (idx + 1).toString());
                   setSearchParams(searchParams);
                 }}
                 disabled={isLoading}
@@ -702,7 +702,7 @@ const ManagePosts = () => {
               <button
                 className="btn btn-sm border-amber-400 px-2 sm:px-3"
                 onClick={() => {
-                  searchParams.set("page", page.toString());
+                  searchParams.set('page', page.toString());
                   setSearchParams(searchParams);
                 }}
                 disabled={isLoading}
@@ -714,10 +714,10 @@ const ManagePosts = () => {
             {totalPages > 3 && (
               <button
                 className={`btn btn-sm px-2 sm:px-3 ${
-                  page === totalPages ? "border-amber-400" : "btn-ghost"
+                  page === totalPages ? 'border-amber-400' : 'btn-ghost'
                 }`}
                 onClick={() => {
-                  searchParams.set("page", totalPages.toString());
+                  searchParams.set('page', totalPages.toString());
                   setSearchParams(searchParams);
                 }}
                 disabled={isLoading}
@@ -730,7 +730,7 @@ const ManagePosts = () => {
               className="btn btn-sm btn-ghost px-2 sm:px-3"
               onClick={() => {
                 const newPage = page + 1;
-                searchParams.set("page", newPage.toString());
+                searchParams.set('page', newPage.toString());
                 setSearchParams(searchParams);
               }}
               disabled={isLoading || page === totalPages}
@@ -752,7 +752,7 @@ const ManagePosts = () => {
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6  w-full max-w-xl sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {(modal.type === "approve" || modal.type === "success") && (
+              {(modal.type === 'approve' || modal.type === 'success') && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-3 h-3 sm:w-5 sm:h-5 text-success-content"
@@ -769,9 +769,9 @@ const ManagePosts = () => {
                   </svg>
                 </div>
               )}
-              {(modal.type === "delete" ||
-                modal.type === "deleted" ||
-                modal.type === "error") && (
+              {(modal.type === 'delete' ||
+                modal.type === 'deleted' ||
+                modal.type === 'error') && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-3 h-3 sm:w-5 sm:h-5 text-error-content"
@@ -789,14 +789,14 @@ const ManagePosts = () => {
                 </div>
               )}
               <h3 className="font-bold text-base sm:text-lg" id="modal-title">
-                {modal.type === "approve" && "Approve Post"}
-                {(modal.type === "deleted" || modal.type === "delete") &&
-                  "Delete Post"}
-                {(modal.type === "success" || modal.type === "error") &&
-                  "Approve Post"}
+                {modal.type === 'approve' && 'Approve Post'}
+                {(modal.type === 'deleted' || modal.type === 'delete') &&
+                  'Delete Post'}
+                {(modal.type === 'success' || modal.type === 'error') &&
+                  'Approve Post'}
               </h3>
             </div>
-            {modal.type === "view-post" && modal.post ? (
+            {modal.type === 'view-post' && modal.post ? (
               <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 <h3
                   className="font-bold text-xl sm:text-2xl text-base-content"
@@ -809,11 +809,11 @@ const ManagePosts = () => {
                   <span className="mx-1.5">·</span>
                   <span className="italic">
                     {new Date(modal.post.created_at).toLocaleDateString(
-                      "en-US",
+                      'en-US',
                       {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
                       }
                     )}
                   </span>
@@ -828,7 +828,7 @@ const ManagePosts = () => {
               </div>
             )}
             <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
-              {modal.type === "approve" || modal.type === "delete" ? (
+              {modal.type === 'approve' || modal.type === 'delete' ? (
                 <>
                   <button
                     className="btn btn-ghost btn-sm sm:btn-md"
@@ -839,7 +839,7 @@ const ManagePosts = () => {
                   </button>
                   <button
                     className={`btn btn-sm sm:btn-md ${
-                      modal.type === "approve" ? "btn-success" : "btn-error"
+                      modal.type === 'approve' ? 'btn-success' : 'btn-error'
                     }`}
                     onClick={confirmAction}
                     disabled={isActionLoading}
@@ -847,14 +847,14 @@ const ManagePosts = () => {
                     {isActionLoading ? (
                       <>
                         <span className="loading loading-spinner loading-sm mr-2"></span>
-                        {modal.type === "approve"
-                          ? "Approving..."
-                          : "Deleting..."}
+                        {modal.type === 'approve'
+                          ? 'Approving...'
+                          : 'Deleting...'}
                       </>
-                    ) : modal.type === "approve" ? (
-                      "Approve"
+                    ) : modal.type === 'approve' ? (
+                      'Approve'
                     ) : (
-                      "Delete"
+                      'Delete'
                     )}
                   </button>
                 </>

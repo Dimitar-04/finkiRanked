@@ -1,7 +1,13 @@
-import React, { useRef, useEffect } from "react";
-import "cally";
+import React, { useRef, useEffect } from 'react';
+import 'cally';
 
-const CalendarPopover = ({ isOpen, onClose, onDateSelect, selectedDate }) => {
+const CalendarPopover = ({
+  isOpen,
+  onClose,
+  onDateSelect,
+  selectedDate,
+  isFromManageChallenges,
+}) => {
   const popoverRef = useRef(null);
   const calendarRef = useRef(null);
 
@@ -12,21 +18,20 @@ const CalendarPopover = ({ isOpen, onClose, onDateSelect, selectedDate }) => {
       }
     };
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
     // Cleanup the event listener
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, onClose]);
 
-  // Effect to set the calendar's initial value when it opens
   useEffect(() => {
     if (isOpen && calendarRef.current && selectedDate) {
       const date = new Date(selectedDate);
       const timezoneOffset = date.getTimezoneOffset() * 60000;
       const adjustedDate = new Date(date.getTime() - timezoneOffset);
-      calendarRef.current.value = adjustedDate.toISOString().split("T")[0];
+      calendarRef.current.value = adjustedDate.toISOString().split('T')[0];
     }
   }, [isOpen, selectedDate]);
 
@@ -35,19 +40,19 @@ const CalendarPopover = ({ isOpen, onClose, onDateSelect, selectedDate }) => {
 
     const handleDateChange = (event) => {
       if (event.target.value) {
-        const selected = new Date(event.target.value + "T00:00:00");
+        const selected = new Date(event.target.value + 'T00:00:00');
         onDateSelect(selected);
         onClose();
       }
     };
 
     if (isOpen && calendarEl) {
-      calendarEl.addEventListener("change", handleDateChange);
+      calendarEl.addEventListener('change', handleDateChange);
     }
 
     return () => {
       if (calendarEl) {
-        calendarEl.removeEventListener("change", handleDateChange);
+        calendarEl.removeEventListener('change', handleDateChange);
       }
     };
   }, [isOpen, onDateSelect, onClose]);
@@ -58,7 +63,7 @@ const CalendarPopover = ({ isOpen, onClose, onDateSelect, selectedDate }) => {
   const today = new Date();
   const timezoneOffset = today.getTimezoneOffset() * 60000; // Get timezone offset in milliseconds
   const adjustedDate = new Date(today.getTime() - timezoneOffset); // Adjust to UTC
-  const maxDate = adjustedDate.toISOString().split("T")[0];
+  const maxDate = adjustedDate.toISOString().split('T')[0];
 
   return (
     <div
@@ -68,7 +73,7 @@ const CalendarPopover = ({ isOpen, onClose, onDateSelect, selectedDate }) => {
       <calendar-date
         ref={calendarRef}
         class="cally bg-base-100 border border-base-300 shadow-md rounded-box w-full mb-4"
-        max={maxDate}
+        max={isFromManageChallenges ? '' : maxDate}
       >
         <svg
           aria-label="Previous"

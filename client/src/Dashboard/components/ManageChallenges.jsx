@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  getAllTasks,
+  getChallenges,
   deleteTask,
   searchTaskByDate,
-} from "@/services/taskService";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
-
-import "cally";
+} from '@/services/taskService';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import CalendarPopover from './CalendarPopover';
+import 'cally';
 const PAGE_SIZE = 10;
 
 const ManageChallenges = () => {
@@ -17,75 +17,50 @@ const ManageChallenges = () => {
   const [loading, setLoading] = useState(false);
   const [expandedChallenge, setExpandedChallenge] = useState(null);
   const navigate = useNavigate();
+  const [showFilters, setShowFilters] = useState(false);
   const { user } = useAuth();
   const calendarRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const defaultFilters = {
+    dateSort: 'newest',
+    selectedDate: null,
+    searchText: '',
+  };
+  const [filters, setFilters] = useState(() => {
+    const initialFilters = { ...defaultFilters };
+    for (const [key, value] of searchParams.entries()) {
+      if (key in initialFilters) {
+        initialFilters[key] = value;
+      }
+    }
+    return initialFilters;
+  });
   const [modal, setModal] = useState({
     isOpen: false,
-    message: "",
-    type: "",
+    message: '',
+    type: '',
     challengeId: null,
   });
   useEffect(() => {
-    const fetchChallengesAndStyleCalendar = async () => {
+    const fetchChallenges = async () => {
       setLoading(true);
-      const dateParam = searchParams.get("date");
+      const dateParam = searchParams.get('date');
 
       try {
-        if (dateParam) {
-          const data = await searchTaskByDate(dateParam);
-          setChallenges(data);
-          setTotalPages(1);
-          setCurrentPage(1);
-
-          if (calendarRef.current) {
-            calendarRef.current.value = dateParam;
-
-            calendarRef.current.style.setProperty(
-              "--cally-selected-background",
-              "white"
-            );
-            calendarRef.current.style.setProperty(
-              "--cally-selected-color",
-              "#1f2937"
-            );
-
-            calendarRef.current.style.setProperty(
-              "--cally-today-background",
-              "transparent"
-            );
-            calendarRef.current.style.setProperty(
-              "--cally-today-color",
-              "inherit"
-            );
-          }
-        } else {
-          console.log(currentPage);
-          const data = await getAllTasks(currentPage, PAGE_SIZE);
-          setChallenges(data.challenges);
-          setTotalPages(data.totalPages);
-          console.log(totalPages);
-
-          if (calendarRef.current) {
-            calendarRef.current.style.removeProperty(
-              "--cally-selected-background"
-            );
-            calendarRef.current.style.removeProperty("--cally-selected-color");
-            calendarRef.current.style.removeProperty(
-              "--cally-today-background"
-            );
-            calendarRef.current.style.removeProperty("--cally-today-color");
-          }
-        }
+        const data = await getChallenges(currentPage, PAGE_SIZE, filters);
+        setChallenges(data.challenges);
+        setTotalPages(data.totalPages);
       } catch (err) {
-        console.error("Failed to fetch challenges:", err);
+        console.error('Failed to fetch challenges:', err);
         setChallenges([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchChallengesAndStyleCalendar();
+    fetchChallenges();
   }, [currentPage, searchParams]);
   const fetchTestCases = async (challengeId) => {
     try {
@@ -99,19 +74,37 @@ const ManageChallenges = () => {
       );
     }
   };
-  const handleViewAll = async () => {
-    setLoading(true);
-    setSearchParams({});
-    try {
-      const data = await getAllTasks(1, PAGE_SIZE);
-      setChallenges(data.challenges);
-      setTotalPages(data.totalPages);
-      setCurrentPage(1);
-    } catch (err) {
-      console.error("Failed to fetch all challenges:", err);
-    } finally {
-      setLoading(false);
+  const applyFilters = () => {
+    const newSearchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value && value.toString() !== defaultFilters[key]?.toString()) {
+        newSearchParams.set(key, value);
+      }
     }
+    newSearchParams.set('page', '1');
+    setCurrentPage(1);
+    setSearchParams(newSearchParams);
+  };
+  const handleRemoveFilter = (filterKey) => {
+    const newFilters = { ...filters, [filterKey]: defaultFilters[filterKey] };
+    setFilters(newFilters);
+
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete(filterKey);
+    newSearchParams.set('page', '1');
+    setCurrentPage(1);
+    setSearchParams(newSearchParams);
+  };
+
+  const clearFilters = () => {
+    const freshDefaultFilters = { ...defaultFilters };
+    setFilters(freshDefaultFilters);
+    setSearchParams({ page: '1' });
+    setCurrentPage(1);
+  };
+
+  const handleViewAll = async () => {
+    clearFilters();
   };
 
   const deleteChallenge = async (challengeId) => {
@@ -122,20 +115,20 @@ const ManageChallenges = () => {
       setChallenges(
         challenges.filter((challenge) => challenge.id !== challengeId)
       );
-      showModal("Challenge deleted successfully.", "success");
+      showModal('Challenge deleted successfully.', 'success');
     } catch (err) {
-      showModal(`Failed to delete challenge: ${err.message}`, "error");
+      showModal(`Failed to delete challenge: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const showModal = (message, type = "info", challengeId = null) => {
+  const showModal = (message, type = 'info', challengeId = null) => {
     setModal({ isOpen: true, message, type, challengeId });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, message: "", type: "", challengeId: null });
+    setModal({ isOpen: false, message: '', type: '', challengeId: null });
   };
 
   const confirmDelete = async () => {
@@ -146,302 +139,473 @@ const ManageChallenges = () => {
     }
   };
 
-  const searchByDate = (date) => {
-    if (date) {
-      setSearchParams({ date });
-    }
-  };
-
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold ml-8 mb-12">Manage Challenges</h1>
-      <div className="flex flex-col md:flex-row gap-8 ml-8 mx-auto">
-        {/* Left sidebar with calendar */}
-        <div className="w-full md:w-[310px] flex-shrink-0 ">
-          <div className="sticky top-6">
-            <div className="card bg-base-200 shadow-md p-4">
-              <h2 className="font-semibold text-lg mb-4">Search by date:</h2>
-
-              {/* Calendar component */}
-              <calendar-date
-                ref={calendarRef}
-                class="cally bg-base-100 border border-base-300 shadow-md rounded-box w-full mb-4"
+    <div>
+      <div className="sticky top-0 z-20 bg-base-100 ">
+        <div className="flex flex-col">
+          {/* Add New Challenge Button */}
+          <div className="w-full flex justify-end pt-3 pr-3 ">
+            <button
+              className="btn btn-outline btn-sm border-amber-400 gap-2"
+              onClick={() => navigate('/dashboard/create-new-challenge')}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                <svg
-                  aria-label="Previous"
-                  className="fill-current size-4"
-                  slot="previous"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Add New Challenge
+            </button>
+          </div>
+          <div className="border-b border-base-300 shadow-sm">
+            <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
+              {/* Mobile Filter Toggle */}
+              <div className="flex items-center justify-between mb-3 lg:hidden">
+                <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                  Filters
+                  {/* Active filter count indicator */}
+                  {(filters.topic !== 'all' ||
+                    filters.dateSort !== 'newest' ||
+                    filters.selectedDate ||
+                    (filters.searchText && filters.searchText.trim())) && (
+                    <span className="badge badge-sm bg-yellow-500 text-black border-none">
+                      {
+                        [
+                          filters.topic !== 'all',
+                          filters.dateSort !== 'newest',
+                          filters.selectedDate,
+                          filters.searchText && filters.searchText.trim(),
+                        ].filter(Boolean).length
+                      }
+                    </span>
+                  )}
+                </h3>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="btn btn-sm btn-ghost px-2"
                 >
-                  <path
-                    fill="currentColor"
-                    d="M15.75 19.5 8.25 12l7.5-7.5"
-                  ></path>
-                </svg>
-                <svg
-                  aria-label="Next"
-                  className="fill-current size-4"
-                  slot="next"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                  ></path>
-                </svg>
-                <calendar-month></calendar-month>
-              </calendar-date>
+                  <svg
+                    className={`w-5 h-5 transition-transform duration-200 ${
+                      showFilters ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
 
-              {/* Search button */}
-              <button
-                className="btn btn-block border-amber-400"
-                onClick={() => {
-                  if (calendarRef.current) {
-                    const selectedDate = calendarRef.current.value;
-                    searchByDate(selectedDate);
-                  }
+              {/* Filter Controls */}
+              <div
+                className={`transition-all duration-300 ${
+                  showFilters ? 'block opacity-100' : 'hidden opacity-0'
+                } lg:block lg:opacity-100`}
+              >
+                {/* Filter Layout */}
+                <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
+                  {/* Search Filter - Wider */}
+                  <div className="flex flex-col gap-1 lg:col-span-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Search Challenges
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search titles and content..."
+                        value={filters.searchText}
+                        onChange={(e) =>
+                          setFilters({
+                            ...filters,
+                            searchText: e.target.value,
+                          })
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            applyFilters();
+                          }
+                        }}
+                        className="input input-sm input-bordered w-full text-xs pl-8 pr-2 h-8"
+                      />
+                      <svg
+                        className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
 
-                  const calendarElement =
-                    document.querySelector("calendar-date");
-                  if (calendarElement) {
-                    const selectedDate = calendarElement.value;
-                    searchByDate(selectedDate);
-                  }
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                Search
-              </button>
-            </div>
-            <div className="mt-6 w-full">
-              {/* Add new challenge button */}
-              <button
-                className="btn btn-block btn-outline  border-amber-400 gap-2"
-                onClick={() => navigate("/dashboard/create-new-challenge")}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                Add New Challenge
-              </button>
+                  {/* Date Sort - Wider */}
+                  <div className="flex flex-col gap-1 lg:col-span-2 xl:col-span-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Date Order
+                    </label>
+                    <select
+                      value={filters.dateSort}
+                      onChange={(e) =>
+                        setFilters({
+                          ...filters,
+                          dateSort: e.target.value,
+                        })
+                      }
+                      className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
+                    >
+                      <option value="newest">Most Recent</option>
+                      <option value="oldest">Oldest First</option>
+                    </select>
+                  </div>
+
+                  {/* Specific Date Filter - Wider */}
+                  <div className="relative flex flex-col gap-1 lg:col-span-2 xl:col-span-2">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Specific Date
+                    </label>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        readOnly
+                        onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                        value={
+                          filters.selectedDate
+                            ? new Date(filters.selectedDate).toLocaleDateString(
+                                'en-US',
+                                {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                }
+                              )
+                            : ''
+                        }
+                        placeholder="Select date"
+                        className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <CalendarPopover
+                      isOpen={isCalendarOpen}
+                      onClose={() => setIsCalendarOpen(false)}
+                      selectedDate={filters.selectedDate}
+                      onDateSelect={(date) => {
+                        setFilters({ ...filters, selectedDate: date });
+                      }}
+                      isFromManageChallenges={true}
+                    />
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-1 lg:col-span-1">
+                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
+                      Actions
+                    </label>
+                    <div className="flex gap-1.5">
+                      {(filters.topic !== 'all' ||
+                        filters.dateSort !== 'newest' ||
+                        filters.selectedDate ||
+                        (filters.searchText && filters.searchText.trim())) && (
+                        <button
+                          onClick={clearFilters}
+                          className="cursor-pointer px-2 py-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
+                        >
+                          <span className="lg:hidden">Clear</span>
+                          <span className="hidden lg:inline">
+                            Clear Filters
+                          </span>
+                        </button>
+                      )}
+                      <button
+                        onClick={applyFilters}
+                        className="cursor-pointer px-2 py-1.5 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
+                      >
+                        <span className="lg:hidden">Apply</span>
+                        <span className="hidden lg:inline">Apply Filters</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Filters Display */}
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {filters.searchText && filters.searchText.trim() && (
+                    <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                      <span className="font-medium text-xs truncate">
+                        "{filters.searchText.trim()}"
+                      </span>
+                      <button
+                        type="button"
+                        className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                        onClick={() => handleRemoveFilter('searchText')}
+                        aria-label="Remove search filter"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {filters.dateSort !== 'newest' && (
+                    <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                      <span className="font-medium text-xs">
+                        {filters.dateSort === 'oldest'
+                          ? 'Oldest First'
+                          : 'Most Recent'}
+                      </span>
+                      <button
+                        type="button"
+                        className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                        onClick={() => handleRemoveFilter('dateSort')}
+                        aria-label="Remove sort filter"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                  {filters.selectedDate && (
+                    <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                      <span className="font-medium text-xs">
+                        {new Date(filters.selectedDate).toLocaleDateString(
+                          'en-US',
+                          {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          }
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                        onClick={() => handleRemoveFilter('selectedDate')}
+                        aria-label="Remove date filter"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Main content area */}
-        <div className="flex-1">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <span className="loading loading-spinner loading-lg"></span>
-            </div>
-          ) : challenges.length > 0 ? (
-            <div className="space-y-6">
-              {challenges.map((challenge) => (
-                <div key={challenge.id} className="card bg-base-200 shadow-md">
-                  <div className="card-body">
-                    <div className="flex justify-between items-center">
-                      <h2 className="card-title text-xl font-bold">
-                        {challenge.title
-                          .split("-")
-                          .map(
-                            (word) =>
-                              word.charAt(0).toUpperCase() + word.slice(1)
-                          )
-                          .join(" ")}
-                      </h2>
-                      <div className="badge badge-tertiary p-4">
-                        {new Date(challenge.solving_date).toLocaleDateString()}
+      {/* Main content area */}
+      <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <span className="loading loading-spinner loading-lg"></span>
+          </div>
+        ) : challenges.length > 0 ? (
+          <div className="space-y-6">
+            {challenges.map((challenge) => (
+              <div key={challenge.id} className="card bg-base-200 shadow-md">
+                <div className="card-body">
+                  <div className="flex justify-between items-center">
+                    <h2 className="card-title text-xl font-bold">
+                      {challenge.title
+                        .split('-')
+                        .map(
+                          (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                        )
+                        .join(' ')}
+                    </h2>
+                    <div className="badge badge-tertiary p-4">
+                      {new Date(challenge.solving_date).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <p className="text-base-content/80 mt-2 line-clamp-2">
+                    {challenge.content}
+                  </p>
+
+                  {challenge.examples && challenge.examples.length > 0 && (
+                    <div className="mt-4 card bg-base-300 p-3">
+                      <h3 className="font-medium mb-2">Examples:</h3>
+                      <div className="space-y-3">
+                        {challenge.examples.map((example, index) => (
+                          <div key={index} className="font-mono text-sm">
+                            <p className="pl-2 border-l-2 border-amber-400 mt-1">
+                              Input: "{example.input || 'N/A'}" <br />
+                              Output: "{example.output || 'N/A'}"
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </div>
+                  )}
 
-                    <p className="text-base-content/80 mt-2 line-clamp-2">
-                      {challenge.content}
-                    </p>
+                  <div className="card-actions justify-between mt-4">
+                    <button
+                      className="btn btn-sm btn-teritary"
+                      onClick={() => fetchTestCases(challenge.id)}
+                    >
+                      {expandedChallenge === challenge.id
+                        ? 'Hide Test Cases'
+                        : 'Show Test Cases'}
+                    </button>
 
-                    {challenge.examples && challenge.examples.length > 0 && (
-                      <div className="mt-4 card bg-base-300 p-3">
-                        <h3 className="font-medium mb-2">Examples:</h3>
-                        <div className="space-y-3">
-                          {challenge.examples.map((example, index) => (
-                            <div key={index} className="font-mono text-sm">
-                              <p className="pl-2 border-l-2 border-amber-400 mt-1">
-                                Input: "{example.input || "N/A"}" <br />
-                                Output: "{example.output || "N/A"}"
-                              </p>
+                    <button
+                      className="btn btn-sm btn-error btn-outline"
+                      onClick={() =>
+                        showModal(
+                          `Are you sure you want to delete challenge with title "${challenge.title}" ? This action cannot be undone.`,
+                          'confirm',
+                          challenge.id
+                        )
+                      }
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                  {expandedChallenge === challenge.id &&
+                    challenge.test_cases && (
+                      <div className="mt-4 card bg-base-300 p-4 ">
+                        <h3 className="font-medium mb-2">Test Cases:</h3>
+                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                          {challenge.test_cases.map((testCase, index) => (
+                            <div
+                              key={testCase.id}
+                              className="card bg-base-100 max-w-250 p-3"
+                            >
+                              <h4 className="font-medium">
+                                Test Case {index + 1}
+                              </h4>
+                              <div className="font-mono text-sm">
+                                <div className="pl-2 border-l-2 border-amber-400 mt-1">
+                                  <p>Input:</p>
+                                  <div className="max-h-40 overflow-y-auto">
+                                    <pre className="bg-base-300 p-2 rounded whitespace-pre-wrap break-words w-full overflow-hidden">
+                                      {testCase.input || 'N/A'}
+                                    </pre>
+                                  </div>
+                                </div>
+                                <div className="pl-2 border-l-2 border-green-400 mt-2">
+                                  <p>Expected Output:</p>
+                                  <div className="max-h-40 overflow-y-auto">
+                                    <pre className="bg-base-300 p-2 rounded whitespace-pre-wrap break-words w-full overflow-hidden">
+                                      {testCase.output || 'N/A'}
+                                    </pre>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
-
-                    <div className="card-actions justify-between mt-4">
-                      <button
-                        className="btn btn-sm btn-teritary"
-                        onClick={() => fetchTestCases(challenge.id)}
-                      >
-                        {expandedChallenge === challenge.id
-                          ? "Hide Test Cases"
-                          : "Show Test Cases"}
-                      </button>
-
-                      <button
-                        className="btn btn-sm btn-error btn-outline"
-                        onClick={() =>
-                          showModal(
-                            `Are you sure you want to delete challenge with title "${challenge.title}" ? This action cannot be undone.`,
-                            "confirm",
-                            challenge.id
-                          )
-                        }
-                      >
-                        Delete
-                      </button>
-                    </div>
-
-                    {expandedChallenge === challenge.id &&
-                      challenge.test_cases && (
-                        <div className="mt-4 card bg-base-300 p-4 ">
-                          <h3 className="font-medium mb-2">Test Cases:</h3>
-                          <div className="space-y-4 max-h-60 overflow-y-auto">
-                            {challenge.test_cases.map((testCase, index) => (
-                              <div
-                                key={testCase.id}
-                                className="card bg-base-100 max-w-250 p-3"
-                              >
-                                <h4 className="font-medium">
-                                  Test Case {index + 1}
-                                </h4>
-                                <div className="font-mono text-sm">
-                                  <div className="pl-2 border-l-2 border-amber-400 mt-1">
-                                    <p>Input:</p>
-                                    <div className="max-h-40 overflow-y-auto">
-                                      <pre className="bg-base-300 p-2 rounded whitespace-pre-wrap break-words w-full overflow-hidden">
-                                        {testCase.input || "N/A"}
-                                      </pre>
-                                    </div>
-                                  </div>
-                                  <div className="pl-2 border-l-2 border-green-400 mt-2">
-                                    <p>Expected Output:</p>
-                                    <div className="max-h-40 overflow-y-auto">
-                                      <pre className="bg-base-300 p-2 rounded whitespace-pre-wrap break-words w-full overflow-hidden">
-                                        {testCase.output || "N/A"}
-                                      </pre>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                  </div>
                 </div>
-              ))}
-              {searchParams.get("date") && (
-                <button
-                  className="block mx-auto  cursor-pointer hover:underline"
-                  onClick={() => handleViewAll()}
-                >
-                  View all challenges
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="text-center text-base-content/60 py-16">
-              <p>No available challenges for the selected date.</p>
-            </div>
-          )}
-          {!loading && totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-8">
-              {/* Previous Arrow */}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center text-base-content/60 py-16">
+            <p>No available challenges for the selected filters.</p>
+            <button
+              onClick={clearFilters}
+              className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm font-medium transition-colors duration-200"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            {/* Previous Arrow */}
+            <button
+              className="btn btn-sm btn-ghost"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={loading || currentPage === 1}
+              title="Previous Page"
+            >
+              ←
+            </button>
+
+            {/* First 3 page numbers */}
+            {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
               <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={loading || currentPage === 1}
-                title="Previous Page"
+                key={idx}
+                className={`btn btn-sm ${
+                  currentPage === idx + 1 ? 'border-amber-400' : 'btn-ghost'
+                }`}
+                onClick={() => setCurrentPage(idx + 1)}
+                disabled={loading}
               >
-                ←
+                {idx + 1}
               </button>
+            ))}
 
-              {/* First 3 page numbers */}
-              {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
-                <button
-                  key={idx}
-                  className={`btn btn-sm ${
-                    currentPage === idx + 1 ? "border-amber-400" : "btn-ghost"
-                  }`}
-                  onClick={() => setCurrentPage(idx + 1)}
-                  disabled={loading}
-                >
-                  {idx + 1}
-                </button>
-              ))}
+            {/* Dots if more than 4 pages */}
+            {totalPages > 4 && <span className="px-2 text-gray-500">...</span>}
 
-              {/* Dots if more than 4 pages */}
-              {totalPages > 4 && (
-                <span className="px-2 text-gray-500">...</span>
-              )}
-
-              {/* Show current page if it's not in the first 3 or last */}
-              {currentPage > 2 && currentPage < totalPages - 1 && (
-                <button
-                  className="btn btn-sm border-amber-400"
-                  onClick={() => setCurrentPage(currentPage)}
-                  disabled={loading}
-                >
-                  {currentPage + 1}
-                </button>
-              )}
-
-              {/* Last page button if more than 3 pages */}
-              {totalPages > 3 && (
-                <button
-                  className={`btn btn-sm ${
-                    currentPage === totalPages - 1
-                      ? "border-amber-400"
-                      : "btn-ghost"
-                  }`}
-                  onClick={() => setCurrentPage(totalPages - 1)}
-                  disabled={loading}
-                >
-                  {totalPages}
-                </button>
-              )}
-
-              {/* Next Arrow */}
+            {/* Show current page if it's not in the first 3 or last */}
+            {currentPage > 2 && currentPage < totalPages - 1 && (
               <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={loading || currentPage >= totalPages}
-                title="Next Page"
+                className="btn btn-sm border-amber-400"
+                onClick={() => setCurrentPage(currentPage)}
+                disabled={loading}
               >
-                →
+                {currentPage + 1}
               </button>
-            </div>
-          )}
-        </div>
+            )}
+
+            {/* Last page button if more than 3 pages */}
+            {totalPages > 3 && (
+              <button
+                className={`btn btn-sm ${
+                  currentPage === totalPages - 1
+                    ? 'border-amber-400'
+                    : 'btn-ghost'
+                }`}
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={loading}
+              >
+                {totalPages}
+              </button>
+            )}
+
+            {/* Next Arrow */}
+            <button
+              className="btn btn-sm btn-ghost"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={loading || currentPage >= totalPages}
+              title="Next Page"
+            >
+              →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal*/}
@@ -454,7 +618,7 @@ const ManageChallenges = () => {
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {modal.type === "confirm" && (
+              {modal.type === 'confirm' && (
                 <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-error-content"
@@ -471,7 +635,7 @@ const ManageChallenges = () => {
                   </svg>
                 </div>
               )}
-              {modal.type === "success" && (
+              {modal.type === 'success' && (
                 <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-success-content"
@@ -494,7 +658,7 @@ const ManageChallenges = () => {
             </div>
             <p className="py-4">{modal.message}</p>
             <div className="flex justify-end gap-3 mt-4">
-              {modal.type === "confirm" ? (
+              {modal.type === 'confirm' ? (
                 <>
                   <button
                     className="btn btn-ghost"
@@ -514,7 +678,7 @@ const ManageChallenges = () => {
                         Deleting...
                       </>
                     ) : (
-                      "Delete"
+                      'Delete'
                     )}
                   </button>
                 </>

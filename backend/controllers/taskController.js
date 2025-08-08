@@ -1,8 +1,7 @@
-const { get } = require("http");
-const prisma = require("../lib/prisma");
-const verifyModeratorStatus = require("../services/checkModeratorStatus");
-const Challenge = require("../models/challenge");
-const { at } = require("../filters/macedonianProfanity");
+const { get } = require('http');
+const prisma = require('../lib/prisma');
+const verifyModeratorStatus = require('../services/checkModeratorStatus');
+const Challenge = require('../models/challenge');
 
 //Helper functions
 const safeSerialize = (data) => {
@@ -11,7 +10,7 @@ const safeSerialize = (data) => {
       if (value instanceof Date) {
         return value.toISOString();
       }
-      if (typeof value === "bigint") {
+      if (typeof value === 'bigint') {
         return value.toString();
       }
       return value;
@@ -19,25 +18,55 @@ const safeSerialize = (data) => {
   );
 };
 
-const getAllTasks = async (req, res) => {
+const getChallenges = async (req, res) => {
   const userId = req.user.sub;
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 20;
+  const searchText = req.query.searchText;
+  const dateSort = req.query.dateSort;
+  const selectedDate = req.query.selectedDate;
 
   try {
     const isModerator = await verifyModeratorStatus(userId);
     if (!isModerator) {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(403).json({ message: 'Access denied' });
     }
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    let filters = [];
+    orderBy = [];
+    if (dateSort) {
+      orderBy.push({ solving_date: 'asc' });
+    } else {
+      orderBy.push({ solving_date: 'desc' });
+    }
+    if (searchText) {
+      filters.push({
+        OR: [
+          { title: { contains: searchText, mode: 'insensitive' } },
+          { content: { contains: searchText, mode: 'insensitive' } },
+        ],
+      });
+    }
+    if (selectedDate) {
+      const formattedDate = new Date(selectedDate);
+      if (!isNaN(formattedDate.getTime())) {
+        filters.push({ solving_date: formattedDate });
+      } else {
+        console.error(`Invalid date provided: "${selectedDate}"`);
+      }
+    }
+    const whereCondition = filters.length > 0 ? { AND: filters } : {};
 
     const [challenges, total] = await Promise.all([
       prisma.challenges.findMany({
         include: { test_cases: true },
-        orderBy: { solving_date: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
+        orderBy: orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        where: whereCondition,
       }),
-      prisma.challenges.count(),
+      prisma.challenges.count({
+        where: whereCondition,
+      }),
     ]);
 
     const processedChallenges = challenges.map((challenge) => {
@@ -56,16 +85,16 @@ const getAllTasks = async (req, res) => {
     res.status(200).json({
       challenges: processedChallenges,
       total,
-      totalPages: Math.ceil(total / pageSize),
+      totalPages: Math.ceil(total / limit),
       currentPage: page,
-      pageSize,
+      limit,
     });
   } catch (error) {
-    console.error("Error fetching all challenges:", error);
+    console.error('Error fetching all challenges:', error);
     res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
@@ -103,7 +132,7 @@ const getTaskByDate = async (req, res) => {
       },
     });
     if (tasks.length === 0) {
-      return res.status(404).json({ message: "No tasks found for this date" });
+      return res.status(404).json({ message: 'No tasks found for this date' });
     }
 
     const processedTasks = tasks.map((task) => {
@@ -112,8 +141,8 @@ const getTaskByDate = async (req, res) => {
       if (safeTask.test_cases) {
         safeTask.test_cases = safeTask.test_cases.map((testCase) => ({
           id: testCase.id,
-          input: testCase.input || "",
-          output: testCase.output || "",
+          input: testCase.input || '',
+          output: testCase.output || '',
           challenge_id: testCase.challenge_id,
         }));
       }
@@ -121,22 +150,22 @@ const getTaskByDate = async (req, res) => {
       return safeTask;
     });
 
-    res.setHeader("Content-Type", "application/json");
+    res.setHeader('Content-Type', 'application/json');
     res.status(200).json(processedTasks);
   } catch (error) {
-    console.error("Error fetching tasks:", error);
+    console.error('Error fetching tasks:', error);
 
     res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
 
 const getTasksForForumPost = async (req, res) => {
   try {
-    console.log("Called");
+    console.log('Called');
     const now = new Date();
     const today = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
@@ -155,7 +184,7 @@ const getTasksForForumPost = async (req, res) => {
           lt: endOfRange,
         },
       },
-      orderBy: { solving_date: "desc" },
+      orderBy: { solving_date: 'desc' },
     });
 
     const processedChallenges = challenges.map((challenge) => {
@@ -173,11 +202,11 @@ const getTasksForForumPost = async (req, res) => {
 
     res.status(200).json(processedChallenges);
   } catch (err) {
-    console.error("Error fetching tasks for forum post:", err);
+    console.error('Error fetching tasks for forum post:', err);
     res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
       error: err.message,
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     });
   }
 };
@@ -199,19 +228,19 @@ const fetchTestCaseForToday = async (req, res) => {
     });
 
     if (testCases.length === 0) {
-      return res.status(404).json({ message: "No test cases found for today" });
+      return res.status(404).json({ message: 'No test cases found for today' });
     }
 
     const randomTestCase =
       testCases[Math.floor(Math.random() * testCases.length)];
 
-    res.setHeader("Content-Type", "application/json");
+    res.setHeader('Content-Type', 'application/json');
     res.status(200).json(randomTestCase);
   } catch (error) {
-    console.error("Error fetching test cases:", error);
+    console.error('Error fetching test cases:', error);
     res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ message: 'Internal server error', error: error.message });
   }
 };
 
@@ -230,7 +259,7 @@ const searchTaskByDate = async (req, res) => {
       },
     });
     if (challenges.length === 0) {
-      return res.status(404).json({ message: "No tasks found for this date" });
+      return res.status(404).json({ message: 'No tasks found for this date' });
     }
 
     const parsedChallenges = challenges.map((task) => {
@@ -239,8 +268,8 @@ const searchTaskByDate = async (req, res) => {
       if (safeTask.test_cases) {
         safeTask.test_cases = safeTask.test_cases.map((testCase) => ({
           id: testCase.id,
-          input: testCase.input || "",
-          output: testCase.output || "",
+          input: testCase.input || '',
+          output: testCase.output || '',
           challenge_id: testCase.challenge_id,
         }));
       }
@@ -249,11 +278,11 @@ const searchTaskByDate = async (req, res) => {
     });
     res.status(200).json(parsedChallenges);
   } catch (error) {
-    console.error("Error searching tasks by date:", error);
+    console.error('Error searching tasks by date:', error);
     res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
@@ -272,14 +301,14 @@ const getSpecificTestCaseById = async (req, res) => {
       },
     });
     if (!testCase) {
-      return res.status(404).json({ message: "Test case not found" });
+      return res.status(404).json({ message: 'Test case not found' });
     }
     res.status(200).json(testCase);
   } catch (error) {
-    console.error("Error fetching specific test case by ID:", error);
+    console.error('Error fetching specific test case by ID:', error);
     res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ message: 'Internal server error', error: error.message });
   }
 };
 
@@ -299,15 +328,15 @@ const getAllTestCasesForTask = async (req, res) => {
     if (testCases.length === 0) {
       return res
         .status(404)
-        .json({ message: "No test cases found for this task" });
+        .json({ message: 'No test cases found for this task' });
     }
 
     res.status(200).json(testCases);
   } catch (error) {
-    console.error("Error fetching all test cases for task:", error);
+    console.error('Error fetching all test cases for task:', error);
     res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ message: 'Internal server error', error: error.message });
   }
 };
 
@@ -316,7 +345,7 @@ const updateUserDailyChallengeId = async (req, res) => {
   const { testCaseId } = req.body;
 
   if (!testCaseId) {
-    return res.status(400).json({ message: "testCaseId is required" });
+    return res.status(400).json({ message: 'testCaseId is required' });
   }
 
   try {
@@ -327,31 +356,31 @@ const updateUserDailyChallengeId = async (req, res) => {
     });
     res.status(200).json({ user: updatedUser });
   } catch (error) {
-    console.error("Error updating user daily test case ID:", error);
-    if (error.code === "P2025") {
-      return res.status(404).json({ message: "User not found" });
+    console.error('Error updating user daily test case ID:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'User not found' });
     }
     res
       .status(500)
-      .json({ message: "Internal server error", error: error.message });
+      .json({ message: 'Internal server error', error: error.message });
   }
 };
 
 const RANK_DATA = {
-  Novice: { id: 1, title: "Novice", requiredPoints: 0 },
-  Learner: { id: 2, title: "Learner", requiredPoints: 300 },
-  "Junior Developer": { id: 3, title: "Junior Developer", requiredPoints: 800 },
-  Developer: { id: 4, title: "Developer", requiredPoints: 1500 },
-  "Senior Developer": {
+  Novice: { id: 1, title: 'Novice', requiredPoints: 0 },
+  Learner: { id: 2, title: 'Learner', requiredPoints: 300 },
+  'Junior Developer': { id: 3, title: 'Junior Developer', requiredPoints: 800 },
+  Developer: { id: 4, title: 'Developer', requiredPoints: 1500 },
+  'Senior Developer': {
     id: 5,
-    title: "Senior Developer",
+    title: 'Senior Developer',
     requiredPoints: 2500,
   },
-  Expert: { id: 6, title: "Expert", requiredPoints: 4000 },
-  Master: { id: 7, title: "Master", requiredPoints: 6000 },
-  "Grand Master": { id: 8, title: "Grand Master", requiredPoints: 8500 },
-  "FINKI Royalty": { id: 9, title: "FINKI Royalty", requiredPoints: 11000 },
-  "FINKI Legend": { id: 10, title: "FINKI Legend", requiredPoints: 16000 },
+  Expert: { id: 6, title: 'Expert', requiredPoints: 4000 },
+  Master: { id: 7, title: 'Master', requiredPoints: 6000 },
+  'Grand Master': { id: 8, title: 'Grand Master', requiredPoints: 8500 },
+  'FINKI Royalty': { id: 9, title: 'FINKI Royalty', requiredPoints: 11000 },
+  'FINKI Legend': { id: 10, title: 'FINKI Legend', requiredPoints: 16000 },
 };
 
 function getRankByPoints(points) {
@@ -363,7 +392,7 @@ function getRankByPoints(points) {
       return rank;
     }
   }
-  return RANK_DATA["Novice"];
+  return RANK_DATA['Novice'];
 }
 
 function getMinutesSinceSevenAM() {
@@ -395,25 +424,25 @@ function isOutputCorrect(userOutput, expectedOutput, outputType) {
   const normalizeString = (str) =>
     str
       .toString()
-      .replace(/[^\w.-]/g, "")
+      .replace(/[^\w.-]/g, '')
       .trim()
       .toLowerCase();
 
   const normalizeArray = (str) => {
-    const cleaned = str.replace(/[\[\]]/g, "");
+    const cleaned = str.replace(/[\[\]]/g, '');
     return cleaned
       .split(/[\s,]+/)
-      .filter((val) => val !== "")
+      .filter((val) => val !== '')
       .map((val) => val.trim());
   };
 
-  if (outputType === "integer") {
+  if (outputType === 'integer') {
     const cleanedUserOutput = normalizeString(userOutput);
     const cleanedExpectedOutput = normalizeString(expectedOutput);
     return parseInt(cleanedUserOutput) === parseInt(cleanedExpectedOutput);
   }
 
-  if (outputType === "float") {
+  if (outputType === 'float') {
     const cleanedUserOutput = normalizeString(userOutput);
     const cleanedExpectedOutput = normalizeString(expectedOutput);
     return (
@@ -423,7 +452,7 @@ function isOutputCorrect(userOutput, expectedOutput, outputType) {
     );
   }
 
-  if (outputType === "array") {
+  if (outputType === 'array') {
     const userArr = normalizeArray(userOutput);
     const expectedArr = normalizeArray(expectedOutput);
     if (userArr.length !== expectedArr.length) return false;
@@ -443,7 +472,7 @@ const evaluateTask = async (req, res) => {
 
   try {
     if (!testCaseId || !userOutput || !userId) {
-      return res.status(400).json({ message: "Missing required fields" });
+      return res.status(400).json({ message: 'Missing required fields' });
     }
     const testCase = await prisma.test_cases.findUnique({
       where: {
@@ -454,15 +483,15 @@ const evaluateTask = async (req, res) => {
     if (testCase.challenge_id !== taskId) {
       return res
         .status(400)
-        .json({ message: "Test case does not belong to the task" });
+        .json({ message: 'Test case does not belong to the task' });
     }
     let user = await prisma.users.findUnique({ where: { id: userId } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
     if (user.solvedDailyChallenge) {
-      return res.status(404).json({ message: "User daily challenge solved" });
+      return res.status(404).json({ message: 'User daily challenge solved' });
     }
     let attempts = user.attempts || 0;
     await prisma.challenges.update({
@@ -484,9 +513,9 @@ const evaluateTask = async (req, res) => {
       const timeBonus = getTimeBonus();
       const attemptScore = getAttemptScore(attempts + 1);
       const difficultyScore =
-        task.difficulty === "Easy"
+        task.difficulty === 'Easy'
           ? 10
-          : task.difficulty === "Medium"
+          : task.difficulty === 'Medium'
           ? 20
           : 30;
       const totalScore = timeBonus + attemptScore + difficultyScore;
@@ -506,7 +535,7 @@ const evaluateTask = async (req, res) => {
       });
       const responseUser = { ...updatedUser };
 
-      if (typeof responseUser.points === "bigint") {
+      if (typeof responseUser.points === 'bigint') {
         responseUser.points = responseUser.points.toString();
       }
 
@@ -517,7 +546,7 @@ const evaluateTask = async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: "Challenge solved successfully!",
+        message: 'Challenge solved successfully!',
         scoreAwarded: totalScore,
         newTotalPoints: responseUser.points,
         rank: userRank.title,
@@ -533,17 +562,17 @@ const evaluateTask = async (req, res) => {
       });
       return res.status(200).json({
         success: false,
-        message: "Incorrect solution. Try again!",
+        message: 'Incorrect solution. Try again!',
         attemptsMade:
-          typeof newAttempts === "bigint"
+          typeof newAttempts === 'bigint'
             ? newAttempts.toString()
             : newAttempts,
       });
     }
   } catch (error) {
-    console.error("Error evaluating task:", error);
+    console.error('Error evaluating task:', error);
     return res.status(500).json({
-      message: "Internal server error during evaluation.",
+      message: 'Internal server error during evaluation.',
       error: error.message,
     });
   }
@@ -556,7 +585,7 @@ const createNewTask = async (req, res) => {
 
     if (!isModeratorOrAdmin) {
       return res.status(403).json({
-        message: "You do not have permission to create challenges",
+        message: 'You do not have permission to create challenges',
       });
     }
 
@@ -583,13 +612,13 @@ const createNewTask = async (req, res) => {
       solved_by: 0,
       expired: false,
       examples: examples,
-      output_type: output_type || "string",
-      difficulty: difficulty || "Easy",
+      output_type: output_type || 'string',
+      difficulty: difficulty || 'Easy',
     });
     const validation = challenge.validate();
     if (!validation.isValid) {
       return res.status(400).json({
-        message: "Challenge validation failed",
+        message: 'Challenge validation failed',
         errors: validation.errors,
       });
     }
@@ -614,7 +643,7 @@ const createNewTask = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Challenge created successfully",
+      message: 'Challenge created successfully',
       challenge: {
         id: createdChallenge.id,
         title: createdChallenge.title,
@@ -623,11 +652,11 @@ const createNewTask = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error creating challenge:", error);
+    console.error('Error creating challenge:', error);
     res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
@@ -649,19 +678,19 @@ const deleteTask = async (req, res) => {
       });
 
       res.status(200).json({
-        message: "Challenge and associated test cases deleted successfully",
+        message: 'Challenge and associated test cases deleted successfully',
       });
     } else {
       res.status(403).json({
-        message: "You do not have permission to delete this challenge",
+        message: 'You do not have permission to delete this challenge',
       });
     }
   } catch (error) {
-    console.error("Error deleting challenge:", error);
+    console.error('Error deleting challenge:', error);
     res.status(500).json({
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
@@ -673,7 +702,7 @@ module.exports = {
   updateUserDailyChallengeId,
   fetchTestCaseForToday,
   evaluateTask,
-  getAllTasks,
+  getChallenges,
   getAllTestCasesForTask,
   deleteTask,
   createNewTask,

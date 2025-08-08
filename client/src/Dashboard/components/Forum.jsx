@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import commentIcon from "../../assets/images/comment.svg";
-import trashIcon from "../../assets/images/delete.svg"; // Add this import
-import Navbar from "./Navbar";
-import { getForumPosts, deleteForumPost } from "@/services/forumService";
-import { useAuth } from "@/contexts/AuthContext";
-import { DatePicker } from "react-daisyui-timetools";
-import "react-datepicker/dist/react-datepicker.css";
-import CalendarPopover from "./CalendarPopover";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import commentIcon from '../../assets/images/comment.svg';
+import trashIcon from '../../assets/images/delete.svg';
+import Navbar from './Navbar';
+import { getForumPosts, deleteForumPost } from '@/services/forumService';
+import { useAuth } from '@/contexts/AuthContext';
+import { DatePicker } from 'react-daisyui-timetools';
+import 'react-datepicker/dist/react-datepicker.css';
+import CalendarPopover from './CalendarPopover';
 // import { useForumSearchParams } from "../../contexts/ForumSearchParamsContext";
 const Forum = () => {
   const navigate = useNavigate();
@@ -21,8 +21,8 @@ const Forum = () => {
   const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState({
     isOpen: false,
-    message: "",
-    type: "",
+    message: '',
+    type: '',
     postId: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -30,11 +30,11 @@ const Forum = () => {
   const { user } = useAuth();
 
   const defaultFilters = {
-    topic: "all",
-    dateSort: "newest",
+    topic: 'all',
+    dateSort: 'newest',
     selectedDate: null,
-    commentSort: "none",
-    searchText: "",
+    commentSort: 'none',
+    searchText: '',
   };
 
   const [filters, setFilters] = useState(() => {
@@ -48,12 +48,12 @@ const Forum = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const showModal = (message, type = "info", postId = null) => {
+  const showModal = (message, type = 'info', postId = null) => {
     setModal({ isOpen: true, message, type, postId });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, message: "", type: "", postId: null });
+    setModal({ isOpen: false, message: '', type: '', postId: null });
   };
 
   const confirmDelete = async () => {
@@ -63,8 +63,6 @@ const Forum = () => {
       setIsDeleting(false);
     }
   };
-
-  // Only fetch posts on component mount
 
   const fetchPosts = useCallback(
     async (pageNum = 0, append = false, activeFilters = null) => {
@@ -102,10 +100,10 @@ const Forum = () => {
 
         setPage(pageNum);
       } catch (error) {
-        console.error("Error fetching forum posts:", error);
+        console.error('Error fetching forum posts:', error);
 
         if (error.response) {
-          console.error("Error response:", error.response);
+          console.error('Error response:', error.response);
         }
 
         if (!append) {
@@ -119,7 +117,7 @@ const Forum = () => {
     [postsPerPage]
   );
   useEffect(() => {
-    const pageFromUrl = parseInt(forumSearchParams.get("page") || "1", 10);
+    const pageFromUrl = parseInt(forumSearchParams.get('page') || '1', 10);
     const filtersFromUrl = { ...defaultFilters };
     for (const [key, value] of forumSearchParams.entries()) {
       if (key in filtersFromUrl) {
@@ -131,7 +129,6 @@ const Forum = () => {
     fetchPosts(pageFromUrl, false, filtersFromUrl);
   }, [forumSearchParams, fetchPosts]);
 
-  // Apply all selected filters
   const applyFilters = () => {
     const newSearchParams = new URLSearchParams();
 
@@ -140,19 +137,21 @@ const Forum = () => {
         newSearchParams.set(key, value);
       }
     }
-    newSearchParams.set("page", "1");
+    newSearchParams.set('page', '1');
     setForumSearchParams(newSearchParams);
   };
-  const handleRemoveFilter = (filterKeyToRemove) => {
-    const newSearchParams = new URLSearchParams(forumSearchParams);
-    const newFilters = {
-      ...filters,
-      [filterKeyToRemove]: defaultFilters[filterKeyToRemove],
-    };
-    newSearchParams.delete(filterKeyToRemove);
-    newSearchParams.set("page", "1");
-    setForumSearchParams(newSearchParams);
+
+  const handleRemoveFilter = (filterKey) => {
+    const newFilters = { ...filters, [filterKey]: defaultFilters[filterKey] };
     setFilters(newFilters);
+
+    if (forumSearchParams.has(filterKey)) {
+      const newSearchParams = new URLSearchParams(forumSearchParams);
+      newSearchParams.delete(filterKey);
+      setPage(1);
+      newSearchParams.set('page', '1');
+      setForumSearchParams(newSearchParams);
+    }
   };
 
   const clearFilters = async () => {
@@ -160,7 +159,7 @@ const Forum = () => {
 
     const freshDefaultFilters = { ...defaultFilters };
     setFilters(freshDefaultFilters);
-    setForumSearchParams({ page: "1" });
+    setForumSearchParams({ page: '1' });
 
     setPage(1);
 
@@ -172,17 +171,17 @@ const Forum = () => {
       await deleteForumPost(postId);
 
       await fetchPosts(1, false, { ...filters });
-      showModal("Post deleted successfully.", "success");
+      showModal('Post deleted successfully.', 'success');
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error('Error deleting post:', error);
     }
   };
   const formatFilterLabel = (value) => {
-    if (!value) return "";
+    if (!value) return '';
     return value
-      .split("-")
+      .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+      .join(' ');
   };
 
   return (
@@ -191,51 +190,52 @@ const Forum = () => {
         <div className="sticky top-0 z-20 bg-base-100">
           <div className="flex flex-col">
             {/* Sticky Header Section */}
-            <div className=" border-base-300 shadow-sm">
-              <div className="flex xs:flex-row gap-2 sm:gap-3 w-full lg:w-auto justify-end p-2">
-                <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={() => navigate("/dashboard/create-post")}
-                    className="btn bg-[#FFB800] text-black btn-sm gap-1"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Create Post</span>
-                  </button>
-                  <button
-                    onClick={() => navigate("/dashboard/user-posts")}
-                    className="btn btn-outline btn-sm gap-1"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    <span className="hidden sm:inline">Your Posts</span>
-                  </button>
-                </div>
-              </div>
+            <div className="pt-3 pr-3 flex gap-3 justify-end">
+              <button
+                onClick={() => navigate('/dashboard/create-post')}
+                className="btn bg-[#FFB800] text-black btn-sm gap-1"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Create Post</span>
+              </button>
+              <button
+                onClick={() => {
+                  navigate(`/dashboard/user-posts`, {
+                    state: {
+                      fromForumSearch: forumSearchParams.toString(),
+                    },
+                  });
+                }}
+                className="btn btn-outline btn-sm gap-1"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Your Posts</span>
+              </button>
             </div>
-
             {/* Filter Navbar */}
             <div className="border-b border-base-300 shadow-sm">
               <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
@@ -244,18 +244,17 @@ const Forum = () => {
                   <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     Filters
                     {/* Active filter count indicator */}
-                    {(filters.topic !== "all" ||
-                      filters.dateSort !== "newest" ||
+                    {(filters.topic !== 'all' ||
+                      filters.dateSort !== 'newest' ||
                       filters.selectedDate ||
-                      filters.commentSort !== "none" ||
                       (filters.searchText && filters.searchText.trim())) && (
                       <span className="badge badge-sm bg-yellow-500 text-black border-none">
                         {
                           [
-                            filters.topic !== "all",
-                            filters.dateSort !== "newest",
+                            filters.topic !== 'all',
+                            filters.dateSort !== 'newest',
                             filters.selectedDate,
-                            filters.commentSort !== "none",
+                            filters.commentSort !== 'none',
                             filters.searchText && filters.searchText.trim(),
                           ].filter(Boolean).length
                         }
@@ -268,7 +267,7 @@ const Forum = () => {
                   >
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        showFilters ? "rotate-180" : ""
+                        showFilters ? 'rotate-180' : ''
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -287,13 +286,13 @@ const Forum = () => {
                 {/* Filter Controls */}
                 <div
                   className={`transition-all duration-300 ${
-                    showFilters ? "block opacity-100" : "hidden opacity-0"
+                    showFilters ? 'block opacity-100' : 'hidden opacity-0'
                   } lg:block lg:opacity-100`}
                 >
-                  {/* Mobile-First Filter Layout */}
-                  <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-3 mb-3 max-w-full">
+                  {/* Mobile-First Filter Layout - Compact Version */}
+                  <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
                     {/* Search Filter - Full width on mobile, 2 cols on desktop */}
-                    <div className="flex flex-col gap-1.5 lg:col-span-2">
+                    <div className="flex flex-col gap-1 lg:col-span-2">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Search Posts
                       </label>
@@ -309,14 +308,14 @@ const Forum = () => {
                             })
                           }
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") {
+                            if (e.key === 'Enter') {
                               applyFilters();
                             }
                           }}
-                          className="input input-sm input-bordered w-full text-sm pl-9 pr-3"
+                          className="input input-sm input-bordered w-full text-xs pl-8 pr-2 h-8"
                         />
                         <svg
-                          className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -332,9 +331,9 @@ const Forum = () => {
                     </div>
 
                     {/* Mobile: 2-column grid for selects */}
-                    <div className="grid grid-cols-2 gap-3 lg:contents">
+                    <div className="grid grid-cols-2 gap-2 lg:contents">
                       {/* Topic Filter */}
-                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                      <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Topic
                         </label>
@@ -343,7 +342,7 @@ const Forum = () => {
                           onChange={(e) =>
                             setFilters({ ...filters, topic: e.target.value })
                           }
-                          className="select select-sm select-bordered w-full text-sm"
+                          className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
                         >
                           <option value="all">All Topics</option>
                           <option value="general">General</option>
@@ -354,16 +353,19 @@ const Forum = () => {
                       </div>
 
                       {/* Date Sort */}
-                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                      <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Date Order
                         </label>
                         <select
                           value={filters.dateSort}
                           onChange={(e) =>
-                            setFilters({ ...filters, dateSort: e.target.value })
+                            setFilters({
+                              ...filters,
+                              dateSort: e.target.value,
+                            })
                           }
-                          className="select select-sm select-bordered w-full text-sm"
+                          className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
                         >
                           <option value="newest">Most Recent</option>
                           <option value="past-week">Past Week</option>
@@ -374,10 +376,10 @@ const Forum = () => {
                     </div>
 
                     {/* Mobile: Single column for date picker and popularity */}
-                    <div className="space-y-3 lg:space-y-0 lg:contents">
-                      <div className="flex flex-col gap-1.5 lg:col-span-1">
+                    <div className="space-y-2 lg:space-y-0 lg:contents">
+                      <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          Popularity
+                          Populrarity
                         </label>
                         <select
                           value={filters.commentSort}
@@ -387,7 +389,7 @@ const Forum = () => {
                               commentSort: e.target.value,
                             })
                           }
-                          className="select select-sm select-bordered w-full text-sm"
+                          className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
                         >
                           <option value="none">No Sorting</option>
                           <option value="most-popular">Most Popular</option>
@@ -395,7 +397,7 @@ const Forum = () => {
                         </select>
                       </div>
                       {/* Specific Date Filter */}
-                      <div className="relative flex flex-col gap-1.5 lg:col-span-1">
+                      <div className="relative flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Specific Date
                         </label>
@@ -409,21 +411,21 @@ const Forum = () => {
                               filters.selectedDate
                                 ? new Date(
                                     filters.selectedDate
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
+                                  ).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
                                   })
-                                : "" // Use empty string so placeholder is visible
+                                : '' // Use empty string so placeholder is visible
                             }
                             placeholder="Select date"
                             // Style to match other inputs and add cursor-pointer
-                            className="input input-sm input-bordered w-full text-sm pl-9 pr-3 cursor-pointer"
+                            className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
                           />
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             // Position the icon inside the input field
-                            className="z-10 w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -432,7 +434,7 @@ const Forum = () => {
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                             />
                           </svg>
                         </div>
@@ -444,25 +446,25 @@ const Forum = () => {
                           onDateSelect={(date) => {
                             setFilters({ ...filters, selectedDate: date });
                           }}
+                          isFromManageChallenges={false}
                         />
                       </div>
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col gap-1.5 lg:col-span-1">
+                    <div className="flex flex-col gap-1 lg:col-span-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                         Actions
                       </label>
-                      <div className="flex gap-2">
-                        {(filters.topic !== "all" ||
-                          filters.dateSort !== "newest" ||
+                      <div className="flex gap-1.5">
+                        {(filters.topic !== 'all' ||
+                          filters.dateSort !== 'newest' ||
                           filters.selectedDate ||
-                          filters.commentSort !== "none" ||
                           (filters.searchText &&
                             filters.searchText.trim())) && (
                           <button
                             onClick={clearFilters}
-                            className="cursor-pointer px-2.5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                            className="cursor-pointer px-2 py-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
                           >
                             <span className="lg:hidden">Clear Filters</span>
                             <span className="hidden lg:inline">
@@ -472,7 +474,7 @@ const Forum = () => {
                         )}
                         <button
                           onClick={applyFilters}
-                          className="cursor-pointer px-2.5 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none"
+                          className="cursor-pointer px-2 py-1.5 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
                         >
                           <span className="lg:hidden">Apply Filters</span>
                           <span className="hidden lg:inline">
@@ -485,17 +487,17 @@ const Forum = () => {
 
                   {/* Active Filters Display - Improved Mobile Layout */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {filters.topic !== "all" && (
-                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1">
+                    {filters.topic !== 'all' && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
-                          {filters.topic === "general"
-                            ? "General"
-                            : "Daily Challenge"}
+                          {filters.topic === 'general'
+                            ? 'General'
+                            : 'Daily Challenge'}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("topic")}
+                          onClick={() => handleRemoveFilter('topic')}
                           aria-label="Remove topic filter"
                         >
                           ×
@@ -503,29 +505,46 @@ const Forum = () => {
                       </span>
                     )}
                     {filters.searchText && filters.searchText.trim() && (
-                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
                         <span className="font-medium text-xs truncate">
                           "{filters.searchText.trim()}"
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("searchText")}
+                          onClick={() => handleRemoveFilter('searchText')}
                           aria-label="Remove search filter"
                         >
                           ×
                         </button>
                       </span>
                     )}
-                    {filters.dateSort !== "newest" && (
-                      <span className="badge badge-outline flex items-center gap-1 px-2 py-1">
+                    {filters.commentSort != 'none' &&
+                      filters.commentSort.trim() && (
+                        <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                          <span className="font-medium text-xs truncate">
+                            {formatFilterLabel(filters.commentSort)}
+                          </span>
+                          <button
+                            type="button"
+                            className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                            onClick={() => handleRemoveFilter('commentSort')}
+                            aria-label="Remove search filter"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+
+                    {filters.dateSort !== 'newest' && (
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {formatFilterLabel(filters.dateSort)}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("dateSort")}
+                          onClick={() => handleRemoveFilter('dateSort')}
                           aria-label="Remove sort filter"
                         >
                           ×
@@ -533,39 +552,22 @@ const Forum = () => {
                       </span>
                     )}
                     {filters.selectedDate && (
-                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1">
+                      <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {new Date(filters.selectedDate).toLocaleDateString(
-                            "en-US",
+                            'en-US',
                             {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
                             }
                           )}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("selectedDate")}
+                          onClick={() => handleRemoveFilter('selectedDate')}
                           aria-label="Remove date filter"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    )}
-                    {filters.commentSort !== "none" && (
-                      <span className="badge badge-outline  flex items-center gap-1 px-2 py-1">
-                        <span className="font-medium text-xs">
-                          {filters.commentSort === "most-popular"
-                            ? "Most Popular"
-                            : "Least Popular"}
-                        </span>
-                        <button
-                          type="button"
-                          className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("commentSort")}
-                          aria-label="Remove popularity filter"
                         >
                           ×
                         </button>
@@ -607,19 +609,19 @@ const Forum = () => {
                   {posts.map((post) => (
                     <div
                       key={post.id}
-                      className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 border h-full flex flex-col"
+                      className="card bg-base-200 shadow-md md:scale-95 lg:scale-100 hover:shadow-lg transition-all duration-300 border h-full flex flex-col"
                     >
-                      <div className="card-body p-3 sm:p-4 lg:p-5 xl:p-6 flex flex-col h-full relative">
+                      <div className="card-body p-2 sm:p-3 md:p-2.5 lg:p-4 xl:p-5 flex flex-col h-full relative">
                         {(post.author_name === user.name ||
                           post.author_name === user.username ||
                           user.isModerator) && (
                           <button
-                            className="absolute top-2 right-2 p-1.5 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
+                            className="absolute top-1 right-1 p-1 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
                               showModal(
-                                "Are you sure you want to delete this post? This action cannot be undone.",
-                                "confirm",
+                                'Are you sure you want to delete this post? This action cannot be undone.',
+                                'confirm',
                                 post.id
                               );
                             }}
@@ -627,13 +629,13 @@ const Forum = () => {
                             <img
                               src={trashIcon}
                               alt="Delete"
-                              className="w-4 h-4 sm:w-5 sm:h-5"
+                              className="w-3 h-3 sm:w-4 sm:h-4"
                             />
                           </button>
                         )}
 
                         <h1
-                          className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20 cursor-pointer"
+                          className="text-base sm:text-lg md:text-base lg:text-xl font-bold mb-2 pr-8 sm:pr-12 cursor-pointer line-clamp-2"
                           onClick={() => {
                             navigate(`/dashboard/forum-detail/${post.id}`, {
                               state: {
@@ -646,65 +648,65 @@ const Forum = () => {
                           {post.title}
                         </h1>
 
-                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-0.5">
+                        <div className="flex flex-wrap items-center gap-1 mb-0.5">
                           <span
-                            className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${
-                              post.topic === "general"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
+                            className={`inline-block text-xs font-medium px-1 py-0.5 rounded ${
+                              post.topic === 'general'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-green-100 text-green-800'
                             }`}
                           >
-                            {post.topic === "general"
-                              ? "General"
-                              : "Daily Challenge"}
+                            {post.topic === 'general'
+                              ? 'General'
+                              : 'Daily Challenge'}
                           </span>
                           {post.challengeTitle && (
-                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1.5 py-0.5 rounded">
+                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-1 py-0.5 rounded truncate max-w-[120px]">
                               {post.challengeTitle}
                             </span>
                           )}
                         </div>
 
-                        <p className="text-xs sm:text-sm text-base-content/70 mb-2 sm:mb-6">
-                          By{" "}
+                        <p className="text-xs text-base-content/70 mb-1 sm:mb-2">
+                          By{' '}
                           <span className="font-semibold">
                             {post.author_name}
                           </span>
                           <span className="mx-1">·</span>
                           <span className="italic">
                             {new Date(post.date_created).toLocaleDateString(
-                              "en-US",
+                              'en-US',
                               {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
                               }
                             )}
                           </span>
                         </p>
 
-                        <p className="hidden sm:block text-lg text-base-content/80 line-clamp-1">
-                          {post.content && post.content.length > 60
-                            ? post.content.slice(0, 60) + "..."
+                        <p className="hidden sm:block text-sm md:text-xs lg:text-sm text-base-content/80 line-clamp-1 mb-auto">
+                          {post.content && post.content.length > 50
+                            ? post.content.slice(0, 50) + '...'
                             : post.content}
                         </p>
 
-                        <div className="card-actions justify-end mt-4">
+                        <div className="card-actions justify-end mt-2">
                           <div
-                            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+                            className="flex items-center gap-1 cursor-pointer"
                             onClick={() => {
                               navigate(`/dashboard/forum-detail/${post.id}`, {
                                 state: { post },
                               });
                             }}
                           >
-                            <p className="text-xs sm:text-sm font-medium">
+                            <p className="text-xs font-medium">
                               {post.comment_count}
                             </p>
                             <img
                               src={commentIcon}
                               alt="Comment"
-                              className="w-4 h-4 sm:w-5 sm:h-5 hover:opacity-80"
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 hover:opacity-80"
                             />
                           </div>
                         </div>
@@ -720,7 +722,7 @@ const Forum = () => {
                     className="btn btn-sm btn-ghost px-2 sm:px-3"
                     onClick={() => {
                       const newPage = page - 1;
-                      forumSearchParams.set("page", newPage.toString());
+                      forumSearchParams.set('page', newPage.toString());
                       setForumSearchParams(forumSearchParams);
                     }}
                     disabled={loading || page === 1}
@@ -733,10 +735,10 @@ const Forum = () => {
                     <button
                       key={idx}
                       className={`btn btn-sm px-2 sm:px-3 ${
-                        page - 1 === idx ? "border-amber-400" : "btn-ghost"
+                        page - 1 === idx ? 'border-amber-400' : 'btn-ghost'
                       }`}
                       onClick={() => {
-                        forumSearchParams.set("page", (idx + 1).toString());
+                        forumSearchParams.set('page', (idx + 1).toString());
                         setForumSearchParams(forumSearchParams);
                       }}
                       disabled={loading}
@@ -755,7 +757,7 @@ const Forum = () => {
                     <button
                       className="btn btn-sm border-amber-400 px-2 sm:px-3"
                       onClick={() => {
-                        forumSearchParams.set("page", page.toString());
+                        forumSearchParams.set('page', page.toString());
                         setForumSearchParams(forumSearchParams);
                       }}
                       disabled={loading}
@@ -767,10 +769,10 @@ const Forum = () => {
                   {totalPages > 3 && (
                     <button
                       className={`btn btn-sm px-2 sm:px-3 ${
-                        page === totalPages ? "border-amber-400" : "btn-ghost"
+                        page === totalPages ? 'border-amber-400' : 'btn-ghost'
                       }`}
                       onClick={() => {
-                        forumSearchParams.set("page", totalPages.toString());
+                        forumSearchParams.set('page', totalPages.toString());
                         setForumSearchParams(forumSearchParams);
                       }}
                       disabled={loading}
@@ -783,7 +785,7 @@ const Forum = () => {
                     className="btn btn-sm btn-ghost px-2 sm:px-3"
                     onClick={() => {
                       const newPage = page + 1;
-                      forumSearchParams.set("page", newPage.toString());
+                      forumSearchParams.set('page', newPage.toString());
                       setForumSearchParams(forumSearchParams);
                     }}
                     disabled={loading || page === totalPages}
@@ -808,7 +810,7 @@ const Forum = () => {
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {modal.type === "confirm" && (
+              {modal.type === 'confirm' && (
                 <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-error-content"
@@ -825,7 +827,7 @@ const Forum = () => {
                   </svg>
                 </div>
               )}
-              {modal.type === "success" && (
+              {modal.type === 'success' && (
                 <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-success-content"
@@ -848,7 +850,7 @@ const Forum = () => {
             </div>
             <p className="py-3 sm:py-4 text-sm sm:text-base">{modal.message}</p>
             <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
-              {modal.type === "confirm" ? (
+              {modal.type === 'confirm' ? (
                 <>
                   <button
                     className="btn btn-ghost btn-sm sm:btn-md"
@@ -868,7 +870,7 @@ const Forum = () => {
                         Deleting...
                       </>
                     ) : (
-                      "Delete"
+                      'Delete'
                     )}
                   </button>
                 </>

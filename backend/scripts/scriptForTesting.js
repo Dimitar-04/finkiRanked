@@ -22,9 +22,9 @@ const { sendModeratorEmail } = require('../services/emailService');
 //     startOfNextDay.setUTCDate(startOfEffectiveDay.getUTCDate() + 1);
 
 //     console.log(
-//       "Querying between (UTC dates):",
+//       'Querying between (UTC dates):',
 //       startOfEffectiveDay.toISOString(),
-//       "and",
+//       'and',
 //       startOfNextDay.toISOString()
 //     );
 
@@ -45,14 +45,14 @@ const { sendModeratorEmail } = require('../services/emailService');
 //       console.log(`Found ${challenges.length} challenge(s) for today:`);
 //       console.log(challenges);
 //     } else {
-//       console.log("No challenges found for today.");
+//       console.log('No challenges found for today.');
 //     }
 //   } catch (error) {
 //     console.error("Error fetching today's challenges:", error);
 //     process.exitCode = 1;
 //   } finally {
 //     await prisma.$disconnect();
-//     console.log("Disconnected from database.");
+//     console.log('Disconnected from database.');
 //   }
 // }
 
@@ -79,72 +79,72 @@ const { sendModeratorEmail } = require('../services/emailService');
 
 // resetUsers();
 
-async function sendmailToModerators() {
-  try {
-    // 1. Define the time threshold (24 hours ago)
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate());
+// async function sendmailToModerators() {
+//   try {
+//     // 1. Define the time threshold (24 hours ago)
+//     const oneDayAgo = new Date();
+//     oneDayAgo.setDate(oneDayAgo.getDate());
 
-    // 2. Check if there are any posts older than the threshold
-    const posts = await prisma.to_be_reviewed.findMany({
-      where: {
-        created_at: {
-          lt: oneDayAgo, // 'lt' means "less than"
-        },
-      },
-      select: {
-        title: true,
-        created_at: true,
-      },
-      orderBy: {
-        created_at: 'asc',
-      },
-    });
+//     // 2. Check if there are any posts older than the threshold
+//     const posts = await prisma.to_be_reviewed.findMany({
+//       where: {
+//         created_at: {
+//           lt: oneDayAgo, // 'lt' means "less than"
+//         },
+//       },
+//       select: {
+//         title: true,
+//         created_at: true,
+//       },
+//       orderBy: {
+//         created_at: 'asc',
+//       },
+//     });
 
-    console.log(`Found ${posts.length} post(s) older than 24 hours.`);
+//     console.log(`Found ${posts.length} post(s) older than 24 hours.`);
 
-    // 3. If no old posts, exit gracefully
-    if (posts.length === 0) {
-      console.log('No old posts to review. No emails sent.');
-      return;
-    }
-    console.log('Posts awaiting review:');
-    posts.forEach((post, index) => {
-      console.log(
-        `${index + 1}. ${post.title} (ID: ${
-          post.id
-        }) - Created at: ${post.created_at.toISOString()}`
-      );
-    });
+//     // 3. If no old posts, exit gracefully
+//     if (posts.length === 0) {
+//       console.log('No old posts to review. No emails sent.');
+//       return;
+//     }
+//     console.log('Posts awaiting review:');
+//     posts.forEach((post, index) => {
+//       console.log(
+//         `${index + 1}. ${post.title} (ID: ${
+//           post.id
+//         }) - Created at: ${post.created_at.toISOString()}`
+//       );
+//     });
 
-    // 4. If there are old posts, get all moderators
-    const moderators = await prisma.users.findMany({
-      where: {
-        isModerator: true,
-      },
-      select: {
-        email: true, // Only select the email field
-      },
-    });
+//     // 4. If there are old posts, get all moderators
+//     const moderators = await prisma.users.findMany({
+//       where: {
+//         isModerator: true,
+//       },
+//       select: {
+//         email: true, // Only select the email field
+//       },
+//     });
 
-    if (moderators.length === 0) {
-      console.log(
-        'Found old posts, but no moderators are defined in the system.'
-      );
-      return;
-    }
+//     if (moderators.length === 0) {
+//       console.log(
+//         'Found old posts, but no moderators are defined in the system.'
+//       );
+//       return;
+//     }
 
-    const moderatorEmails = moderators.map((m) => m.email);
+//     const moderatorEmails = moderators.map((m) => m.email);
 
-    moderatorEmails.forEach((email) => {
-      sendModeratorEmail(email, posts);
-    });
-  } catch (error) {
-    console.error('Error in sendEmailToModerators script:', error);
-    process.exitCode = 1;
-  } finally {
-    await prisma.$disconnect();
-  }
-}
+//     moderatorEmails.forEach((email) => {
+//       sendModeratorEmail(email, posts);
+//     });
+//   } catch (error) {
+//     console.error('Error in sendEmailToModerators script:', error);
+//     process.exitCode = 1;
+//   } finally {
+//     await prisma.$disconnect();
+//   }
+// }
 
-sendmailToModerators();
+// sendmailToModerators();

@@ -1,24 +1,24 @@
-const prisma = require("../lib/prisma");
-const ForumPost = require("../models/ForumPost");
-const Comment = require("../models/Comment");
-const filter = require("leo-profanity");
-const mkProfanity = require("../filters/macedonianProfanity");
+const prisma = require('../lib/prisma');
+const ForumPost = require('../models/ForumPost');
+const Comment = require('../models/Comment');
+const filter = require('leo-profanity');
+const mkProfanity = require('../filters/macedonianProfanity');
 filter.add(mkProfanity);
-const safeWords = require("../filters/safeWords");
-const { analyzePostContent } = require("../ai/processRequestAi");
-const { createReviewPost } = require("./reviewController");
-const verifyModeratorStatus = require("../services/checkModeratorStatus");
-const { resetPostCheckCounter } = require("../services/forumCountersReset");
+const safeWords = require('../filters/safeWords');
+const { analyzePostContent } = require('../ai/processRequestAi');
+const { createReviewPost } = require('./reviewController');
+const verifyModeratorStatus = require('../services/checkModeratorStatus');
+const { resetPostCheckCounter } = require('../services/forumCountersReset');
 const {
   sendDeletedFromForumEmail,
   sendDeletedCommentEmail,
   sendCommentedNotificationEmail,
-} = require("../services/emailService");
+} = require('../services/emailService');
 const createForumPost = async (req, res) => {
   const { title, content, authorId, authorName, topic, challengeId } = req.body;
   if (!title || !content || !authorId || !authorName || !topic) {
     return res.status(400).json({
-      error: "Title, content, authorId, and authorName are required",
+      error: 'Title, content, authorId, and authorName are required',
     });
   }
 
@@ -28,7 +28,7 @@ const createForumPost = async (req, res) => {
     });
     const postCounter = user.postCounter;
     const postCheckCounter = user.postCheckCounter;
-    console.log("Post check:", postCheckCounter);
+    console.log('Post check:', postCheckCounter);
 
     if (postCounter >= -11) {
       const post = new ForumPost({
@@ -45,11 +45,11 @@ const createForumPost = async (req, res) => {
 
       if (isProfane) {
         return res.status(400).json({
-          error: "Content contains inappropriate language",
+          error: 'Content contains inappropriate language',
         });
       } else if (filter.check(post.content)) {
         return res.status(400).json({
-          error: "Content contains inappropriate language",
+          error: 'Content contains inappropriate language',
         });
       } else if (post.content.length > 200) {
         try {
@@ -57,18 +57,18 @@ const createForumPost = async (req, res) => {
 
           return;
         } catch (reviewError) {
-          console.error("Error submitting post for review:", reviewError);
+          console.error('Error submitting post for review:', reviewError);
           return res.status(500).json({
             error:
               reviewError.message ||
-              "Failed to submit post for review due to an internal error.",
+              'Failed to submit post for review due to an internal error.',
           });
         }
       } else if (postCheckCounter >= 3) {
         return res.status(202).json({
           message:
-            "Would you like to send this post to moderator for approval?",
-          reason: "USER_FLAGGED",
+            'Would you like to send this post to moderator for approval?',
+          reason: 'USER_FLAGGED',
         });
       } else if (
         !(
@@ -79,8 +79,8 @@ const createForumPost = async (req, res) => {
       ) {
         try {
           const aiResponse = await analyzePostContent(post.title, post.content);
-          if (aiResponse.aiResponse === "INAPPROPRIATE") {
-            console.log("AI analysis says INAPPROPRIATE:", aiResponse.reason);
+          if (aiResponse.aiResponse === 'INAPPROPRIATE') {
+            console.log('AI analysis says INAPPROPRIATE:', aiResponse.reason);
             await prisma.users.update({
               where: { id: authorId },
               data: {
@@ -88,13 +88,13 @@ const createForumPost = async (req, res) => {
               },
             });
             return res.status(400).json({
-              error: "Content is not appropriate for the forum",
+              error: 'Content is not appropriate for the forum',
             });
           }
         } catch (error) {
-          console.error("AI analysis error:", error);
+          console.error('AI analysis error:', error);
           return res.status(500).json({
-            error: "AI analysis failed, please try again later",
+            error: 'AI analysis failed, please try again later',
           });
         }
       }
@@ -117,17 +117,17 @@ const createForumPost = async (req, res) => {
       await decrementPostCounter(authorId);
       await resetPostCheckCounter(authorId);
       res.status(201).json({
-        message: "Forum post created successfully",
+        message: 'Forum post created successfully',
         post: savedPost,
       });
     } else {
       return res.status(400).json({
-        error: "You have reached the daily limit for creating posts.",
+        error: 'You have reached the daily limit for creating posts.',
       });
     }
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -178,7 +178,7 @@ const getForumPosts = async (req, res) => {
 
     const filters = [];
     let orderBy = [];
-    if (topic && topic !== "all") {
+    if (topic && topic !== 'all') {
       filters.push({ topic });
     }
 
@@ -190,13 +190,13 @@ const getForumPosts = async (req, res) => {
         console.error(`Invalid date provided: "${date}"`);
       }
     }
-    if (sort === "past-week" || sort === "past-month" || sort === "past-year") {
+    if (sort === 'past-week' || sort === 'past-month' || sort === 'past-year') {
       const fromDate = new Date();
-      if (sort === "past-week") {
+      if (sort === 'past-week') {
         fromDate.setDate(fromDate.getDate() - 7);
-      } else if (sort === "past-month") {
+      } else if (sort === 'past-month') {
         fromDate.setDate(fromDate.getDate() - 30);
-      } else if (sort === "past-year") {
+      } else if (sort === 'past-year') {
         fromDate.setDate(fromDate.getDate() - 365);
       }
       filters.push({
@@ -205,13 +205,13 @@ const getForumPosts = async (req, res) => {
         },
       });
     } else if (!commentSort) {
-      orderBy.push({ date_created: "desc" });
+      orderBy.push({ date_created: 'desc' });
     }
     if (search) {
       filters.push({
         OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { content: { contains: search, mode: "insensitive" } },
+          { title: { contains: search, mode: 'insensitive' } },
+          { content: { contains: search, mode: 'insensitive' } },
         ],
       });
     }
@@ -219,13 +219,13 @@ const getForumPosts = async (req, res) => {
     // Combine filters with AND if there are any
     const whereCondition = filters.length > 0 ? { AND: filters } : {};
 
-    if (commentSort === "most-popular") {
-      orderBy.push({ comment_count: "desc" });
+    if (commentSort === 'most-popular') {
+      orderBy.push({ comment_count: 'desc' });
 
-      orderBy.push({ date_created: "desc" });
-    } else if (commentSort === "least-popular") {
-      orderBy.push({ comment_count: "asc" });
-      orderBy.push({ date_created: "desc" });
+      orderBy.push({ date_created: 'desc' });
+    } else if (commentSort === 'least-popular') {
+      orderBy.push({ comment_count: 'asc' });
+      orderBy.push({ date_created: 'desc' });
     }
 
     const totalCount = await prisma.forum_posts.count({
@@ -253,43 +253,131 @@ const getForumPosts = async (req, res) => {
       challengeTitle: post.challenges?.title || null,
     }));
     if (
-      (sort === "past-week" || sort === "past-month" || sort == "past-year") &&
+      (sort === 'past-week' || sort === 'past-month' || sort == 'past-year') &&
       !commentSort
     ) {
       forumPosts = scorePosts(forumPosts).map(({ score, ...post }) => post);
     }
 
     // Set cache control headers to prevent caching
-    res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
-    res.set("Pragma", "no-cache");
-    res.set("Expires", "0");
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
 
     // Add response information to help debug the filtering
-    res.set("X-Total-Posts", forumPosts.length.toString());
-    res.set("X-Filter-Topic", topic || "none");
-    res.set("X-Filter-Applied", JSON.stringify(whereCondition));
-    res.set("X-Sort-Order", JSON.stringify(orderBy));
+    res.set('X-Total-Posts', forumPosts.length.toString());
+    res.set('X-Filter-Topic', topic || 'none');
+    res.set('X-Filter-Applied', JSON.stringify(whereCondition));
+    res.set('X-Sort-Order', JSON.stringify(orderBy));
 
     res.status(200).json({ forumPosts, totalCount });
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 const getAllPostsByUser = async (req, res) => {
   const userId = req.user.sub;
   try {
-    const posts = await prisma.forum_posts.findMany({
-      where: { author_id: userId },
-      orderBy: {
-        date_created: "desc",
-      },
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    const {
+      topic,
+      date: selectedDate,
+      sort: dateSort,
+      commentSort,
+      search: searchText,
+    } = req.query;
+
+    const filters = [];
+    let orderBy = [];
+
+    filters.push({ author_id: userId });
+
+    if (topic && topic !== 'all') {
+      filters.push({ topic: topic.trim() });
+    }
+
+    if (selectedDate) {
+      const dateObj = new Date(selectedDate);
+      filters.push({ date_created: dateObj });
+    }
+
+    if (
+      dateSort === 'past-week' ||
+      dateSort === 'past-month' ||
+      dateSort === 'past-year'
+    ) {
+      const fromDate = new Date();
+      if (dateSort === 'past-week') fromDate.setDate(fromDate.getDate() - 7);
+      if (dateSort === 'past-month') fromDate.setMonth(fromDate.getMonth() - 1);
+      if (dateSort === 'past-year')
+        fromDate.setFullYear(fromDate.getFullYear() - 1);
+      filters.push({ date_created: { gte: fromDate } });
+    }
+
+    if (searchText && searchText.trim()) {
+      const search = searchText.trim();
+      filters.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { content: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    const whereCondition = filters.length > 0 ? { AND: filters } : {};
+
+    if (commentSort && commentSort !== 'none') {
+      if (commentSort === 'most-popular') {
+        orderBy.push({ comment_count: 'desc' });
+      } else {
+        orderBy.push({ comment_count: 'asc' });
+      }
+      orderBy.push({ date_created: 'desc' });
+    } else {
+      orderBy.push({ date_created: 'desc' });
+    }
+
+    const [posts, totalCount] = await Promise.all([
+      prisma.forum_posts.findMany({
+        where: whereCondition,
+        orderBy: orderBy,
+        skip: skip,
+        take: take,
+        include: {
+          challenges: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      }),
+      prisma.forum_posts.count({
+        where: whereCondition,
+      }),
+    ]);
+
+    // Map posts to include challengeTitle
+    const processedPosts = posts.map((post) => ({
+      ...post,
+      challengeTitle: post.challenges?.title || null,
+    }));
+
+    res.status(200).json({
+      posts: processedPosts,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
     });
-    res.status(200).json(posts);
   } catch (err) {
-    console.error("Error fetching posts by user:", err);
-    res.status(500).json({ error: "Failed to fetch user posts" });
+    console.error('Error fetching posts by user:', err);
+    res.status(500).json({ error: 'Failed to fetch user posts' });
   }
 };
 
@@ -307,7 +395,7 @@ const deleteForumPost = async (req, res) => {
     });
 
     if (!post) {
-      return res.status(404).json({ error: "Forum post not found" });
+      return res.status(404).json({ error: 'Forum post not found' });
     }
 
     const isAuthor = post.author_id === userId;
@@ -315,7 +403,7 @@ const deleteForumPost = async (req, res) => {
 
     if (!isAuthor && !isUserModerator) {
       return res.status(403).json({
-        error: "You do not have permission to delete this post",
+        error: 'You do not have permission to delete this post',
       });
     }
 
@@ -334,11 +422,11 @@ const deleteForumPost = async (req, res) => {
 
     return res.status(204).send();
   } catch (err) {
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Forum post not found" });
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Forum post not found' });
     }
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -348,7 +436,7 @@ const createComment = async (req, res) => {
 
   if (!post_id || !content || !authorId || !authorName) {
     return res.status(400).json({
-      error: "post_id, content, authorId, and authorName are required",
+      error: 'post_id, content, authorId, and authorName are required',
     });
   }
 
@@ -361,9 +449,9 @@ const createComment = async (req, res) => {
     });
     const profane = filter.check(comment.content);
     if (profane) {
-      console.log("not safe words or profanity detected!");
+      console.log('not safe words or profanity detected!');
       return res.status(400).json({
-        error: "Content contains inappropriate language or is not on topic",
+        error: 'Content contains inappropriate language or is not on topic',
       });
     }
 
@@ -394,12 +482,12 @@ const createComment = async (req, res) => {
       );
     }
     res.status(201).json({
-      message: "Comment created successfully",
+      message: 'Comment created successfully',
       comment: savedComment,
     });
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -409,7 +497,7 @@ const getComments = async (req, res) => {
   if (!postId) {
     return res
       .status(400)
-      .json({ error: "post_id query parameter is required" });
+      .json({ error: 'post_id query parameter is required' });
   }
 
   try {
@@ -418,7 +506,7 @@ const getComments = async (req, res) => {
         post_id: postId,
       },
       orderBy: {
-        dateCreated: "desc",
+        dateCreated: 'desc',
       },
     });
 
@@ -435,8 +523,8 @@ const getComments = async (req, res) => {
 
     res.status(200).json(comments);
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -450,7 +538,7 @@ const deleteComment = async (req, res) => {
     });
 
     if (!comment) {
-      return res.status(404).json({ error: "Comment not found" });
+      return res.status(404).json({ error: 'Comment not found' });
     }
 
     const post = await prisma.forum_posts.findUnique({
@@ -461,7 +549,7 @@ const deleteComment = async (req, res) => {
     if (!post) {
       return res
         .status(404)
-        .json({ error: "Post associated with comment not found" });
+        .json({ error: 'Post associated with comment not found' });
     }
 
     const isUserModerator = await verifyModeratorStatus(userId);
@@ -469,7 +557,7 @@ const deleteComment = async (req, res) => {
 
     if (!isUserModerator && !isAuthor) {
       return res.status(403).json({
-        error: "You do not have permission to delete this comment",
+        error: 'You do not have permission to delete this comment',
       });
     }
 
@@ -500,11 +588,11 @@ const deleteComment = async (req, res) => {
 
     return res.status(204).send();
   } catch (err) {
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Comment not found" });
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Comment not found' });
     }
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 

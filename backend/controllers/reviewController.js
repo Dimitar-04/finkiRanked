@@ -1,17 +1,17 @@
-const prisma = require("../lib/prisma");
-const ToBeReviewedPost = require("../models/ToBeReviewedPost");
-const ForumPost = require("../models/ForumPost");
-const ForumController = require("./forumController");
-const filter = require("leo-profanity");
-const safeWords = require("../filters/safeWords");
-const verifyModeratorStatus = require("../services/checkModeratorStatus");
-const { resetPostCheckCounter } = require("../services/forumCountersReset");
+const prisma = require('../lib/prisma');
+const ToBeReviewedPost = require('../models/ToBeReviewedPost');
+const ForumPost = require('../models/ForumPost');
+const ForumController = require('./forumController');
+const filter = require('leo-profanity');
+const safeWords = require('../filters/safeWords');
+const verifyModeratorStatus = require('../services/checkModeratorStatus');
+const { resetPostCheckCounter } = require('../services/forumCountersReset');
 const {
   sendApprovalEmail,
   sendDeletionEmail,
   sendModeratorManyPendingPostsEmail,
-} = require("../services/emailService");
-const { equal } = require("assert");
+} = require('../services/emailService');
+const { equal } = require('assert');
 
 const createReviewPost = async (req, res) => {
   const { title, content, authorId, authorName, topic, challengeId } = req.body;
@@ -58,11 +58,11 @@ const createReviewPost = async (req, res) => {
 
     await resetPostCheckCounter(authorId);
     return res.status(201).json({
-      message: "Post submitted for moderator approval",
+      message: 'Post submitted for moderator approval',
     });
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -70,9 +70,9 @@ const resetCheckCounter = async (req, res) => {
   try {
     const { userId } = req.params;
     await resetPostCheckCounter(userId);
-    res.status(200).json({ message: "Post check counter reset successfully" });
+    res.status(200).json({ message: 'Post check counter reset successfully' });
   } catch (e) {
-    console.error("Error resetting post check counter:", e);
+    console.error('Error resetting post check counter:', e);
   }
 };
 
@@ -81,17 +81,17 @@ const getReviewPosts = async (req, res) => {
     const {
       page = 0,
       limit = 5,
-      search = "",
-      date = "",
-      topic = "all",
-      dateSort = "newest",
+      search = '',
+      date = '',
+      topic = 'all',
+      dateSort = 'newest',
     } = req.query;
     const skip = parseInt(page) * parseInt(limit);
     const userId = req.query.userId;
     const hasModeratorStatus = await verifyModeratorStatus(userId);
     if (!hasModeratorStatus) {
       return res.status(403).json({
-        error: "Access denied. Only moderators can access review posts.",
+        error: 'Access denied. Only moderators can access review posts.',
       });
     }
     try {
@@ -101,9 +101,9 @@ const getReviewPosts = async (req, res) => {
       if (search) {
         whereClause.AND.push({
           OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { content: { contains: search, mode: "insensitive" } },
-            { author_name: { contains: search, mode: "insensitive" } },
+            { title: { contains: search, mode: 'insensitive' } },
+            { content: { contains: search, mode: 'insensitive' } },
+            { author_name: { contains: search, mode: 'insensitive' } },
           ],
         });
       }
@@ -121,7 +121,7 @@ const getReviewPosts = async (req, res) => {
           },
         });
       }
-      if (topic && topic !== "all") {
+      if (topic && topic !== 'all') {
         whereClause.AND.push({
           topic: {
             equals: topic,
@@ -138,7 +138,7 @@ const getReviewPosts = async (req, res) => {
           skip,
           take: parseInt(limit),
           orderBy: {
-            created_at: dateSort === "oldest" ? "asc" : "desc",
+            created_at: dateSort === 'oldest' ? 'asc' : 'desc',
           },
           include: {
             challenges: {
@@ -158,12 +158,12 @@ const getReviewPosts = async (req, res) => {
       }));
       res.status(200).json({ posts: reviewPosts, totalPages });
     } catch (dbError) {
-      console.error("Database query error:", dbError);
-      res.status(500).json({ error: "Error fetching posts from database" });
+      console.error('Database query error:', dbError);
+      res.status(500).json({ error: 'Error fetching posts from database' });
     }
   } catch (err) {
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -176,50 +176,60 @@ const getPendingPosts = async (req, res) => {
         author_id: userId,
       },
       orderBy: {
-        created_at: "desc",
+        created_at: 'desc',
       },
     });
 
     res.status(200).json(pendingPosts);
   } catch (err) {
     console.error("Error fetching user's pending posts:", err);
-    res.status(500).json({ error: "Failed to fetch pending posts" });
+    res.status(500).json({ error: 'Failed to fetch pending posts' });
   }
 };
 
 const deleteReviewPost = async (req, res) => {
-  const { id } = req.params;
-  const { userId } = req.params;
-  const hasModeratorStatus = await verifyModeratorStatus(userId);
-  if (!hasModeratorStatus) {
-    console.log("Access denied: User is not a moderator");
-    return res.status(403).json({
-      error: "Access denied. Only moderators can access review posts.",
-    });
-  }
+  const { id, userId } = req.params;
+
   try {
     const post = await prisma.to_be_reviewed.findUnique({
       where: { id },
     });
+
+    if (!post) {
+      return res.status(404).json({ error: 'Forum post not found' });
+    }
+
+    const isAuthor = post.author_id === userId;
+    const isModerator = await verifyModeratorStatus(userId);
+
+    if (!isAuthor && !isModerator) {
+      console.log('Access denied: Not author or moderator');
+      return res.status(403).json({
+        error:
+          'Access denied. Only the author or a moderator can delete this post.',
+      });
+    }
+
     const author = await prisma.users.findUnique({
       where: { id: post.author_id },
       select: { email: true },
     });
+
     await prisma.to_be_reviewed.delete({
       where: { id },
     });
 
-    if (author && author.email) {
+    if (author?.email) {
       sendDeletionEmail(author.email, post.title);
     }
 
     res.status(204).send();
   } catch (err) {
-    if (err.code === "P2025") {
-      return res.status(404).json({ error: "Forum post not found" });
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Forum post not found' });
     }
-    console.error("Server error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -231,9 +241,9 @@ const approveReviewPost = async (req, res) => {
     const hasModeratorStatus = await verifyModeratorStatus(userId);
 
     if (!hasModeratorStatus) {
-      console.log("Access denied: User is not a moderator");
+      console.log('Access denied: User is not a moderator');
       return res.status(403).json({
-        error: "Access denied. Only moderators can access review posts.",
+        error: 'Access denied. Only moderators can access review posts.',
       });
     }
 
@@ -242,7 +252,7 @@ const approveReviewPost = async (req, res) => {
     });
 
     if (!postToApprove) {
-      return res.status(404).json({ error: "Post not found" });
+      return res.status(404).json({ error: 'Post not found' });
     }
 
     const author = await prisma.users.findUnique({
@@ -279,12 +289,12 @@ const approveReviewPost = async (req, res) => {
     }
 
     res.status(200).json({
-      message: "Post approved and published successfully",
+      message: 'Post approved and published successfully',
       post: newForumPost,
     });
   } catch (err) {
-    console.error("Error approving post:", err);
-    res.status(500).json({ error: "Failed to approve post" });
+    console.error('Error approving post:', err);
+    res.status(500).json({ error: 'Failed to approve post' });
   }
 };
 

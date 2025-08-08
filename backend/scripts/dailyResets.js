@@ -90,3 +90,5 @@ process.on('SIGINT', function () {
   console.log('Daily reset scheduler stopped.');
   process.exit(0);
 });
+
+dailyResets();

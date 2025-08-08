@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-import { Outlet, useSearchParams } from "react-router-dom";
-import Navbar from "./components/Navbar";
+import { Outlet, useSearchParams } from 'react-router-dom';
+import Navbar from './components/Navbar';
 
 const DashboardLayout = () => {
   return (

@@ -1,209 +1,251 @@
-import { useAuth } from "../../contexts/AuthContext.jsx";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { getPendingPosts } from "@/services/reviewService";
-import { getAllPostsByUser } from "@/services/forumService.js";
-import commentIcon from "../../assets/images/comment.svg";
-import { DatePicker } from "react-daisyui-timetools";
-import "react-datepicker/dist/react-datepicker.css";
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { act, useEffect, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { getPendingPosts } from '@/services/reviewService';
+import { getAllPostsByUser, deleteForumPost } from '@/services/forumService.js';
+import { deleteReviewPost } from '@/services/reviewService';
+import commentIcon from '../../assets/images/comment.svg';
+import CalendarPopover from './CalendarPopover.jsx';
+import { DatePicker } from 'react-daisyui-timetools';
+import 'react-datepicker/dist/react-datepicker.css';
+import trashIcon from '../../assets/images/delete.svg';
 
 const UserPosts = () => {
   const { user } = useAuth();
   const [approvedPosts, setApprovedPosts] = useState([]);
   const [pendingPosts, setPendingPosts] = useState([]);
+  const location = useLocation();
+  const fromPath = location.state?.from || '/dashboard/forum';
+
+  const fromForumSearchPrams = location.state?.fromForumSearch;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("published");
+  const [activeTab, setActiveTab] = useState('published');
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(() => {
+    return parseInt(searchParams.get('pendingPage') || '1', 10);
+  });
+  const PENDING_PAGE_SIZE = 10;
 
   // Filter states
   const defaultFilters = {
-    topic: "all", // "all", "general", "daily-challenge"
-    dateSort: "newest", // "newest", "oldest"
-    selectedDate: null, // specific date filter
-    commentSort: "none", // "none", "most-popular", "least-popular"
-    searchText: "", // text search in title and content
+    topic: 'all',
+    dateSort: 'newest',
+    selectedDate: null,
+    commentSort: 'none',
+    searchText: '',
+  };
+  const [modal, setModal] = useState({
+    isOpen: false,
+    message: '',
+    type: '',
+    postId: null,
+  });
+  const showModal = (message, type = 'info', postId = null) => {
+    setModal({ isOpen: true, message, type, postId });
   };
 
-  const [filters, setFilters] = useState({ ...defaultFilters });
-  const [appliedFilters, setAppliedFilters] = useState({ ...defaultFilters });
-  const [showFilters, setShowFilters] = useState(false);
+  const closeModal = () => {
+    setModal({ isOpen: false, message: '', type: '', postId: null });
+  };
 
-  // Apply filters to posts
-  const applyFiltersToApprovedPosts = (posts, activeFilters) => {
-    let filteredPosts = [...posts];
-
-    // 1. Apply text search filter
-    if (activeFilters.searchText && activeFilters.searchText.trim()) {
-      const searchTerm = activeFilters.searchText.trim().toLowerCase();
-      filteredPosts = filteredPosts.filter((post) => {
-        const titleMatch =
-          post.title && post.title.toLowerCase().includes(searchTerm);
-        const contentMatch =
-          post.content && post.content.toLowerCase().includes(searchTerm);
-        return titleMatch || contentMatch;
-      });
+  const confirmDelete = async () => {
+    if (modal.postId) {
+      setIsDeleting(true);
+      await handleDeletePost(modal.postId);
+      setIsDeleting(false);
     }
-
-    // 2. Apply topic filter
-    if (activeFilters.topic && activeFilters.topic !== "all") {
-      filteredPosts = filteredPosts.filter(
-        (post) => post.topic === activeFilters.topic
-      );
-    }
-
-    // 3. Apply specific date filter
-    if (activeFilters.selectedDate) {
+  };
+  const confirmRemoval = async () => {
+    if (modal.postId) {
+      setIsDeleting(true);
       try {
-        const filterDate =
-          activeFilters.selectedDate instanceof Date
-            ? new Date(activeFilters.selectedDate)
-            : new Date(String(activeFilters.selectedDate));
+        await deleteReviewPost(modal.postId, user.id);
 
-        if (!isNaN(filterDate.getTime())) {
-          filterDate.setHours(0, 0, 0, 0);
-          const nextDay = new Date(filterDate);
-          nextDay.setDate(nextDay.getDate() + 1);
+        const data = await getPendingPosts();
+        setPendingPosts(data);
 
-          filteredPosts = filteredPosts.filter((post) => {
-            const postDate = new Date(post.date_created);
-            return postDate >= filterDate && postDate < nextDay;
-          });
+        const newTotalPages = Math.ceil(data.length / PENDING_PAGE_SIZE);
+        if (pendingCurrentPage > newTotalPages && newTotalPages > 0) {
+          handlePendingPageChange(newTotalPages);
         }
-      } catch (err) {
-        console.error("Error in date filtering:", err);
+
+        closeModal();
+        showModal('Post removed successfully.', 'success');
+      } catch (error) {
+        console.error('Error removing post:', error);
+        closeModal();
+        showModal('Failed to remove post. Please try again.', 'error');
+      } finally {
+        setIsDeleting(false);
       }
     }
+  };
+  const handleDeletePost = async (postId) => {
+    try {
+      await deleteForumPost(postId);
 
-    // 4. Apply comment popularity sorting
-    if (activeFilters.commentSort && activeFilters.commentSort !== "none") {
-      filteredPosts = filteredPosts.sort((a, b) => {
-        if (activeFilters.commentSort === "most-popular") {
-          return (
-            b.comment_count - a.comment_count ||
-            new Date(b.date_created) - new Date(a.date_created)
-          );
-        } else {
-          return (
-            a.comment_count - b.comment_count ||
-            new Date(b.date_created) - new Date(a.date_created)
-          );
+      const filtersForBackend = { ...defaultFilters };
+      for (const [key, value] of searchParams.entries()) {
+        if (key in filtersForBackend) {
+          filtersForBackend[key] = value;
         }
-      });
-    }
-    // 5. Apply date sorting (if comment sorting wasn't applied)
-    else if (activeFilters.dateSort) {
-      filteredPosts = filteredPosts.sort((a, b) => {
-        const dateA = new Date(a.date_created);
-        const dateB = new Date(b.date_created);
+      }
+      const approvedData = await getAllPostsByUser(
+        currentPage,
+        10,
+        filtersForBackend
+      );
+      setApprovedPosts(approvedData.posts || []);
+      setTotalPages(approvedData.totalPages || 1);
 
-        if (activeFilters.dateSort === "oldest") {
-          return dateA - dateB;
-        } else {
-          return dateB - dateA;
-        }
-      });
+      closeModal();
+      showModal('Post deleted successfully.', 'success');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      closeModal();
+      showModal('Failed to delete post. Please try again.', 'error');
     }
-
-    return filteredPosts;
   };
 
-  // Apply all selected filters
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [filters, setFilters] = useState({ ...defaultFilters });
+  const [appliedFilters, setAppliedFilters] = useState(() => {
+    //Useful?
+    const initialFilters = { ...defaultFilters };
+    for (const [key, value] of searchParams.entries()) {
+      if (key in initialFilters) {
+        initialFilters[key] = value;
+      }
+    }
+    return initialFilters;
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const pendingTotalPages = Math.ceil(pendingPosts.length / PENDING_PAGE_SIZE);
+  const paginatedPendingPosts = pendingPosts.slice(
+    (pendingCurrentPage - 1) * PENDING_PAGE_SIZE,
+    pendingCurrentPage * PENDING_PAGE_SIZE
+  );
+
   const applyFilters = () => {
-    console.log("Applying filters:", filters);
-    const currentFilters = { ...filters };
-    setAppliedFilters(currentFilters);
+    const newSearchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value && String(value) !== String(defaultFilters[key])) {
+        newSearchParams.set(key, value);
+      }
+    }
+    newSearchParams.set('page', '1');
+    setCurrentPage(1);
+    if (searchParams.get('pendingPage')) {
+      newSearchParams.set('pendingPage', searchParams.get('pendingPage'));
+    }
+    setSearchParams(newSearchParams);
+  };
+  const handleRemoveFilter = (filterKey) => {
+    const newFilters = { ...filters, [filterKey]: defaultFilters[filterKey] };
+    setFilters(newFilters);
+
+    if (searchParams.has(filterKey)) {
+      setAppliedFilters(newFilters);
+
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete(filterKey);
+      setCurrentPage(1);
+      newSearchParams.set('page', '1');
+      setSearchParams(newSearchParams);
+    } else {
+      setAppliedFilters(newFilters);
+    }
   };
 
-  // Clear all filters and reset to default
   const clearFilters = () => {
-    console.log("Clearing filters, using defaults:", defaultFilters);
-    const freshDefaultFilters = { ...defaultFilters };
-    setFilters(freshDefaultFilters);
-    setAppliedFilters(freshDefaultFilters);
+    setFilters({ ...defaultFilters });
+    setAppliedFilters({ defaultFilters });
+    const newSearchParams = new URLSearchParams();
+    newSearchParams.set('page', '1');
+    if (searchParams.get('pendingPage')) {
+      newSearchParams.set('pendingPage', searchParams.get('pendingPage'));
+    }
+    setCurrentPage(1);
+    setSearchParams(newSearchParams);
+  };
+  const handlePendingPageChange = (newPage) => {
+    setPendingCurrentPage(newPage);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('pendingPage', newPage.toString());
+    setSearchParams(newSearchParams);
+  };
+  const formatFilterLabel = (value) => {
+    if (!value) return '';
+    return value
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
   useEffect(() => {
-    if (user) {
-      const fetchAllPosts = async () => {
+    const pendingPageFromUrl = parseInt(
+      searchParams.get('pendingPage') || '1',
+      10
+    );
+    setPendingCurrentPage(pendingPageFromUrl);
+  }, [searchParams]);
+  useEffect(() => {
+    if (user?.id) {
+      const fetchPosts = async () => {
+        setLoading(true);
         try {
-          setLoading(true);
-
-          const [approvedData, pendingData] = await Promise.all([
-            getAllPostsByUser(),
-            getPendingPosts(),
-          ]);
-
-          setApprovedPosts(approvedData);
-
-          setPendingPosts(pendingData);
+          const filtersForBackend = { ...defaultFilters };
+          for (const [key, value] of searchParams.entries()) {
+            if (key in filtersForBackend) {
+              filtersForBackend[key] = value;
+            }
+          }
+          const approvedData = await getAllPostsByUser(
+            currentPage,
+            10,
+            filtersForBackend
+          );
+          setApprovedPosts(approvedData.posts || []);
+          setTotalPages(approvedData.totalPages || 1);
         } catch (error) {
-          console.error("Error fetching user posts:", error);
+          console.error('Error fetching user posts:', error);
+          setApprovedPosts([]); // Clear posts on error
+          setTotalPages(1);
         } finally {
           setLoading(false);
         }
       };
 
-      fetchAllPosts();
+      fetchPosts();
     }
-  }, [user?.id]);
+  }, [user?.id, searchParams, currentPage]);
 
-  // Apply filters to get filtered posts
-  const filteredApprovedPosts = applyFiltersToApprovedPosts(
-    approvedPosts,
-    appliedFilters
-  );
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchPendingPosts = async () => {
+      const data = await getPendingPosts();
+      setPendingPosts(data);
+    };
+    fetchPendingPosts();
+  }, []);
 
   return (
     <div data-theme="luxury" className="min-h-screen bg-base-100">
       <div className="flex flex-col h-screen">
-        {/* Sticky Header Section */}
-        <div className="sticky top-0 z-10 bg-base-100 border-b border-base-300 shadow-sm">
-          <div className="p-4 sm:p-6 sm:pl-12 w-full">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center lg:text-left">
-                Your Posts
-              </h1>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 w-full lg:w-auto">
-                <button
-                  onClick={() => {
-                    navigate("/dashboard/create-post");
-                  }}
-                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
-                >
-                  Create a Post
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/dashboard/forum");
-                  }}
-                  className="cursor-pointer px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm sm:text-base font-medium transition-colors duration-200 flex-1 xs:flex-none lg:whitespace-nowrap"
-                >
-                  View Forum
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="sticky top-[73px] z-10 bg-base-200 border-b border-base-300 shadow-sm">
-          <div className="p-3 sm:p-4 sm:pl-12 w-full max-w-full mx-auto">
-            <div className="flex justify-center mb-4">
+        <div className="sticky top-0 z-20 bg-base-100">
+          <div className="p-3 sm:p-3 sm:pl-12 w-full max-w-full mx-auto">
+            <div className="flex justify-center items-center gap-4 relative">
+              {/* Center - Tab buttons */}
               <div className="rounded-lg bg-base-300 p-1 flex gap-2 w-full max-w-md sm:w-auto">
                 <button
                   className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg flex-1 sm:flex-initial ${
-                    activeTab === "published"
-                      ? "tab-active bg-[#FFB800] text-black hover:text-black"
-                      : "hover:bg-base-200"
+                    activeTab === 'published'
+                      ? 'tab-active bg-[#FFB800] text-black hover:text-black'
+                      : 'hover:bg-base-200'
                   }`}
-                  onClick={() => setActiveTab("published")}
+                  onClick={() => setActiveTab('published')}
                 >
                   <svg
                     className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2"
@@ -219,16 +261,16 @@ const UserPosts = () => {
                     ></path>
                   </svg>
                   <span className="text-xs sm:text-sm lg:text-base">
-                    Published ({filteredApprovedPosts.length})
+                    Published ({approvedPosts.length})
                   </span>
                 </button>
                 <button
                   className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg flex-1 sm:flex-initial ${
-                    activeTab === "pending"
-                      ? "tab-active bg-[#FFB800] text-black hover:text-black"
-                      : "hover:bg-base-200"
+                    activeTab === 'pending'
+                      ? 'tab-active bg-[#FFB800] text-black hover:text-black'
+                      : 'hover:bg-base-200'
                   }`}
-                  onClick={() => setActiveTab("pending")}
+                  onClick={() => setActiveTab('pending')}
                 >
                   <svg
                     className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2"
@@ -248,244 +290,444 @@ const UserPosts = () => {
                   </span>
                 </button>
               </div>
-            </div>
 
-            {/* Filters only show for published tab */}
-            {activeTab === "published" && (
-              <>
-                {/* Mobile Filter Toggle */}
-                <div className="flex items-center justify-between mb-3 lg:hidden">
-                  <h3 className="text-lg font-semibold">Filters</h3>
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="btn btn-sm btn-ghost"
+              {/* Right side - Action buttons */}
+              <div className="flex gap-3 absolute right-0">
+                <button
+                  onClick={() => navigate('/dashboard/create-post')}
+                  className="btn bg-[#FFB800] text-black btn-sm gap-1"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <svg
-                      className={`w-4 h-4 transition-transform ${
-                        showFilters ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <span className="hidden sm:inline">Create Post</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const targetUrl = fromForumSearchPrams
+                      ? `${fromPath}?${fromForumSearchPrams}`
+                      : fromPath;
+                    navigate(targetUrl);
+                  }}
+                  className="btn btn-outline btn-sm gap-1"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 "
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                  <span className="hidden sm:inline">View Forum</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            {/* Sticky Header Section */}
 
-                {/* Filter Controls */}
-                <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-3 max-w-full">
-                    {/* Search Filter - Takes 2 columns to be wider */}
-                    <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-2">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Search Posts
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Search titles and content..."
-                        value={filters.searchText}
-                        onChange={(e) =>
-                          setFilters({ ...filters, searchText: e.target.value })
-                        }
-                        className="input input-sm input-bordered w-full text-sm"
-                      />
-                    </div>
-
-                    {/* Topic Filter */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Topic
-                      </label>
-                      <select
-                        value={filters.topic}
-                        onChange={(e) =>
-                          setFilters({ ...filters, topic: e.target.value })
-                        }
-                        className="select select-sm select-bordered w-full text-sm"
-                      >
-                        <option value="all">All Topics</option>
-                        <option value="general">General</option>
-                        <option value="daily-challenge">Daily Challenge</option>
-                      </select>
-                    </div>
-
-                    {/* Date Sort */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Date Order
-                      </label>
-                      <select
-                        value={filters.dateSort}
-                        onChange={(e) =>
-                          setFilters({ ...filters, dateSort: e.target.value })
-                        }
-                        className="select select-sm select-bordered w-full text-sm"
-                      >
-                        <option value="newest">Most Recent</option>
-                        <option value="oldest">Oldest First</option>
-                      </select>
-                    </div>
-
-                    {/* Specific Date Filter */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Specific Date
-                      </label>
-                      <DatePicker
-                        className="input input-sm input-bordered w-full text-sm"
-                        selected={
-                          filters.selectedDate instanceof Date
-                            ? filters.selectedDate
-                            : filters.selectedDate
-                            ? new Date(filters.selectedDate)
-                            : null
-                        }
-                        onChange={(date) => {
-                          if (date) {
-                            try {
-                              const validDate = new Date(date);
-                              if (!isNaN(validDate.getTime())) {
-                                setFilters({
-                                  ...filters,
-                                  selectedDate: validDate,
-                                });
-                              } else {
-                                console.error("Invalid date selected:", date);
-                                setFilters({ ...filters, selectedDate: null });
-                              }
-                            } catch (err) {
-                              console.error("Error processing date:", err);
-                              setFilters({ ...filters, selectedDate: null });
-                            }
-                          } else {
-                            setFilters({ ...filters, selectedDate: null });
+            {/* Filter Navbar */}
+            {activeTab == 'published' && (
+              <div className="border-b border-base-300 shadow-sm">
+                <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
+                  {/* Mobile Filter Toggle */}
+                  <div className="flex items-center justify-between mb-3 lg:hidden ">
+                    <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                      Filters
+                      {/* Active filter count indicator */}
+                      {(filters.topic !== 'all' ||
+                        filters.dateSort !== 'newest' ||
+                        filters.selectedDate ||
+                        (filters.searchText && filters.searchText.trim())) && (
+                        <span className="badge badge-sm bg-yellow-500 text-black border-none">
+                          {
+                            [
+                              filters.topic !== 'all',
+                              filters.dateSort !== 'newest',
+                              filters.selectedDate,
+                              filters.commentSort !== 'none',
+                              filters.searchText && filters.searchText.trim(),
+                            ].filter(Boolean).length
                           }
-                        }}
-                        placeholder="Select date"
-                        maxDate={new Date()}
-                        dateFormat="MM/dd/yyyy"
-                        showYearDropdown
-                        showMonthDropdown
-                        isClearable={true}
-                      />
-                    </div>
-
-                    {/* Comment Sort */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Popularity
-                      </label>
-                      <select
-                        value={filters.commentSort}
-                        onChange={(e) =>
-                          setFilters({
-                            ...filters,
-                            commentSort: e.target.value,
-                          })
-                        }
-                        className="select select-sm select-bordered w-full text-sm"
+                        </span>
+                      )}
+                    </h3>
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="btn btn-sm btn-ghost px-2"
+                    >
+                      <svg
+                        className={`w-5 h-5 transition-transform duration-200 ${
+                          showFilters ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <option value="none">No Sorting</option>
-                        <option value="most-popular">Most Popular</option>
-                        <option value="least-popular">Least Popular</option>
-                      </select>
-                    </div>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
 
-                    {/* Clear Filters & Apply Buttons */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
-                        Actions
-                      </label>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={clearFilters}
-                          className="cursor-pointer px-2 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium w-16"
-                        >
-                          Clear
-                        </button>
-                        <button
-                          onClick={applyFilters}
-                          className="cursor-pointer px-2 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-xs font-medium w-16"
-                        >
-                          Apply
-                        </button>
+                  {/* Filter Controls */}
+                  <div
+                    className={`transition-all duration-300 ${
+                      showFilters ? 'block opacity-100' : 'hidden opacity-0'
+                    } lg:block lg:opacity-100`}
+                  >
+                    {/* Mobile-First Filter Layout - Compact Version */}
+                    <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
+                      {/* Search Filter - Full width on mobile, 2 cols on desktop */}
+                      <div className="flex flex-col gap-1 lg:col-span-2">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                          Search Posts
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search titles and content..."
+                            value={filters.searchText}
+                            onChange={(e) =>
+                              setFilters({
+                                ...filters,
+                                searchText: e.target.value,
+                              })
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                applyFilters();
+                              }
+                            }}
+                            className="input input-sm input-bordered w-full text-xs pl-8 pr-2 h-8"
+                          />
+                          <svg
+                            className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Mobile: 2-column grid for selects */}
+                      <div className="grid grid-cols-2 gap-2 lg:contents">
+                        {/* Topic Filter */}
+                        <div className="flex flex-col gap-1 lg:col-span-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Topic
+                          </label>
+                          <select
+                            value={filters.topic}
+                            onChange={(e) =>
+                              setFilters({ ...filters, topic: e.target.value })
+                            }
+                            className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
+                          >
+                            <option value="all">All Topics</option>
+                            <option value="general">General</option>
+                            <option value="daily-challenge">
+                              Daily Challenge
+                            </option>
+                          </select>
+                        </div>
+
+                        {/* Date Sort */}
+                        <div className="flex flex-col gap-1 lg:col-span-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Date Order
+                          </label>
+                          <select
+                            value={filters.dateSort}
+                            onChange={(e) =>
+                              setFilters({
+                                ...filters,
+                                dateSort: e.target.value,
+                              })
+                            }
+                            className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
+                          >
+                            <option value="newest">Most Recent</option>
+                            <option value="past-week">Past Week</option>
+                            <option value="past-month">Past Month</option>
+                            <option value="past-year">Past Year</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Mobile: Single column for date picker and popularity */}
+                      <div className="space-y-2 lg:space-y-0 lg:contents">
+                        <div className="flex flex-col gap-1 lg:col-span-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Populrarity
+                          </label>
+                          <select
+                            value={filters.commentSort}
+                            onChange={(e) =>
+                              setFilters({
+                                ...filters,
+                                commentSort: e.target.value,
+                              })
+                            }
+                            className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
+                          >
+                            <option value="none">No Sorting</option>
+                            <option value="most-popular">Most Popular</option>
+                            <option value="least-popular">Least Popular</option>
+                          </select>
+                        </div>
+                        {/* Specific Date Filter */}
+                        <div className="relative flex flex-col gap-1 lg:col-span-1">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                            Specific Date
+                          </label>
+
+                          <div className="relative">
+                            <input
+                              type="text"
+                              readOnly // Makes the input non-editable by typing
+                              onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
+                              value={
+                                filters.selectedDate
+                                  ? new Date(
+                                      filters.selectedDate
+                                    ).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                    })
+                                  : '' // Use empty string so placeholder is visible
+                              }
+                              placeholder="Select date"
+                              // Style to match other inputs and add cursor-pointer
+                              className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
+                            />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              // Position the icon inside the input field
+                              className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                          {/* Render the popover here */}
+                          <CalendarPopover
+                            isOpen={isCalendarOpen}
+                            onClose={() => setIsCalendarOpen(false)}
+                            selectedDate={filters.selectedDate}
+                            onDateSelect={(date) => {
+                              setFilters({ ...filters, selectedDate: date });
+                            }}
+                            isFromManageChallenges={false}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-1 lg:col-span-1">
+                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
+                          Actions
+                        </label>
+                        <div className="flex gap-1.5">
+                          {(filters.topic !== 'all' ||
+                            filters.dateSort !== 'newest' ||
+                            filters.selectedDate ||
+                            (filters.searchText &&
+                              filters.searchText.trim())) && (
+                            <button
+                              onClick={clearFilters}
+                              className="cursor-pointer px-2 py-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
+                            >
+                              <span className="lg:hidden">Clear Filters</span>
+                              <span className="hidden lg:inline">
+                                Clear Filters
+                              </span>
+                            </button>
+                          )}
+                          <button
+                            onClick={applyFilters}
+                            className="cursor-pointer px-2 py-1.5 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
+                          >
+                            <span className="lg:hidden">Apply Filters</span>
+                            <span className="hidden lg:inline">
+                              Apply Filters
+                            </span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Active Filters Display */}
-                  <div className="flex flex-wrap gap-2">
-                    {filters.topic !== "all" && (
-                      <span className="badge badge-outline badge-sm">
-                        Topic:{" "}
-                        {filters.topic === "general"
-                          ? "General"
-                          : "Daily Challenge"}
-                      </span>
-                    )}
-                    {filters.searchText && filters.searchText.trim() && (
-                      <span className="badge badge-outline badge-sm">
-                        Search: "{filters.searchText.trim()}"
-                      </span>
-                    )}
-                    {filters.dateSort !== "newest" && (
-                      <span className="badge badge-outline badge-sm">
-                        Sort:{" "}
-                        {filters.dateSort === "oldest"
-                          ? "Oldest First"
-                          : "Most Recent"}
-                      </span>
-                    )}
-                    {filters.selectedDate && (
-                      <span className="badge badge-outline badge-sm">
-                        Date:{" "}
-                        {filters.selectedDate instanceof Date
-                          ? filters.selectedDate.toLocaleDateString()
-                          : new Date(filters.selectedDate).toLocaleDateString()}
-                      </span>
-                    )}
-                    {filters.commentSort !== "none" && (
-                      <span className="badge badge-outline badge-sm">
-                        {filters.commentSort === "most-popular"
-                          ? "Most Popular"
-                          : "Least Popular"}
-                      </span>
-                    )}
+                    {/* Active Filters Display - Improved Mobile Layout */}
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {filters.topic !== 'all' && (
+                        <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                          <span className="font-medium text-xs">
+                            {filters.topic === 'general'
+                              ? 'General'
+                              : 'Daily Challenge'}
+                          </span>
+                          <button
+                            type="button"
+                            className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                            onClick={() => handleRemoveFilter('topic')}
+                            aria-label="Remove topic filter"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                      {filters.searchText && filters.searchText.trim() && (
+                        <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                          <span className="font-medium text-xs truncate">
+                            "{filters.searchText.trim()}"
+                          </span>
+                          <button
+                            type="button"
+                            className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                            onClick={() => handleRemoveFilter('searchText')}
+                            aria-label="Remove search filter"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                      {filters.commentSort != 'none' &&
+                        filters.commentSort.trim() && (
+                          <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
+                            <span className="font-medium text-xs truncate">
+                              {formatFilterLabel(filters.commentSort)}
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                              onClick={() => handleRemoveFilter('commentSort')}
+                              aria-label="Remove search filter"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        )}
+                      {filters.dateSort !== 'newest' && (
+                        <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                          <span className="font-medium text-xs">
+                            {filters.dateSort === 'oldest'
+                              ? 'Oldest First'
+                              : 'Most Recent'}
+                          </span>
+                          <button
+                            type="button"
+                            className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                            onClick={() => handleRemoveFilter('dateSort')}
+                            aria-label="Remove sort filter"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                      {filters.selectedDate && (
+                        <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
+                          <span className="font-medium text-xs">
+                            {new Date(filters.selectedDate).toLocaleDateString(
+                              'en-US',
+                              {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              }
+                            )}
+                          </span>
+                          <button
+                            type="button"
+                            className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
+                            onClick={() => handleRemoveFilter('selectedDate')}
+                            aria-label="Remove date filter"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex justify-center items-center h-full">
               <span className="loading loading-spinner loading-md sm:loading-lg"></span>
             </div>
           ) : (
             <div className="h-full">
-              <div className="overflow-y-auto">
+              <div className="flex items-center">
                 <div className="p-4 sm:p-6 sm:pl-12 w-full">
                   {/* Tab Content */}
                   <div className="animate-fadeIn">
-                    {activeTab === "published" && (
+                    {activeTab === 'published' && (
                       <div>
-                        {filteredApprovedPosts.length > 0 ? (
-                          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            {filteredApprovedPosts.map((post) => (
+                        {approvedPosts.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-2 3xl:grid-cols-4 gap-4 lg:gap-6">
+                            {approvedPosts.map((post) => (
                               <div
                                 key={post.id}
                                 className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 border h-full flex flex-col"
                               >
                                 <div className="card-body p-3 sm:p-4 lg:p-6 flex flex-col h-full">
+                                  <button
+                                    className="absolute top-1 right-1 p-1 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      showModal(
+                                        `Are you sure you want to delete post with title '${post.title}' ? This action cannot be undone.`,
+                                        'confirm',
+                                        post.id
+                                      );
+                                    }}
+                                  >
+                                    <img
+                                      src={trashIcon}
+                                      alt="Delete"
+                                      className="w-3 h-3 sm:w-5 sm:h-5"
+                                    />
+                                  </button>
                                   <div className="flex">
                                     <h3
                                       className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content line-clamp-2 hover:underline cursor-pointer flex-grow"
@@ -495,7 +737,7 @@ const UserPosts = () => {
                                           {
                                             state: {
                                               post,
-                                              from: "/dashboard/user-posts",
+                                              from: '/dashboard/user-posts',
                                             },
                                           }
                                         );
@@ -506,23 +748,28 @@ const UserPosts = () => {
                                   </div>
 
                                   {/* Topic Badge */}
-                                  <div className="mb-2">
+                                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                                     <span
-                                      className={`inline-block text-xs font-semibold px-2 py-1 rounded ${
-                                        post.topic === "general"
-                                          ? "bg-blue-100 text-blue-800"
-                                          : "bg-green-100 text-green-800"
+                                      className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${
+                                        post.topic === 'general'
+                                          ? 'bg-blue-100 text-blue-800'
+                                          : 'bg-green-100 text-green-800'
                                       }`}
                                     >
-                                      {post.topic === "general"
-                                        ? "General"
-                                        : "Daily Challenge"}
+                                      {post.topic === 'general'
+                                        ? 'General'
+                                        : 'Daily Challenge'}
                                     </span>
+                                    {post.challengeTitle && (
+                                      <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1.5 py-0.5 rounded">
+                                        {post.challengeTitle}
+                                      </span>
+                                    )}
                                   </div>
 
                                   <p className="mt-2 text-gray-400 text-xs sm:text-sm lg:text-base line-clamp-3 flex-grow">
                                     {post.content && post.content.length > 150
-                                      ? post.content.slice(0, 150) + "..."
+                                      ? post.content.slice(0, 150) + '...'
                                       : post.content}
                                   </p>
                                   <div className="flex items-center text-xs sm:text-sm text-base-content/60 mb-3 sm:mb-4 mt-2">
@@ -541,10 +788,10 @@ const UserPosts = () => {
                                     </svg>
                                     {new Date(
                                       post.date_created
-                                    ).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
+                                    ).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
                                     })}
                                   </div>
 
@@ -563,6 +810,114 @@ const UserPosts = () => {
                                 </div>
                               </div>
                             ))}
+                            {!loading && (
+                              <div className="md:col-span-2 2xl:col-span-2 3xl:col-span-4 flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
+                                <button
+                                  className="btn btn-sm btn-ghost px-2 sm:px-3"
+                                  onClick={() => {
+                                    const newPage = currentPage - 1;
+                                    searchParams.set(
+                                      'page',
+                                      newPage.toString()
+                                    );
+                                    setCurrentPage(newPage);
+                                    setSearchParams(searchParams);
+                                  }}
+                                  disabled={loading || currentPage === 1}
+                                  title="Previous Page"
+                                >
+                                  ←
+                                </button>
+
+                                {Array.from(
+                                  { length: Math.min(3, totalPages) },
+                                  (_, idx) => (
+                                    <button
+                                      key={idx}
+                                      className={`btn btn-sm px-2 sm:px-3 ${
+                                        currentPage - 1 === idx
+                                          ? 'border-amber-400'
+                                          : 'btn-ghost'
+                                      }`}
+                                      onClick={() => {
+                                        searchParams.set(
+                                          'page',
+                                          (idx + 1).toString()
+                                        );
+                                        setSearchParams(searchParams);
+                                        setCurrentPage(idx + 1);
+                                      }}
+                                      disabled={loading}
+                                    >
+                                      {idx + 1}
+                                    </button>
+                                  )
+                                )}
+
+                                {totalPages > 3 && (
+                                  <span className="px-1 sm:px-2 text-gray-500 text-sm">
+                                    ...
+                                  </span>
+                                )}
+
+                                {currentPage > 2 &&
+                                  currentPage < totalPages - 1 && (
+                                    <button
+                                      className="btn btn-sm border-amber-400 px-2 sm:px-3"
+                                      onClick={() => {
+                                        searchParams.set(
+                                          'page',
+                                          currentPage.toString()
+                                        );
+                                        setSearchParams(searchParams);
+                                      }}
+                                      disabled={loading}
+                                    >
+                                      {currentPage + 1}
+                                    </button>
+                                  )}
+
+                                {totalPages > 3 && (
+                                  <button
+                                    className={`btn btn-sm px-2 sm:px-3 ${
+                                      currentPage === totalPages
+                                        ? 'border-amber-400'
+                                        : 'btn-ghost'
+                                    }`}
+                                    onClick={() => {
+                                      searchParams.set(
+                                        'page',
+                                        totalPages.toString()
+                                      );
+                                      setSearchParams(searchParams);
+                                      setCurrentPage(totalPages);
+                                    }}
+                                    disabled={loading}
+                                  >
+                                    {totalPages}
+                                  </button>
+                                )}
+
+                                <button
+                                  className="btn btn-sm btn-ghost px-2 sm:px-3"
+                                  onClick={() => {
+                                    const newPage = currentPage + 1;
+                                    searchParams.set(
+                                      'page',
+                                      newPage.toString()
+                                    );
+                                    setSearchParams(searchParams);
+                                    setCurrentPage(newPage);
+                                  }}
+                                  disabled={
+                                    loading || currentPage === totalPages
+                                  }
+                                  title="Next Page"
+                                >
+                                  →
+                                </button>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <div className="text-center py-8 sm:py-12">
@@ -586,16 +941,16 @@ const UserPosts = () => {
                             </p>
                             <p className="text-xs sm:text-sm text-base-content/40 mt-2">
                               {appliedFilters.searchText ||
-                              appliedFilters.topic !== "all" ||
+                              appliedFilters.topic !== 'all' ||
                               appliedFilters.selectedDate ||
-                              appliedFilters.commentSort !== "none"
-                                ? "Try adjusting your filters to see more posts."
-                                : "Start creating content to see your published posts here!"}
+                              appliedFilters.commentSort !== 'none'
+                                ? 'Try adjusting your filters to see more posts.'
+                                : 'Start creating content to see your published posts here!'}
                             </p>
                             {(appliedFilters.searchText ||
-                              appliedFilters.topic !== "all" ||
+                              appliedFilters.topic !== 'all' ||
                               appliedFilters.selectedDate ||
-                              appliedFilters.commentSort !== "none") && (
+                              appliedFilters.commentSort !== 'none') && (
                               <button
                                 onClick={clearFilters}
                                 className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 text-sm font-medium"
@@ -608,69 +963,162 @@ const UserPosts = () => {
                       </div>
                     )}
 
-                    {activeTab === "pending" && (
+                    {activeTab === 'pending' && (
                       <div>
-                        <div className="flex items-center mb-4 sm:mb-6">
-                          <div className="w-1 h-6 sm:h-8 bg-warning rounded-full mr-2 sm:mr-4"></div>
-                          <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-base-content">
-                            Awaiting Approval
-                          </h2>
-                          <div className="flex-1 h-px bg-gradient-to-r from-[#FFB800]/30 to-transparent ml-2 sm:ml-4"></div>
-                        </div>
-
                         {pendingPosts.length > 0 ? (
-                          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-                            {pendingPosts.map((post) => (
-                              <div
-                                key={post.id}
-                                className="card bg-base-200 shadow-lg transition-all duration-300 border border-warning/20 relative overflow-hidden h-full flex flex-col"
-                              >
-                                <div className="absolute top-0 left-0 w-full h-1"></div>
+                          <>
+                            <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+                              {paginatedPendingPosts.map((post) => (
+                                <div
+                                  key={post.id}
+                                  className="card bg-base-200 shadow-lg transition-all duration-300 border border-warning/20 relative overflow-hidden h-full flex flex-col"
+                                >
+                                  <button
+                                    className="absolute top-1 right-1 p-1 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      showModal(
+                                        `Are you sure you want to remove post with title '${post.title}' from review? This action cannot be undone.`,
+                                        'confirmRemoval',
+                                        post.id
+                                      );
+                                    }}
+                                  >
+                                    <img
+                                      src={trashIcon}
+                                      alt="Delete"
+                                      className="w-3 h-3 sm:w-4 sm:h-4"
+                                    />
+                                  </button>
+                                  <div className="absolute top-0 left-0 w-full h-1"></div>
 
-                                <div className="card-body p-3 sm:p-4 lg:p-6 flex flex-col h-full">
-                                  <h3 className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content line-clamp-2">
-                                    {post.title}
-                                  </h3>
-                                  <p className="text-xs sm:text-sm text-base-content/70 mt-2 line-clamp-3 flex-grow">
-                                    {post.content}
-                                  </p>
+                                  <div className="card-body p-3 sm:p-4 lg:p-6 flex flex-col h-full">
+                                    <h3 className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content line-clamp-2">
+                                      {post.title}
+                                    </h3>
+                                    <p className="text-xs sm:text-sm text-base-content/70 mt-2 line-clamp-3 flex-grow">
+                                      {post.content}
+                                    </p>
 
-                                  <div className="flex items-center text-xs sm:text-sm text-base-content/60 mb-3 sm:mb-4 mt-2">
-                                    <svg
-                                      className="w-3 h-3 sm:w-4 sm:h-4 mr-2"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                      ></path>
-                                    </svg>
-                                    Submitted{" "}
-                                    {new Date(
-                                      post.created_at
-                                    ).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                    })}
-                                  </div>
+                                    <div className="flex items-center text-xs sm:text-sm text-base-content/60 mb-3 sm:mb-4 mt-2">
+                                      <svg
+                                        className="w-3 h-3 sm:w-4 sm:h-4 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        ></path>
+                                      </svg>
+                                      Submitted{' '}
+                                      {new Date(
+                                        post.created_at
+                                      ).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric',
+                                      })}
+                                    </div>
 
-                                  <div className="card-actions justify-end mt-auto">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="flex items-center text-xs text-warning">
-                                        <div className="w-2 h-2 sm:w-3 sm:h-3 mr-1.5 bg-warning rounded-full animate-pulse"></div>
-                                        Under Review
+                                    <div className="card-actions justify-end mt-auto">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="flex items-center text-xs text-warning">
+                                          <div className="w-2 h-2 sm:w-3 sm:h-3 mr-1.5 bg-warning rounded-full animate-pulse"></div>
+                                          Under Review
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
+                              ))}
+                            </div>
+                            {pendingTotalPages >= 1 && (
+                              <div className="md:col-span-2 xl:col-span-3 flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
+                                <button
+                                  className="btn btn-sm btn-ghost px-2 sm:px-3"
+                                  onClick={() =>
+                                    handlePendingPageChange(
+                                      pendingCurrentPage - 1
+                                    )
+                                  }
+                                  disabled={pendingCurrentPage === 1}
+                                  title="Previous Page"
+                                >
+                                  ←
+                                </button>
+                                {Array.from(
+                                  { length: Math.min(3, pendingTotalPages) },
+                                  (_, idx) => (
+                                    <button
+                                      key={idx}
+                                      className={`btn btn-sm px-2 sm:px-3 ${
+                                        pendingCurrentPage === idx + 1
+                                          ? 'border-amber-400'
+                                          : 'btn-ghost'
+                                      }`}
+                                      onClick={() =>
+                                        handlePendingPageChange(idx + 1)
+                                      }
+                                    >
+                                      {idx + 1}
+                                    </button>
+                                  )
+                                )}
+                                {pendingTotalPages > 3 && (
+                                  <span className="px-1 sm:px-2 text-gray-500 text-sm">
+                                    ...
+                                  </span>
+                                )}
+                                {pendingCurrentPage > 2 &&
+                                  pendingCurrentPage <
+                                    pendingTotalPages - 1 && (
+                                    <button
+                                      className="btn btn-sm border-amber-400 px-2 sm:px-3"
+                                      onClick={() =>
+                                        handlePendingPageChange(
+                                          pendingCurrentPage
+                                        )
+                                      }
+                                    >
+                                      {pendingCurrentPage}
+                                    </button>
+                                  )}
+
+                                {pendingTotalPages > 3 && (
+                                  <button
+                                    className={`btn btn-sm px-2 sm:px-3 ${
+                                      pendingCurrentPage === pendingTotalPages
+                                        ? 'border-amber-400'
+                                        : 'btn-ghost'
+                                    }`}
+                                    onClick={() =>
+                                      handlePendingPageChange(pendingTotalPages)
+                                    }
+                                  >
+                                    {pendingTotalPages}
+                                  </button>
+                                )}
+                                <button
+                                  className="btn btn-sm btn-ghost px-2 sm:px-3"
+                                  onClick={() =>
+                                    handlePendingPageChange(
+                                      pendingCurrentPage + 1
+                                    )
+                                  }
+                                  disabled={
+                                    pendingCurrentPage === pendingTotalPages
+                                  }
+                                  title="Next Page"
+                                >
+                                  →
+                                </button>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <div className="text-center py-8 sm:py-12">
                             <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -706,6 +1154,139 @@ const UserPosts = () => {
           )}
         </div>
       </div>
+      {modal.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm p-4"
+          aria-labelledby="modal-title"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              {(modal.type === 'confirm' ||
+                modal.type === 'confirmRemoval') && (
+                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
+                  <svg
+                    className="w-5 h-5 text-error-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    ></path>
+                  </svg>
+                </div>
+              )}
+              {modal.type === 'success' && (
+                <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
+                  <svg
+                    className="w-5 h-5 text-success-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    ></path>
+                  </svg>
+                </div>
+              )}
+              {modal.type === 'error' && (
+                <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
+                  <svg
+                    className="w-5 h-5 text-error-content"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </div>
+              )}
+              <h3 className="font-bold text-base sm:text-lg" id="modal-title">
+                {modal.type === 'confirm'
+                  ? 'Delete Post'
+                  : modal.type === 'success'
+                  ? 'Success'
+                  : modal.type === 'confirmRemoval'
+                  ? 'Remove Post'
+                  : 'Error'}
+              </h3>
+            </div>
+            <p className="py-3 sm:py-4 text-sm sm:text-base">{modal.message}</p>
+            <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
+              {modal.type === 'confirm' ? (
+                <>
+                  <button
+                    className="btn btn-ghost btn-sm sm:btn-md"
+                    onClick={closeModal}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-error btn-sm sm:btn-md"
+                    onClick={confirmDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm mr-2"></span>
+                        Deleting...
+                      </>
+                    ) : (
+                      'Delete'
+                    )}
+                  </button>
+                </>
+              ) : modal.type === 'confirmRemoval' ? (
+                <>
+                  <button
+                    className="btn btn-ghost btn-sm sm:btn-md"
+                    onClick={closeModal}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-error btn-sm sm:btn-md"
+                    onClick={confirmRemoval}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm mr-2"></span>
+                        Removing...
+                      </>
+                    ) : (
+                      'Remove'
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn btn-primary btn-sm sm:btn-md"
+                  onClick={closeModal}
+                >
+                  OK
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

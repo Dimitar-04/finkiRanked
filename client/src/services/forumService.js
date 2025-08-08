@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from './apiClient';
 
 export const getForumPosts = async (page, limit, filters = null) => {
   // Force clean parameters
@@ -12,7 +12,7 @@ export const getForumPosts = async (page, limit, filters = null) => {
   // Add filters to the URL if they exist
   if (filters) {
     // Add topic filter - make sure it's really topic=daily-challenge, not topic=daily%2Dchallenge
-    if (filters.topic && filters.topic !== "all") {
+    if (filters.topic && filters.topic !== 'all') {
       url += `&topic=${filters.topic}`;
     }
 
@@ -35,15 +35,15 @@ export const getForumPosts = async (page, limit, filters = null) => {
 
           // Log combined filter details when using specific date with other filters
         } else {
-          console.error("Invalid date object:", filters.selectedDate);
+          console.error('Invalid date object:', filters.selectedDate);
         }
       } catch (err) {
-        console.error("Error formatting date:", err, filters.selectedDate);
+        console.error('Error formatting date:', err, filters.selectedDate);
       }
     }
 
     // Add comment sort filter
-    if (filters.commentSort && filters.commentSort !== "none") {
+    if (filters.commentSort && filters.commentSort !== 'none') {
       url += `&commentSort=${filters.commentSort}`;
     }
 
@@ -70,19 +70,53 @@ export const deleteForumPost = async (postId) => {
   return await apiClient.delete(`/forum/posts/${postId}`);
 };
 export const createForumPost = async (postData) => {
-  return await apiClient.post("/forum/posts", postData);
+  return await apiClient.post('/forum/posts', postData);
 };
-export const getAllPostsByUser = async () => {
-  return await apiClient.get("/forum/user-posts");
-};
+export const getAllPostsByUser = async (page = 1, limit = 20, filters = {}) => {
+  page = Number(page) || 1;
+  limit = Number(limit) || 20;
 
+  const timestamp = new Date().getTime();
+  let url = `/forum/user-posts?page=${page}&limit=${limit}&_t=${timestamp}`;
+
+  if (filters) {
+    if (filters.topic && filters.topic !== 'all') {
+      url += `&topic=${filters.topic}`;
+    }
+
+    if (filters.dateSort && filters.dateSort !== 'newest') {
+      url += `&sort=${filters.dateSort}`;
+    }
+    if (filters.selectedDate) {
+      const dateObj = new Date(String(filters.selectedDate));
+
+      if (!isNaN(dateObj.getTime())) {
+        url += `&date=${dateObj}`;
+      }
+    }
+    if (filters.commentSort && filters.commentSort !== 'none') {
+      url += `&commentSort=${filters.commentSort}`;
+    }
+    if (filters.searchText && filters.searchText.trim()) {
+      url += `&search=${encodeURIComponent(filters.searchText.trim())}`;
+    }
+  }
+
+  try {
+    const apiResponse = await apiClient.get(url);
+    return apiResponse;
+  } catch (err) {
+    console.error(`API error for ${url}:`, err);
+    throw err;
+  }
+};
 //Comment functions
 
 export const getCommentsForPost = async (postId) => {
   return apiClient.get(`/forum/comments/${postId}`);
 };
 export const createComment = async (commentData) => {
-  return apiClient.post("/forum/comments", commentData);
+  return apiClient.post('/forum/comments', commentData);
 };
 export const deleteComment = async (commentId) => {
   return apiClient.delete(`/forum/comments/${commentId}`);
