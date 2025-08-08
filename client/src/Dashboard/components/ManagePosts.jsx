@@ -216,6 +216,13 @@ const ManagePosts = () => {
   };
 
   const isLoading = authLoading || isFetching;
+  const formatFilterLabel = (value) => {
+    if (!value) return '';
+    return value
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
 
   return (
     <div
@@ -291,7 +298,7 @@ const ManagePosts = () => {
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Search titles and content..."
+                          placeholder="Search by title, content or author"
                           value={filters.searchText}
                           onChange={(e) =>
                             setFilters({
@@ -637,7 +644,7 @@ const ManagePosts = () => {
                   </span>
                   {post.challengeTitle && (
                     <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1.5 py-0.5 rounded">
-                      {post.challengeTitle}
+                      {formatFilterLabel(post.challengeTitle)}
                     </span>
                   )}
                 </div>

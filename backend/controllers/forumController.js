@@ -154,7 +154,7 @@ const scorePosts = (posts) => {
       const createdAt = new Date(post.date_created);
       const daysSince = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
       const commentCount = post.comment_count || 0;
-      const score = commentCount * 2 - daysSince;
+      const score = Math.max(0, 100 - daysSince * 5) + commentCount * 2;
       return {
         ...post,
         score,
@@ -307,17 +307,10 @@ const getAllPostsByUser = async (req, res) => {
       filters.push({ date_created: dateObj });
     }
 
-    if (
-      dateSort === 'past-week' ||
-      dateSort === 'past-month' ||
-      dateSort === 'past-year'
-    ) {
-      const fromDate = new Date();
-      if (dateSort === 'past-week') fromDate.setDate(fromDate.getDate() - 7);
-      if (dateSort === 'past-month') fromDate.setMonth(fromDate.getMonth() - 1);
-      if (dateSort === 'past-year')
-        fromDate.setFullYear(fromDate.getFullYear() - 1);
-      filters.push({ date_created: { gte: fromDate } });
+    if (dateSort === 'newest') {
+      orderBy.push({ date_created: 'desc' });
+    } else {
+      orderBy.push({ date_created: 'asc' });
     }
 
     if (searchText && searchText.trim()) {
@@ -343,7 +336,7 @@ const getAllPostsByUser = async (req, res) => {
       orderBy.push({ date_created: 'desc' });
     }
 
-    const [posts, totalCount] = await Promise.all([
+    const [posts, totalCount, userPostsCount] = await Promise.all([
       prisma.forum_posts.findMany({
         where: whereCondition,
         orderBy: orderBy,
@@ -361,6 +354,11 @@ const getAllPostsByUser = async (req, res) => {
       prisma.forum_posts.count({
         where: whereCondition,
       }),
+      prisma.forum_posts.count({
+        where: {
+          author_id: userId,
+        },
+      }),
     ]);
 
     // Map posts to include challengeTitle
@@ -374,6 +372,7 @@ const getAllPostsByUser = async (req, res) => {
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
+      userPostsCount: userPostsCount,
     });
   } catch (err) {
     console.error('Error fetching posts by user:', err);

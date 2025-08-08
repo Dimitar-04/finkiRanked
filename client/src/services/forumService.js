@@ -84,7 +84,7 @@ export const getAllPostsByUser = async (page = 1, limit = 20, filters = {}) => {
       url += `&topic=${filters.topic}`;
     }
 
-    if (filters.dateSort && filters.dateSort !== 'newest') {
+    if (filters.dateSort) {
       url += `&sort=${filters.dateSort}`;
     }
     if (filters.selectedDate) {

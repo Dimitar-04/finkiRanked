@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import commentIcon from "../../assets/images/comment.svg";
-import trashIcon from "../../assets/images/delete.svg";
-import Navbar from "./Navbar";
-import { getForumPosts, deleteForumPost } from "@/services/forumService";
-import { useAuth } from "@/contexts/AuthContext";
-import { DatePicker } from "react-daisyui-timetools";
-import "react-datepicker/dist/react-datepicker.css";
-import CalendarPopover from "./CalendarPopover";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import commentIcon from '../../assets/images/comment.svg';
+import trashIcon from '../../assets/images/delete.svg';
+import Navbar from './Navbar';
+import { getForumPosts, deleteForumPost } from '@/services/forumService';
+import { useAuth } from '@/contexts/AuthContext';
+import { DatePicker } from 'react-daisyui-timetools';
+import 'react-datepicker/dist/react-datepicker.css';
+import CalendarPopover from './CalendarPopover';
 // import { useForumSearchParams } from "../../contexts/ForumSearchParamsContext";
 const Forum = () => {
   const navigate = useNavigate();
@@ -21,8 +21,8 @@ const Forum = () => {
   const [hasMore, setHasMore] = useState(true);
   const [modal, setModal] = useState({
     isOpen: false,
-    message: "",
-    type: "",
+    message: '',
+    type: '',
     postId: null,
   });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -30,11 +30,11 @@ const Forum = () => {
   const { user } = useAuth();
 
   const defaultFilters = {
-    topic: "all",
-    dateSort: "newest",
+    topic: 'all',
+    dateSort: 'newest',
     selectedDate: null,
-    commentSort: "none",
-    searchText: "",
+    commentSort: 'none',
+    searchText: '',
   };
 
   const [filters, setFilters] = useState(() => {
@@ -48,12 +48,12 @@ const Forum = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
 
-  const showModal = (message, type = "info", postId = null) => {
+  const showModal = (message, type = 'info', postId = null) => {
     setModal({ isOpen: true, message, type, postId });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, message: "", type: "", postId: null });
+    setModal({ isOpen: false, message: '', type: '', postId: null });
   };
 
   const confirmDelete = async () => {
@@ -100,10 +100,10 @@ const Forum = () => {
 
         setPage(pageNum);
       } catch (error) {
-        console.error("Error fetching forum posts:", error);
+        console.error('Error fetching forum posts:', error);
 
         if (error.response) {
-          console.error("Error response:", error.response);
+          console.error('Error response:', error.response);
         }
 
         if (!append) {
@@ -117,7 +117,7 @@ const Forum = () => {
     [postsPerPage]
   );
   useEffect(() => {
-    const pageFromUrl = parseInt(forumSearchParams.get("page") || "1", 10);
+    const pageFromUrl = parseInt(forumSearchParams.get('page') || '1', 10);
     const filtersFromUrl = { ...defaultFilters };
     for (const [key, value] of forumSearchParams.entries()) {
       if (key in filtersFromUrl) {
@@ -137,7 +137,7 @@ const Forum = () => {
         newSearchParams.set(key, value);
       }
     }
-    newSearchParams.set("page", "1");
+    newSearchParams.set('page', '1');
     setForumSearchParams(newSearchParams);
   };
 
@@ -149,7 +149,7 @@ const Forum = () => {
       const newSearchParams = new URLSearchParams(forumSearchParams);
       newSearchParams.delete(filterKey);
       setPage(1);
-      newSearchParams.set("page", "1");
+      newSearchParams.set('page', '1');
       setForumSearchParams(newSearchParams);
     }
   };
@@ -159,7 +159,7 @@ const Forum = () => {
 
     const freshDefaultFilters = { ...defaultFilters };
     setFilters(freshDefaultFilters);
-    setForumSearchParams({ page: "1" });
+    setForumSearchParams({ page: '1' });
 
     setPage(1);
 
@@ -171,17 +171,17 @@ const Forum = () => {
       await deleteForumPost(postId);
 
       await fetchPosts(1, false, { ...filters });
-      showModal("Post deleted successfully.", "success");
+      showModal('Post deleted successfully.', 'success');
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error('Error deleting post:', error);
     }
   };
   const formatFilterLabel = (value) => {
-    if (!value) return "";
+    if (!value) return '';
     return value
-      .split("-")
+      .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+      .join(' ');
   };
 
   return (
@@ -192,7 +192,14 @@ const Forum = () => {
             {/* Sticky Header Section */}
             <div className="pt-3 pr-3 flex gap-3 justify-end">
               <button
-                onClick={() => navigate("/dashboard/create-post")}
+                onClick={() => {
+                  navigate(`/dashboard/create-post`, {
+                    state: {
+                      from: '/dashboard/forum',
+                      fromForumSearch: forumSearchParams.toString(),
+                    },
+                  });
+                }}
                 className="btn bg-[#FFB800] text-black btn-sm gap-1"
               >
                 <svg
@@ -214,6 +221,7 @@ const Forum = () => {
                 onClick={() => {
                   navigate(`/dashboard/user-posts`, {
                     state: {
+                      from: '/dashboard/forum',
                       fromForumSearch: forumSearchParams.toString(),
                     },
                   });
@@ -244,17 +252,17 @@ const Forum = () => {
                   <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     Filters
                     {/* Active filter count indicator */}
-                    {(filters.topic !== "all" ||
-                      filters.dateSort !== "newest" ||
+                    {(filters.topic !== 'all' ||
+                      filters.dateSort !== 'newest' ||
                       filters.selectedDate ||
                       (filters.searchText && filters.searchText.trim())) && (
                       <span className="badge badge-sm bg-yellow-500 text-black border-none">
                         {
                           [
-                            filters.topic !== "all",
-                            filters.dateSort !== "newest",
+                            filters.topic !== 'all',
+                            filters.dateSort !== 'newest',
                             filters.selectedDate,
-                            filters.commentSort !== "none",
+                            filters.commentSort !== 'none',
                             filters.searchText && filters.searchText.trim(),
                           ].filter(Boolean).length
                         }
@@ -267,7 +275,7 @@ const Forum = () => {
                   >
                     <svg
                       className={`w-5 h-5 transition-transform duration-200 ${
-                        showFilters ? "rotate-180" : ""
+                        showFilters ? 'rotate-180' : ''
                       }`}
                       fill="none"
                       stroke="currentColor"
@@ -286,7 +294,7 @@ const Forum = () => {
                 {/* Filter Controls */}
                 <div
                   className={`transition-all duration-300 ${
-                    showFilters ? "block opacity-100" : "hidden opacity-0"
+                    showFilters ? 'block opacity-100' : 'hidden opacity-0'
                   } lg:block lg:opacity-100`}
                 >
                   {/* Mobile-First Filter Layout - Compact Version */}
@@ -308,7 +316,7 @@ const Forum = () => {
                             })
                           }
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") {
+                            if (e.key === 'Enter') {
                               applyFilters();
                             }
                           }}
@@ -411,12 +419,12 @@ const Forum = () => {
                               filters.selectedDate
                                 ? new Date(
                                     filters.selectedDate
-                                  ).toLocaleDateString("en-US", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric",
+                                  ).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
                                   })
-                                : "" // Use empty string so placeholder is visible
+                                : '' // Use empty string so placeholder is visible
                             }
                             placeholder="Select date"
                             // Style to match other inputs and add cursor-pointer
@@ -457,8 +465,8 @@ const Forum = () => {
                         Actions
                       </label>
                       <div className="flex gap-1.5">
-                        {(filters.topic !== "all" ||
-                          filters.dateSort !== "newest" ||
+                        {(filters.topic !== 'all' ||
+                          filters.dateSort !== 'newest' ||
                           filters.selectedDate ||
                           (filters.searchText &&
                             filters.searchText.trim())) && (
@@ -487,17 +495,17 @@ const Forum = () => {
 
                   {/* Active Filters Display - Improved Mobile Layout */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                    {filters.topic !== "all" && (
+                    {filters.topic !== 'all' && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
-                          {filters.topic === "general"
-                            ? "General"
-                            : "Daily Challenge"}
+                          {filters.topic === 'general'
+                            ? 'General'
+                            : 'Daily Challenge'}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("topic")}
+                          onClick={() => handleRemoveFilter('topic')}
                           aria-label="Remove topic filter"
                         >
                           ×
@@ -512,14 +520,14 @@ const Forum = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("searchText")}
+                          onClick={() => handleRemoveFilter('searchText')}
                           aria-label="Remove search filter"
                         >
                           ×
                         </button>
                       </span>
                     )}
-                    {filters.commentSort != "none" &&
+                    {filters.commentSort != 'none' &&
                       filters.commentSort.trim() && (
                         <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
                           <span className="font-medium text-xs truncate">
@@ -528,7 +536,7 @@ const Forum = () => {
                           <button
                             type="button"
                             className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                            onClick={() => handleRemoveFilter("commentSort")}
+                            onClick={() => handleRemoveFilter('commentSort')}
                             aria-label="Remove search filter"
                           >
                             ×
@@ -536,7 +544,7 @@ const Forum = () => {
                         </span>
                       )}
 
-                    {filters.dateSort !== "newest" && (
+                    {filters.dateSort !== 'newest' && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {formatFilterLabel(filters.dateSort)}
@@ -544,7 +552,7 @@ const Forum = () => {
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("dateSort")}
+                          onClick={() => handleRemoveFilter('dateSort')}
                           aria-label="Remove sort filter"
                         >
                           ×
@@ -555,18 +563,18 @@ const Forum = () => {
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                         <span className="font-medium text-xs">
                           {new Date(filters.selectedDate).toLocaleDateString(
-                            "en-US",
+                            'en-US',
                             {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
                             }
                           )}
                         </span>
                         <button
                           type="button"
                           className="ml-1 text-xs font-bold hover:text-error hover:cursor-pointer focus:outline-none"
-                          onClick={() => handleRemoveFilter("selectedDate")}
+                          onClick={() => handleRemoveFilter('selectedDate')}
                           aria-label="Remove date filter"
                         >
                           ×
@@ -620,8 +628,8 @@ const Forum = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               showModal(
-                                "Are you sure you want to delete this post? This action cannot be undone.",
-                                "confirm",
+                                'Are you sure you want to delete this post? This action cannot be undone.',
+                                'confirm',
                                 post.id
                               );
                             }}
@@ -651,35 +659,35 @@ const Forum = () => {
                         <div className="flex flex-wrap items-center gap-1 mb-0.5">
                           <span
                             className={`inline-block text-xs font-medium px-1 py-0.5 rounded ${
-                              post.topic === "general"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
+                              post.topic === 'general'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-green-100 text-green-800'
                             }`}
                           >
-                            {post.topic === "general"
-                              ? "General"
-                              : "Daily Challenge"}
+                            {post.topic === 'general'
+                              ? 'General'
+                              : 'Daily Challenge'}
                           </span>
                           {post.challengeTitle && (
                             <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-1 py-0.5 rounded truncate max-w-[120px]">
-                              {post.challengeTitle}
+                              {formatFilterLabel(post.challengeTitle)}
                             </span>
                           )}
                         </div>
 
                         <p className="text-xs text-base-content/70 mb-1 sm:mb-2">
-                          By{" "}
+                          By{' '}
                           <span className="font-semibold">
                             {post.author_name}
                           </span>
                           <span className="mx-1">·</span>
                           <span className="italic">
                             {new Date(post.date_created).toLocaleDateString(
-                              "en-US",
+                              'en-US',
                               {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
                               }
                             )}
                           </span>
@@ -687,7 +695,7 @@ const Forum = () => {
 
                         <p className="hidden sm:block text-sm md:text-xs lg:text-sm text-base-content/80 line-clamp-1 mb-auto">
                           {post.content && post.content.length > 50
-                            ? post.content.slice(0, 50) + "..."
+                            ? post.content.slice(0, 50) + '...'
                             : post.content}
                         </p>
 
@@ -722,7 +730,7 @@ const Forum = () => {
                     className="btn btn-sm btn-ghost px-2 sm:px-3"
                     onClick={() => {
                       const newPage = page - 1;
-                      forumSearchParams.set("page", newPage.toString());
+                      forumSearchParams.set('page', newPage.toString());
                       setForumSearchParams(forumSearchParams);
                     }}
                     disabled={loading || page === 1}
@@ -735,10 +743,10 @@ const Forum = () => {
                     <button
                       key={idx}
                       className={`btn btn-sm px-2 sm:px-3 ${
-                        page - 1 === idx ? "border-amber-400" : "btn-ghost"
+                        page - 1 === idx ? 'border-amber-400' : 'btn-ghost'
                       }`}
                       onClick={() => {
-                        forumSearchParams.set("page", (idx + 1).toString());
+                        forumSearchParams.set('page', (idx + 1).toString());
                         setForumSearchParams(forumSearchParams);
                       }}
                       disabled={loading}
@@ -757,7 +765,7 @@ const Forum = () => {
                     <button
                       className="btn btn-sm border-amber-400 px-2 sm:px-3"
                       onClick={() => {
-                        forumSearchParams.set("page", page.toString());
+                        forumSearchParams.set('page', page.toString());
                         setForumSearchParams(forumSearchParams);
                       }}
                       disabled={loading}
@@ -769,10 +777,10 @@ const Forum = () => {
                   {totalPages > 3 && (
                     <button
                       className={`btn btn-sm px-2 sm:px-3 ${
-                        page === totalPages ? "border-amber-400" : "btn-ghost"
+                        page === totalPages ? 'border-amber-400' : 'btn-ghost'
                       }`}
                       onClick={() => {
-                        forumSearchParams.set("page", totalPages.toString());
+                        forumSearchParams.set('page', totalPages.toString());
                         setForumSearchParams(forumSearchParams);
                       }}
                       disabled={loading}
@@ -785,7 +793,7 @@ const Forum = () => {
                     className="btn btn-sm btn-ghost px-2 sm:px-3"
                     onClick={() => {
                       const newPage = page + 1;
-                      forumSearchParams.set("page", newPage.toString());
+                      forumSearchParams.set('page', newPage.toString());
                       setForumSearchParams(forumSearchParams);
                     }}
                     disabled={loading || page === totalPages}
@@ -810,7 +818,7 @@ const Forum = () => {
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {modal.type === "confirm" && (
+              {modal.type === 'confirm' && (
                 <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-error-content"
@@ -827,7 +835,7 @@ const Forum = () => {
                   </svg>
                 </div>
               )}
-              {modal.type === "success" && (
+              {modal.type === 'success' && (
                 <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-success-content"
@@ -850,7 +858,7 @@ const Forum = () => {
             </div>
             <p className="py-3 sm:py-4 text-sm sm:text-base">{modal.message}</p>
             <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
-              {modal.type === "confirm" ? (
+              {modal.type === 'confirm' ? (
                 <>
                   <button
                     className="btn btn-ghost btn-sm sm:btn-md"
@@ -870,7 +878,7 @@ const Forum = () => {
                         Deleting...
                       </>
                     ) : (
-                      "Delete"
+                      'Delete'
                     )}
                   </button>
                 </>
