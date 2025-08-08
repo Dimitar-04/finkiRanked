@@ -146,7 +146,7 @@ const ManageChallenges = () => {
       <div className="sticky top-0 z-20 bg-base-100 ">
         <div className="flex flex-col">
           {/* Add New Challenge Button */}
-          <div className="w-full flex justify-end pt-3 pr-3 ">
+          <div className="hidden sm:w-full sm:flex sm:justify-end sm:pt-3 sm:pr-3 ">
             <button
               className="btn btn-outline btn-sm border-amber-400 gap-2"
               onClick={() => navigate('/dashboard/create-new-challenge')}
@@ -171,14 +171,12 @@ const ManageChallenges = () => {
                 <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   Filters
                   {/* Active filter count indicator */}
-                  {(filters.topic !== 'all' ||
-                    filters.dateSort !== 'newest' ||
+                  {(filters.dateSort !== 'newest' ||
                     filters.selectedDate ||
                     (filters.searchText && filters.searchText.trim())) && (
                     <span className="badge badge-sm bg-yellow-500 text-black border-none">
                       {
                         [
-                          filters.topic !== 'all',
                           filters.dateSort !== 'newest',
                           filters.selectedDate,
                           filters.searchText && filters.searchText.trim(),
@@ -334,15 +332,14 @@ const ManageChallenges = () => {
                       Actions
                     </label>
                     <div className="flex gap-1.5">
-                      {(filters.topic !== 'all' ||
-                        filters.dateSort !== 'newest' ||
+                      {(filters.dateSort !== 'newest' ||
                         filters.selectedDate ||
                         (filters.searchText && filters.searchText.trim())) && (
                         <button
                           onClick={clearFilters}
                           className="cursor-pointer px-2 py-1.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
                         >
-                          <span className="lg:hidden">Clear</span>
+                          <span className="lg:hidden">Clea Filters</span>
                           <span className="hidden lg:inline">
                             Clear Filters
                           </span>
@@ -352,7 +349,7 @@ const ManageChallenges = () => {
                         onClick={applyFilters}
                         className="cursor-pointer px-2 py-1.5 bg-yellow-500 text-black rounded-md hover:bg-yellow-600 text-xs font-medium transition-colors duration-200 flex-1 lg:flex-none h-8"
                       >
-                        <span className="lg:hidden">Apply</span>
+                        <span className="lg:hidden">Apply Filters</span>
                         <span className="hidden lg:inline">Apply Filters</span>
                       </button>
                     </div>

@@ -1,7 +1,7 @@
-import React from "react";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { RANK_DATA } from "../../utils/rankUtils";
+import React from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { RANK_DATA } from '../../utils/rankUtils';
 
 export const OurRankSystem = () => {
   const rankData = Object.values(RANK_DATA).sort((a, b) => a.id - b.id);
@@ -25,18 +25,18 @@ export const OurRankSystem = () => {
       </style>
       <div
         data-theme="luxury"
-        className="dashboard bg-base-200 flex overflow-none py-8 sm:py-12 lg:py-20 px-4 sm:px-8 lg:px-20"
+        className="dashboard bg-base-200 flex overflow-none py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-12"
       >
-        <div className="flex w-full flex-col justify-center items-center gap-6 sm:gap-8 lg:gap-10 max-w-7xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+        <div className="flex w-full flex-col justify-center items-center gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center">
             Our Ranking System
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-center max-w-2xl">
+          <p className="text-sm sm:text-base lg:text-base text-center max-w-xl">
             Climb the ranks and show your coding prowess! Each rank represents
             your dedication and skill level in competitive programming.
           </p>
 
-          <div className="rounded-box border border-base-content/5 bg-base-100 w-full max-w-6xl p-4 sm:p-6 lg:p-10 overflow-x-auto">
+          <div className="rounded-box border border-base-content/5 bg-base-100 w-full max-w-5xl p-3 sm:p-4 lg:p-6 overflow-x-auto">
             <table className="table table-xs sm:table-sm lg:table-md w-full">
               <thead>
                 <tr>
@@ -67,15 +67,15 @@ export const OurRankSystem = () => {
                       <td>
                         <svg
                           className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 ${
-                            isGlowing ? "breathing-glow" : ""
+                            isGlowing ? 'breathing-glow' : ''
                           }`}
                           viewBox="0 0 24 24"
-                          fill={rank.color || "#FFFFFF"}
+                          fill={rank.color || '#FFFFFF'}
                           xmlns="http://www.w3.org/2000/svg"
                           style={
                             isGlowing
                               ? {
-                                  "--glow-color": rank.color,
+                                  '--glow-color': rank.color,
                                 }
                               : {}
                           }
@@ -90,12 +90,12 @@ export const OurRankSystem = () => {
             </table>
           </div>
 
-          <div className="text-center text-base-content/70 max-w-4xl w-full">
-            <p className="mb-4 text-sm sm:text-base font-semibold">
+          <div className="text-center text-base-content/70 max-w-3xl w-full">
+            <p className="mb-3 text-sm sm:text-base font-semibold">
               How to earn points:
             </p>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs sm:text-sm">
-              <div className="bg-base-100 p-4 sm:p-6 rounded-lg">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs sm:text-sm">
+              <div className="bg-base-100 p-3 sm:p-4 rounded-lg">
                 <h3 className="font-semibold mb-2 text-sm sm:text-base">
                   Early bird gets the worm
                 </h3>
@@ -104,7 +104,7 @@ export const OurRankSystem = () => {
                   they start 7 AM sharp
                 </p>
               </div>
-              <div className="bg-base-100 p-4 sm:p-6 rounded-lg">
+              <div className="bg-base-100 p-3 sm:p-4 rounded-lg">
                 <h3 className="font-semibold mb-2 text-sm sm:text-base">
                   As few attempts as possible
                 </h3>

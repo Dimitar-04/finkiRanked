@@ -186,7 +186,7 @@ const Forum = () => {
 
   return (
     <div data-theme="luxury" className="flex flex-col h-screen bg-base-100">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         <div className="sticky top-0 z-20 bg-base-100">
           <div className="flex flex-col">
             {/* Sticky Header Section */}
@@ -215,7 +215,7 @@ const Forum = () => {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                <span className="hidden sm:inline">Create Post</span>
+                <span className="sm:inline">Create Post</span>
               </button>
               <button
                 onClick={() => {
@@ -226,7 +226,7 @@ const Forum = () => {
                     },
                   });
                 }}
-                className="btn btn-outline btn-sm gap-1"
+                className="hidden sm:btn sm:btn-outline sm:btn-sm sm:gap-1"
               >
                 <svg
                   className="w-4 h-4"
@@ -589,221 +589,226 @@ const Forum = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
-          {loading ? (
-            <div className="flex justify-center items-center h-full">
-              <span className="loading loading-spinner loading-md sm:loading-lg"></span>
-            </div>
-          ) : (
-            <>
-              {posts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10">
-                  <div className="text-xl sm:text-2xl font-semibold text-gray-400 mb-2">
-                    No posts found
-                  </div>
-                  <p className="text-gray-500 text-center text-sm sm:text-base">
-                    There are no posts that match your selected filters.
-                  </p>
-                  <button
-                    onClick={clearFilters}
-                    className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm font-medium transition-colors duration-200"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 l:gird-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4 lg:gap-6">
-                  {posts.map((post) => (
-                    <div
-                      key={post.id}
-                      className="card bg-base-200 shadow-md md:scale-95 lg:scale-100 hover:shadow-lg transition-all duration-300 border h-full flex flex-col"
+        <div className="overflow-y-auto">
+          <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
+            {loading ? (
+              <div className="flex justify-center items-center h-full">
+                <span className="loading loading-spinner loading-md sm:loading-lg"></span>
+              </div>
+            ) : (
+              <>
+                {posts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <div className="text-xl sm:text-2xl font-semibold text-gray-400 mb-2">
+                      No posts found
+                    </div>
+                    <p className="text-gray-500 text-center text-sm sm:text-base">
+                      There are no posts that match your selected filters.
+                    </p>
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 cursor-pointer px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-600 text-sm font-medium transition-colors duration-200"
                     >
-                      <div className="card-body p-2 sm:p-3 md:p-2.5 lg:p-4 xl:p-5 flex flex-col h-full relative">
-                        {(post.author_name === user.name ||
-                          post.author_name === user.username ||
-                          user.isModerator) && (
-                          <button
-                            className="absolute top-1 right-1 p-1 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              showModal(
-                                'Are you sure you want to delete this post? This action cannot be undone.',
-                                'confirm',
-                                post.id
-                              );
-                            }}
-                          >
-                            <img
-                              src={trashIcon}
-                              alt="Delete"
-                              className="w-3 h-3 sm:w-4 sm:h-4"
-                            />
-                          </button>
-                        )}
-
-                        <h1
-                          className="text-base sm:text-lg md:text-base lg:text-xl font-bold mb-2 pr-8 sm:pr-12 cursor-pointer line-clamp-2"
-                          onClick={() => {
-                            navigate(`/dashboard/forum-detail/${post.id}`, {
-                              state: {
-                                post,
-                                fromForumSearch: forumSearchParams.toString(),
-                              },
-                            });
-                          }}
-                        >
-                          {post.title}
-                        </h1>
-
-                        <div className="flex flex-wrap items-center gap-1 mb-0.5">
-                          <span
-                            className={`inline-block text-xs font-medium px-1 py-0.5 rounded ${
-                              post.topic === 'general'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}
-                          >
-                            {post.topic === 'general'
-                              ? 'General'
-                              : 'Daily Challenge'}
-                          </span>
-                          {post.challengeTitle && (
-                            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-1 py-0.5 rounded truncate max-w-[120px]">
-                              {formatFilterLabel(post.challengeTitle)}
-                            </span>
+                      Clear Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 l:gird-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4 lg:gap-6">
+                    {posts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="card bg-base-200 shadow-md md:scale-95 lg:scale-100 hover:shadow-lg transition-all duration-300 border h-full flex flex-col"
+                      >
+                        <div className="card-body p-2 sm:p-3 md:p-2.5 lg:p-4 xl:p-5 flex flex-col h-full relative">
+                          {(post.author_name === user.name ||
+                            post.author_name === user.username ||
+                            user.isModerator) && (
+                            <button
+                              className="absolute top-1 right-1 p-1 cursor-pointer rounded-full hover:bg-base-300 transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                showModal(
+                                  'Are you sure you want to delete this post? This action cannot be undone.',
+                                  'confirm',
+                                  post.id
+                                );
+                              }}
+                            >
+                              <img
+                                src={trashIcon}
+                                alt="Delete"
+                                className="w-3 h-3 sm:w-4 sm:h-4"
+                              />
+                            </button>
                           )}
-                        </div>
 
-                        <p className="text-xs text-base-content/70 mb-1 sm:mb-2">
-                          By{' '}
-                          <span className="font-semibold">
-                            {post.author_name}
-                          </span>
-                          <span className="mx-1">·</span>
-                          <span className="italic">
-                            {new Date(post.date_created).toLocaleDateString(
-                              'en-US',
-                              {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              }
-                            )}
-                          </span>
-                        </p>
-
-                        <p className="hidden sm:block text-sm md:text-xs lg:text-sm text-base-content/80 line-clamp-1 mb-auto">
-                          {post.content && post.content.length > 50
-                            ? post.content.slice(0, 50) + '...'
-                            : post.content}
-                        </p>
-
-                        <div className="card-actions justify-end mt-2">
-                          <div
-                            className="flex items-center gap-1 cursor-pointer"
+                          <h1
+                            className="text-base sm:text-lg md:text-base lg:text-xl font-bold mb-2 pr-8 sm:pr-12 cursor-pointer line-clamp-2"
                             onClick={() => {
                               navigate(`/dashboard/forum-detail/${post.id}`, {
-                                state: { post },
+                                state: {
+                                  post,
+                                  fromForumSearch: forumSearchParams.toString(),
+                                },
                               });
                             }}
                           >
-                            <p className="text-xs font-medium">
-                              {post.comment_count}
-                            </p>
-                            <img
-                              src={commentIcon}
-                              alt="Comment"
-                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 hover:opacity-80"
-                            />
+                            {post.title}
+                          </h1>
+
+                          <div className="flex flex-wrap items-center gap-1 mb-0.5">
+                            <span
+                              className={`inline-block text-xs font-medium px-1 py-0.5 rounded ${
+                                post.topic === 'general'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-green-100 text-green-800'
+                              }`}
+                            >
+                              {post.topic === 'general'
+                                ? 'General'
+                                : 'Daily Challenge'}
+                            </span>
+                            {post.challengeTitle && (
+                              <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-1 py-0.5 rounded truncate max-w-[120px]">
+                                {formatFilterLabel(post.challengeTitle)}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-base-content/70 mb-1 sm:mb-2">
+                            By{' '}
+                            <span className="font-semibold">
+                              {post.author_name}
+                            </span>
+                            <span className="mx-1">·</span>
+                            <span className="italic">
+                              {new Date(post.date_created).toLocaleDateString(
+                                'en-US',
+                                {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                }
+                              )}
+                            </span>
+                          </p>
+
+                          <p className="hidden sm:block text-sm md:text-xs lg:text-sm text-base-content/80 line-clamp-1 mb-auto">
+                            {post.content && post.content.length > 50
+                              ? post.content.slice(0, 50) + '...'
+                              : post.content}
+                          </p>
+
+                          <div className="card-actions justify-end mt-2">
+                            <div
+                              className="flex items-center gap-1 cursor-pointer"
+                              onClick={() => {
+                                navigate(`/dashboard/forum-detail/${post.id}`, {
+                                  state: { post },
+                                });
+                              }}
+                            >
+                              <p className="text-xs font-medium">
+                                {post.comment_count}
+                              </p>
+                              <img
+                                src={commentIcon}
+                                alt="Comment"
+                                className="w-3.5 h-3.5 sm:w-4 sm:h-4 hover:opacity-80"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
-              {!loading && (
-                <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
-                  <button
-                    className="btn btn-sm btn-ghost px-2 sm:px-3"
-                    onClick={() => {
-                      const newPage = page - 1;
-                      forumSearchParams.set('page', newPage.toString());
-                      setForumSearchParams(forumSearchParams);
-                    }}
-                    disabled={loading || page === 1}
-                    title="Previous Page"
-                  >
-                    ←
-                  </button>
-
-                  {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
+                {!loading && (
+                  <div className="flex justify-center items-center gap-1 sm:gap-2 mt-6 sm:mt-8">
                     <button
-                      key={idx}
-                      className={`btn btn-sm px-2 sm:px-3 ${
-                        page - 1 === idx ? 'border-amber-400' : 'btn-ghost'
-                      }`}
+                      className="btn btn-sm btn-ghost px-2 sm:px-3"
                       onClick={() => {
-                        forumSearchParams.set('page', (idx + 1).toString());
+                        const newPage = page - 1;
+                        forumSearchParams.set('page', newPage.toString());
                         setForumSearchParams(forumSearchParams);
                       }}
-                      disabled={loading}
+                      disabled={loading || page === 1}
+                      title="Previous Page"
                     >
-                      {idx + 1}
+                      ←
                     </button>
-                  ))}
 
-                  {totalPages > 3 && (
-                    <span className="px-1 sm:px-2 text-gray-500 text-sm">
-                      ...
-                    </span>
-                  )}
+                    {Array.from(
+                      { length: Math.min(3, totalPages) },
+                      (_, idx) => (
+                        <button
+                          key={idx}
+                          className={`btn btn-sm px-2 sm:px-3 ${
+                            page - 1 === idx ? 'border-amber-400' : 'btn-ghost'
+                          }`}
+                          onClick={() => {
+                            forumSearchParams.set('page', (idx + 1).toString());
+                            setForumSearchParams(forumSearchParams);
+                          }}
+                          disabled={loading}
+                        >
+                          {idx + 1}
+                        </button>
+                      )
+                    )}
 
-                  {page > 2 && page < totalPages - 1 && (
+                    {totalPages > 3 && (
+                      <span className="px-1 sm:px-2 text-gray-500 text-sm">
+                        ...
+                      </span>
+                    )}
+
+                    {page > 2 && page < totalPages - 1 && (
+                      <button
+                        className="btn btn-sm border-amber-400 px-2 sm:px-3"
+                        onClick={() => {
+                          forumSearchParams.set('page', page.toString());
+                          setForumSearchParams(forumSearchParams);
+                        }}
+                        disabled={loading}
+                      >
+                        {page + 1}
+                      </button>
+                    )}
+
+                    {totalPages > 3 && (
+                      <button
+                        className={`btn btn-sm px-2 sm:px-3 ${
+                          page === totalPages ? 'border-amber-400' : 'btn-ghost'
+                        }`}
+                        onClick={() => {
+                          forumSearchParams.set('page', totalPages.toString());
+                          setForumSearchParams(forumSearchParams);
+                        }}
+                        disabled={loading}
+                      >
+                        {totalPages}
+                      </button>
+                    )}
+
                     <button
-                      className="btn btn-sm border-amber-400 px-2 sm:px-3"
+                      className="btn btn-sm btn-ghost px-2 sm:px-3"
                       onClick={() => {
-                        forumSearchParams.set('page', page.toString());
+                        const newPage = page + 1;
+                        forumSearchParams.set('page', newPage.toString());
                         setForumSearchParams(forumSearchParams);
                       }}
-                      disabled={loading}
+                      disabled={loading || page === totalPages}
+                      title="Next Page"
                     >
-                      {page + 1}
+                      →
                     </button>
-                  )}
-
-                  {totalPages > 3 && (
-                    <button
-                      className={`btn btn-sm px-2 sm:px-3 ${
-                        page === totalPages ? 'border-amber-400' : 'btn-ghost'
-                      }`}
-                      onClick={() => {
-                        forumSearchParams.set('page', totalPages.toString());
-                        setForumSearchParams(forumSearchParams);
-                      }}
-                      disabled={loading}
-                    >
-                      {totalPages}
-                    </button>
-                  )}
-
-                  <button
-                    className="btn btn-sm btn-ghost px-2 sm:px-3"
-                    onClick={() => {
-                      const newPage = page + 1;
-                      forumSearchParams.set('page', newPage.toString());
-                      setForumSearchParams(forumSearchParams);
-                    }}
-                    disabled={loading || page === totalPages}
-                    title="Next Page"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 

@@ -260,7 +260,15 @@ export default function Navbar() {
             <img
               src={pp}
               alt="Profile"
-              className="w-8 xl:w-10 h-8 xl:h-10 rounded-full border-2 border-base-content/10 flex-shrink-0"
+              className={`w-8 xl:w-10 h-8 xl:h-10 rounded-full border-2 flex-shrink-0
+    ${
+      isActive('/dashboard/profile') ? 'border-black' : 'border-base-content/10'
+    }`}
+              style={
+                isActive('/dashboard/profile')
+                  ? { filter: 'brightness(0) invert(0)' }
+                  : {}
+              }
             />
             <div className="flex flex-col items-start cursor-pointer min-w-0 flex-1">
               <span className="font-medium text-left text-sm xl:text-base truncate w-full">

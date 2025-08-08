@@ -250,15 +250,15 @@ const UserPosts = () => {
       <div className="flex flex-col h-screen">
         <div className="sticky top-0 z-20 bg-base-100">
           <div className="p-3 sm:p-3 sm:pl-12 w-full max-w-full mx-auto">
-            <div className="flex justify-center items-center gap-4 relative">
-              {/* Center - Tab buttons */}
-              <div className="rounded-lg bg-base-300 p-1 flex gap-2 w-full max-w-md sm:w-auto">
+            <div className="flex justify-between items-center gap-2 sm:gap-4 sm:relative">
+              {/* Mobile: Left - Tab buttons, Desktop: Center */}
+              <div className="rounded-lg bg-base-300 p-1 flex gap-2 flex-shrink min-w-0 sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2">
                 <button
-                  className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg flex-1 sm:flex-initial ${
+                  className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg ${
                     activeTab === 'published'
                       ? 'tab-active bg-[#FFB800] text-black hover:text-black'
                       : 'hover:bg-base-200'
-                  }`}
+                  } px-2 sm:px-4 whitespace-nowrap`}
                   onClick={() => setActiveTab('published')}
                 >
                   <svg
@@ -279,11 +279,11 @@ const UserPosts = () => {
                   </span>
                 </button>
                 <button
-                  className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg flex-1 sm:flex-initial ${
+                  className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg ${
                     activeTab === 'pending'
                       ? 'tab-active bg-[#FFB800] text-black hover:text-black'
                       : 'hover:bg-base-200'
-                  }`}
+                  } px-2 sm:px-4 whitespace-nowrap`}
                   onClick={() => setActiveTab('pending')}
                 >
                   <svg
@@ -305,8 +305,8 @@ const UserPosts = () => {
                 </button>
               </div>
 
-              {/* Right side - Action buttons */}
-              <div className="flex gap-3 absolute right-0">
+              {/* Right - Action buttons */}
+              <div className="flex gap-2 sm:gap-3 flex-shrink-0 ml-auto">
                 <button
                   onClick={() => {
                     navigate(`/dashboard/create-post`, {
@@ -340,11 +340,11 @@ const UserPosts = () => {
                       : fromPath;
                     navigate(targetUrl);
                   }}
-                  className="btn btn-outline btn-sm gap-1"
+                  className="hidden sm:btn sm:btn-outline sm:btn-sm sm:gap-1"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 "
+                    className="w-4 h-4"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

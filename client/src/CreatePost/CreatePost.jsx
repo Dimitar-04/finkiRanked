@@ -178,16 +178,18 @@ const CreatePost = () => {
       data-theme="luxury"
       className="min-h-screen bg-base-100 p-3 sm:p-4 lg:p-6"
     >
-      <div className="max-w-4xl mx-auto px-2 sm:px-4 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 gap-4">
-          <h2 className="text-2xl sm:text-3xl font-bold text-base-content">
+      <div className="max-w-3xl mx-auto px-2 sm:px-4 lg:px-6 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+          <h2 className="text-xl sm:text-2xl font-bold text-base-content">
             Create a Post
           </h2>
           <button
             onClick={() => {
               const targetUrl = fromForumSearchParams
                 ? `${fromPath}?${fromForumSearchParams}`
-                : fromPath;
+                : fromUserPostsSearchParams
+                ? `${fromPath}?${fromUserPostsSearchParams}`
+                : `${fromPath}`;
               navigate(targetUrl);
             }}
             className="btn btn-outline btn-sm sm:btn-md gap-2 w-full sm:w-auto"
@@ -202,7 +204,9 @@ const CreatePost = () => {
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            Back to Forum
+            {fromPath === '/dashboard/forum'
+              ? 'Back to Forum'
+              : 'Back to Your Posts'}
           </button>
         </div>
 
@@ -210,7 +214,7 @@ const CreatePost = () => {
           onSubmit={handleSubmit}
           className="card bg-base-200 shadow-xl w-full relative"
         >
-          <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10">
+          <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
             <div className="dropdown dropdown-hover dropdown-end">
               <div
                 tabIndex={0}
@@ -234,13 +238,13 @@ const CreatePost = () => {
               </div>
               <div
                 tabIndex={0}
-                className="dropdown-content z-[1] card card-compact w-72 sm:w-80 p-2 shadow bg-base-200 text-base-content border border-base-300"
+                className="dropdown-content z-[1] card card-compact w-64 sm:w-72 p-2 shadow bg-base-200 text-base-content border border-base-300"
               >
                 <div className="card-body">
-                  <h3 className="font-bold text-base sm:text-lg mb-3">
+                  <h3 className="font-bold text-sm sm:text-base mb-2">
                     Posting Guidelines
                   </h3>
-                  <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="space-y-1.5 text-xs sm:text-sm">
                     <div className="flex items-start gap-2">
                       <span className="text-success">✓</span>
                       <span>Keep discussions respectful and constructive</span>
@@ -270,7 +274,7 @@ const CreatePost = () => {
                       <span>No personal attacks or harassment</span>
                     </div>
                   </div>
-                  <div className="mt-4 p-3 bg-warning/20 rounded-lg">
+                  <div className="mt-3 p-2 bg-warning/20 rounded-lg">
                     <p className="text-xs">
                       <strong>Note:</strong> Posts exceeding character limits or
                       containing sensitive content will be reviewed by
@@ -282,11 +286,11 @@ const CreatePost = () => {
             </div>
           </div>
 
-          <div className="card-body p-4 sm:p-6 lg:p-8">
-            <div className="space-y-6 sm:space-y-8">
+          <div className="card-body p-3 sm:p-4 lg:p-6">
+            <div className="space-y-4 sm:space-y-5">
               <div className="form-control w-full">
-                <label className="label mb-1.5">
-                  <span className="label-text text-base sm:text-lg font-medium">
+                <label className="label mb-1">
+                  <span className="label-text text-sm sm:text-base font-medium">
                     Topic
                   </span>
                 </label>
@@ -308,15 +312,15 @@ const CreatePost = () => {
                 challenges.length > 0 &&
                 typeof selectedChallengeId === 'number' && (
                   <div className="form-control w-full">
-                    <label className="label mb-1.5">
-                      <span className="label-text text-base sm:text-lg font-medium">
+                    <label className="label mb-1">
+                      <span className="label-text text-sm sm:text-base font-medium">
                         Select Challenge
                       </span>
                     </label>
 
                     <div className="card bg-base-300 shadow-md border border-base-300">
-                      <div className="card-body p-4 sm:p-6">
-                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                      <div className="card-body p-3 sm:p-4">
+                        <div className="flex items-center justify-between gap-2 sm:gap-3">
                           <button
                             type="button"
                             className="btn btn-circle btn-sm sm:btn-md btn-outline hover:btn-primary transition-all duration-200"
@@ -348,7 +352,7 @@ const CreatePost = () => {
                           </button>
 
                           <div className="flex-1 text-center px-2">
-                            <h3 className="font-semibold text-base sm:text-lg text-base-content leading-tight">
+                            <h3 className="font-semibold text-sm sm:text-base text-base-content leading-tight">
                               {challenges[selectedChallengeId]?.title
                                 .split('-')
                                 .map(
@@ -403,7 +407,7 @@ const CreatePost = () => {
                           </button>
                         </div>
 
-                        <div className="mt-3 sm:mt-4">
+                        <div className="mt-2 sm:mt-3">
                           <div className="flex items-center justify-center gap-2">
                             <span className="text-xs sm:text-sm text-base-content/60">
                               This post will be linked to the selected challenge
@@ -434,8 +438,8 @@ const CreatePost = () => {
                   </div>
                 )}
               <div className="form-control w-full">
-                <label className="label mb-1.5">
-                  <span className="label-text text-base sm:text-lg font-medium">
+                <label className="label mb-1">
+                  <span className="label-text text-sm sm:text-base font-medium">
                     Title
                   </span>
                 </label>
@@ -445,14 +449,14 @@ const CreatePost = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter your post title"
-                  className="input input-bordered input-md sm:input-lg w-full focus:input-primary"
+                  className="input input-bordered input-md w-full focus:input-primary"
                   required
                 />
               </div>
 
               <div className="flex flex-col form-control w-full">
-                <label className="label mb-1.5">
-                  <span className="label-text text-base sm:text-lg font-medium">
+                <label className="label mb-1">
+                  <span className="label-text text-sm sm:text-base font-medium">
                     Content
                   </span>
                 </label>
@@ -460,25 +464,25 @@ const CreatePost = () => {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Write your post content here..."
-                  className="textarea textarea-bordered min-h-[250px] sm:min-h-[300px] lg:min-h-[400px] w-full text-sm sm:text-base leading-relaxed focus:textarea-primary p-3 sm:p-4"
+                  className="textarea textarea-bordered min-h-[200px] sm:min-h-[250px] lg:min-h-[300px] w-full text-sm sm:text-base leading-relaxed focus:textarea-primary p-3 sm:p-4"
                   required
                   disabled={isSubmitting}
                 ></textarea>
               </div>
             </div>
 
-            <div className="card-actions justify-end mt-6 sm:mt-8 gap-3 flex-col sm:flex-row">
+            <div className="card-actions justify-end mt-4 sm:mt-6 gap-2 flex-col sm:flex-row">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/forum')}
-                className="btn btn-ghost btn-md sm:btn-lg w-full sm:w-auto order-2 sm:order-1"
+                className="btn btn-ghost btn-md w-full sm:w-auto order-2 sm:order-1"
                 disabled={isSubmitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn border-amber-400 btn-md sm:btn-lg w-full sm:w-auto order-1 sm:order-2"
+                className="btn border-amber-400 btn-md w-full sm:w-auto order-1 sm:order-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

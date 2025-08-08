@@ -1,7 +1,7 @@
-import Navbar from "@/Dashboard/components/Navbar";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import RankBadge from "../../utils/RankBadge";
+import Navbar from '@/Dashboard/components/Navbar';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import RankBadge from '../../utils/RankBadge';
 
 const LeaderBoardEx = () => {
   const [landing, setLanding] = useState(false);
@@ -14,9 +14,9 @@ const LeaderBoardEx = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/") {
+    if (location.pathname === '/') {
       setLanding(true);
-    } else if (location.pathname === "/dashboard/leaderboard") {
+    } else if (location.pathname === '/dashboard/leaderboard') {
       setLanding(false);
     }
   }, [location.pathname]);
@@ -35,9 +35,9 @@ const LeaderBoardEx = () => {
           import.meta.env.VITE_SUPABASE_URL
         }functions/v1/leaderboard?page=${page}&limit=20`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
         }
@@ -50,7 +50,7 @@ const LeaderBoardEx = () => {
       const data = await response.json();
 
       if (data.error) {
-        throw new Error(data.message || "Failed to fetch leaderboard");
+        throw new Error(data.message || 'Failed to fetch leaderboard');
       }
 
       if (append) {
@@ -62,7 +62,7 @@ const LeaderBoardEx = () => {
 
       setPagination(data.pagination);
     } catch (err) {
-      console.error("Error fetching leaderboard:", err);
+      console.error('Error fetching leaderboard:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -87,8 +87,8 @@ const LeaderBoardEx = () => {
   if (loading && leaderboard.length === 0) {
     return (
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        <div className="flex w-full flex-col justify-center items-center p-4 sm:p-8 lg:p-20 gap-6 sm:gap-8 lg:gap-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+        <div className="flex w-full flex-col justify-center items-center p-4 sm:p-6 lg:p-12 gap-4 sm:gap-6 lg:gap-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center">
             Leaderboard
           </h1>
           <div className="loading loading-spinner loading-lg"></div>
@@ -100,15 +100,15 @@ const LeaderBoardEx = () => {
   if (error && leaderboard.length === 0) {
     return (
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        <div className="flex w-full flex-col justify-center items-center p-4 sm:p-8 lg:p-20 gap-6 sm:gap-8 lg:gap-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+        <div className="flex w-full flex-col justify-center items-center p-4 sm:p-6 lg:p-12 gap-4 sm:gap-6 lg:gap-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center">
             Leaderboard
           </h1>
           <div className="alert alert-error max-w-md">
             <span className="text-sm sm:text-base">{error}</span>
           </div>
           <button
-            className="btn btn-sm sm:btn-md lg:btn-lg btn-tertiary"
+            className="btn btn-sm sm:btn-md btn-tertiary"
             onClick={() => fetchLeaderboard(1, false)}
           >
             Retry
@@ -121,8 +121,8 @@ const LeaderBoardEx = () => {
   return (
     <>
       <div data-theme="luxury" className="min-h-screen flex bg-base-100">
-        <div className="flex w-full flex-col items-center p-4 sm:p-8 lg:p-20 gap-6 sm:gap-8 lg:gap-10">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-center">
+        <div className="flex w-full flex-col items-center p-4 sm:p-6 lg:p-12 gap-4 sm:gap-6 lg:gap-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center">
             Leaderboard
           </h1>
           <p className="text-sm sm:text-base text-center">
@@ -135,20 +135,20 @@ const LeaderBoardEx = () => {
                 <div className="stat-title text-center text-xs sm:text-sm">
                   Total Users
                 </div>
-                <div className="stat-value text-lg text-center sm:text-2xl lg:text-3xl">
+                <div className="stat-value text-base text-center sm:text-xl lg:text-2xl">
                   {pagination.totalUsers}
                 </div>
               </div>
               <div className="stat">
                 <div className="stat-title text-xs sm:text-sm">Showing</div>
-                <div className="stat-value text-lg sm:text-2xl text-center lg:text-3xl">
+                <div className="stat-value text-base sm:text-xl text-center lg:text-2xl">
                   {leaderboard.length}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="w-full max-w-6xl px-2 sm:px-4">
+          <div className="w-full max-w-5xl px-2 sm:px-4">
             <div className="rounded-box border border-base-content/5 bg-base-100 overflow-x-auto">
               <table className="table table-xs sm:table-sm lg:table-md w-full">
                 <thead>
@@ -195,8 +195,8 @@ const LeaderBoardEx = () => {
 
           {pagination && pagination.hasNextPage && (
             <button
-              className={`btn btn-sm sm:btn-md lg:btn-lg ${
-                loadingMore ? "btn-disabled" : "btn-primary"
+              className={`btn btn-sm sm:btn-md ${
+                loadingMore ? 'btn-disabled' : 'btn-primary'
               }`}
               onClick={handleLoadMore}
               disabled={loadingMore}
@@ -207,7 +207,7 @@ const LeaderBoardEx = () => {
                   <span className="hidden sm:inline">Loading...</span>
                 </>
               ) : (
-                "Load More"
+                'Load More'
               )}
             </button>
           )}

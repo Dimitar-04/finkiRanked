@@ -1,18 +1,19 @@
-import React from "react";
-import lista from "../../assets/images/listaNoBg.png";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import React from 'react';
+import lista from '../../assets/images/listaNoBg.png';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+
 const VisionSection = () => {
   const navigate = useNavigate();
   const user = useAuth();
   return (
-    <div className="hero bg-base-200 min-h-[60vh] sm:min-h-[70vh] lg:min-h-[80vh] py-8 sm:py-12">
-      <div className="hero-content flex-col lg:flex-row-reverse gap-8 lg:gap-12 px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <div className="flex flex-col p-4 sm:p-6 lg:p-10 text-center lg:text-left">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
+    <div className="hero bg-base-200 min-h-[50vh] sm:min-h-[55vh] lg:min-h-[65vh] py-6 sm:py-8">
+      <div className="hero-content flex-col lg:flex-row-reverse gap-6 lg:gap-8 px-4 sm:px-6 lg:px-8 max-w-6xl">
+        <div className="flex flex-col p-3 sm:p-4 lg:p-6 text-center lg:text-left">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">
             How does it work?
           </h1>
-          <p className="py-3 sm:py-4 lg:py-6 leading-relaxed text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
+          <p className="py-2 sm:py-3 lg:py-4 leading-relaxed text-sm sm:text-sm md:text-base lg:text-base mb-3 sm:mb-4">
             Every day we post a new coding problem at precisely 7am. If you have
             made an account using your students email address, you get access to
             the coding problem and can submit your solution. The earlier you
@@ -22,9 +23,9 @@ const VisionSection = () => {
             leaderboard.
           </p>
           <button
-            className="btn btn-sm sm:btn-md lg:btn-lg xl:btn-xl w-full sm:w-64 lg:w-80 bg-black text-white hover:bg-gray-800 mx-auto lg:mx-0"
+            className="btn btn-sm sm:btn-md lg:btn-lg w-full sm:w-48 lg:w-60 bg-black text-white hover:bg-gray-800 mx-auto lg:mx-0"
             onClick={() => {
-              user ? navigate("/dashboard") : navigate("/register");
+              user ? navigate('/dashboard') : navigate('/register');
             }}
           >
             Join now
@@ -32,7 +33,7 @@ const VisionSection = () => {
         </div>
         <img
           src={lista}
-          className="w-48 sm:w-64 md:w-80 lg:w-100 h-auto max-w-full"
+          className="w-40 sm:w-48 md:w-56 lg:w-72 h-auto max-w-full"
           alt="Leaderboard illustration"
         />
       </div>

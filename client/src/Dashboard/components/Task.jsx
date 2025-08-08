@@ -285,19 +285,19 @@ const Task = () => {
               </div>
             </div>
           ) : (
-            <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
+            <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 lg:px-6">
               <div className="card bg-base-200 shadow-xl">
-                <div className="card-body p-3 sm:p-6 lg:p-8">
+                <div className="card-body p-2 sm:p-4 lg:p-6">
                   {/* Header Section */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
-                    <h1 className="card-title text-xl sm:text-2xl lg:text-3xl text-left flex-1 break-words">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-4 lg:mb-6">
+                    <h1 className="card-title text-lg sm:text-xl lg:text-2xl text-left flex-1 break-words">
                       Challenge for {today}
                     </h1>
                   </div>
 
                   {/* Already Completed Alert */}
                   {user.solvedDailyChallenge && (
-                    <div className="alert alert-info mb-3 sm:mb-4 text-sm sm:text-base">
+                    <div className="alert alert-info mb-2 sm:mb-3 text-sm sm:text-base">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -321,27 +321,27 @@ const Task = () => {
                   {task ? (
                     <>
                       {/* Problem Section */}
-                      <div className="card bg-base-300 mb-3 sm:mb-4 lg:mb-6">
-                        <div className="card-body p-3 sm:p-4 lg:p-6">
-                          <h2 className="card-title text-lg sm:text-xl lg:text-2xl mb-2 sm:mb-3 underline break-words">
+                      <div className="card bg-base-300 mb-2 sm:mb-3 lg:mb-4">
+                        <div className="card-body p-2 sm:p-3 lg:p-4">
+                          <h2 className="card-title text-base sm:text-lg lg:text-xl mb-1 sm:mb-2 underline break-words">
                             Problem: {task.title || 'Daily Challenge'}
                           </h2>
-                          <p className="text-sm sm:text-base lg:text-lg leading-relaxed break-words font-bold whitespace-pre-line">
+                          <p className="text-sm sm:text-base lg:text-base leading-relaxed break-words font-bold whitespace-pre-line">
                             {task.content || 'No description available'}
                           </p>
                         </div>
                       </div>
 
                       {/* Input and Examples Section */}
-                      <div className="space-y-3 sm:space-y-4 lg:space-y-6 mb-4 sm:mb-6 lg:mb-8">
+                      <div className="space-y-2 sm:space-y-3 lg:space-y-4 mb-3 sm:mb-4 lg:mb-6">
                         {/* Your Input Card */}
                         <div className="card bg-primary/5">
-                          <div className="card-body p-3 sm:p-4 lg:p-6">
-                            <h3 className="card-title text-base sm:text-lg lg:text-xl underline mb-2 sm:mb-3">
+                          <div className="card-body p-2 sm:p-3 lg:p-4">
+                            <h3 className="card-title text-sm sm:text-base lg:text-lg underline mb-1 sm:mb-2">
                               Your Input:
                             </h3>
                             <div
-                              className={`text-sm sm:text-base lg:text-lg xl:text-xl font-mono break-words max-h-32 sm:max-h-40 lg:max-h-48 overflow-y-auto font-bold p-2 sm:p-3 bg-base-100 rounded ${
+                              className={`text-sm sm:text-base lg:text-base font-mono break-words max-h-24 sm:max-h-32 lg:max-h-36 overflow-y-auto font-bold p-2 sm:p-3 bg-base-100 rounded ${
                                 testCase &&
                                 testCase.input &&
                                 testCase.input.includes('\n')
@@ -358,15 +358,15 @@ const Task = () => {
 
                         {/* Examples Card */}
                         <div className="card bg-base-300">
-                          <div className="card-body p-3 sm:p-4 lg:p-6">
-                            <h3 className="card-title text-base sm:text-lg lg:text-xl mb-2 sm:mb-3">
+                          <div className="card-body p-2 sm:p-3 lg:p-4">
+                            <h3 className="card-title text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">
                               Examples:
                             </h3>
-                            <div className="space-y-3 sm:space-y-4 lg:space-y-5">
+                            <div className="space-y-2 sm:space-y-3 lg:space-y-3">
                               {task.examples.map((example, index) => (
                                 <div
                                   key={index}
-                                  className="font-mono text-xs sm:text-sm lg:text-base break-words font-bold whitespace-pre-line bg-base-100 p-2 sm:p-3 rounded"
+                                  className="font-mono text-xs sm:text-sm lg:text-sm break-words font-bold whitespace-pre-line bg-base-100 p-2 sm:p-3 rounded"
                                 >
                                   <div className="pl-2 sm:pl-3 border-l-2 border-amber-400">
                                     <p className="mb-1 sm:mb-2">
@@ -390,15 +390,15 @@ const Task = () => {
                       </div>
                     </>
                   ) : (
-                    <div className="flex justify-center items-center py-8 sm:py-12 lg:py-16">
+                    <div className="flex justify-center items-center py-6 sm:py-8 lg:py-12">
                       <span className="loading loading-spinner loading-md sm:loading-lg"></span>
                     </div>
                   )}
 
                   {/* Submit Solution Section */}
                   <div className="card bg-base-300">
-                    <div className="card-body p-3 sm:p-4 lg:p-6">
-                      <h3 className="card-title text-base sm:text-lg lg:text-xl mb-3 sm:mb-4">
+                    <div className="card-body p-2 sm:p-3 lg:p-4">
+                      <h3 className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3">
                         Submit Your Solution
                       </h3>
 
@@ -414,20 +414,20 @@ const Task = () => {
                           const value = e.target.value;
                           setIsUserOutputEmpty(value.trim() === '');
                         }}
-                        className={`textarea textarea-bordered w-full mb-3 sm:mb-4 text-sm sm:text-base resize-none ${
+                        className={`textarea textarea-bordered w-full mb-2 sm:mb-3 text-sm sm:text-base resize-none ${
                           isCorrect === null
                             ? ''
                             : isCorrect
                             ? 'border-green-500'
                             : 'border-red-500'
                         }`}
-                        rows="4"
-                        style={{ minHeight: '100px', maxHeight: '200px' }}
+                        rows="6"
+                        style={{ minHeight: '150px', maxHeight: '300px' }}
                         disabled={user.solvedDailyChallenge || isSubmitting}
                       />
 
                       {user.solvedDailyChallenge && (
-                        <p className="text-sm sm:text-base lg:text-lg text-success mb-3 sm:mb-4">
+                        <p className="text-sm sm:text-base lg:text-base text-success mb-2 sm:mb-3">
                           You earned:{' '}
                           <span className="font-bold">{user.daily_points}</span>{' '}
                           points for today's task
@@ -442,7 +442,7 @@ const Task = () => {
                       )}
 
                       <p
-                        className={`mb-4 sm:mb-6 lg:mb-8 text-sm sm:text-base lg:text-lg break-words ${
+                        className={`mb-3 sm:mb-4 lg:mb-6 text-sm sm:text-base lg:text-base break-words ${
                           isCorrect
                             ? 'text-success'
                             : isCorrect === false
@@ -454,19 +454,19 @@ const Task = () => {
                       </p>
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
+                      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                         <button
                           onClick={() => {
                             handleGoBack();
                           }}
-                          className="btn border-amber-400 btn-sm sm:btn-md lg:btn-lg order-2 sm:order-1"
+                          className="btn border-amber-400 btn-sm sm:btn-md order-2 sm:order-1"
                           disabled={isSubmitting}
                         >
                           Go Back
                         </button>
                         <button
                           onClick={() => handleSubmitSolution()}
-                          className={`btn btn-sm sm:btn-md lg:btn-lg order-1 sm:order-2 ${
+                          className={`btn btn-sm sm:btn-md order-1 sm:order-2 ${
                             user.solvedDailyChallenge || isSubmitting
                               ? 'btn-disabled'
                               : 'border-amber-400'
