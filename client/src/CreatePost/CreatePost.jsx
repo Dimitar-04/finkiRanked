@@ -1,45 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { createForumPost } from "@/services/forumService";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createForumPost } from '@/services/forumService';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   createApprovalForumPost,
   discardApprovalForumPost,
-} from "@/services/reviewService";
-import { getTasksForForumPost } from "@/services/taskService";
+} from '@/services/reviewService';
+import { getTasksForForumPost } from '@/services/taskService';
 const CreatePost = () => {
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const location = useLocation();
+  const fromPath = location.state?.from || '/dashboard/forum';
+
+  const fromForumSearchParams = location.state?.fromForumSearch;
+  const fromUserPostsSearchParams = location.state?.fromUserPostsSearch;
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingModerator, setPendingModerator] = useState(false);
   const [selectedChallengeId, setSelectedChallengeId] = useState(0);
   const [challenges, setChallenges] = useState([]);
-  const [topic, setTopic] = useState("general");
-  const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
+  const [topic, setTopic] = useState('general');
+  const [modal, setModal] = useState({ isOpen: false, message: '', type: '' });
   const navigate = useNavigate();
   useEffect(() => {
     if (modal.isOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     }
 
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
     };
   }, [modal.isOpen]);
 
-  const showModal = (message, type = "info") => {
+  const showModal = (message, type = 'info') => {
     setModal({ isOpen: true, message, type });
   };
 
   const closeModal = () => {
-    setModal({ isOpen: false, message: "", type: "" });
-    if (modal.type === "success" || modal.type === "pending") {
-      navigate("/dashboard/forum");
-    } else if (modal.type === "auth") {
-      navigate("/login");
+    setModal({ isOpen: false, message: '', type: '' });
+    if (modal.type === 'success' || modal.type === 'pending') {
+      let targetUrl = fromPath;
+
+      if (fromForumSearchParams) {
+        targetUrl = `${fromPath}?${fromForumSearchParams}`;
+      } else if (fromUserPostsSearchParams) {
+        targetUrl = `${fromPath}?${fromUserPostsSearchParams}`;
+      }
+
+      navigate(targetUrl);
+    } else if (modal.type === 'auth') {
+      navigate('/login');
     }
   };
 
@@ -47,7 +60,7 @@ const CreatePost = () => {
     const selectedTopic = e.target.value;
     setTopic(selectedTopic);
 
-    if (selectedTopic === "daily-challenge") {
+    if (selectedTopic === 'daily-challenge') {
       console.log(challenges);
       if (!challenges || challenges.length === 0) {
         try {
@@ -55,10 +68,10 @@ const CreatePost = () => {
           setChallenges(response);
         } catch (error) {
           setChallenges([]);
-          console.error("Error fetching challenges:", error);
+          console.error('Error fetching challenges:', error);
           showModal(
-            "Failed to load challenges. Please try again later.",
-            "error"
+            'Failed to load challenges. Please try again later.',
+            'error'
           );
         }
       }
@@ -70,7 +83,7 @@ const CreatePost = () => {
     setIsSubmitting(true);
 
     if (!user || !user.id || !user.username) {
-      showModal("You must be logged in to create a post.", "auth");
+      showModal('You must be logged in to create a post.', 'auth');
       setIsSubmitting(false);
       return;
     }
@@ -83,44 +96,44 @@ const CreatePost = () => {
         authorName: user.username,
         topic,
         challengeId:
-          topic === "daily-challenge" && challenges.length > 0
+          topic === 'daily-challenge' && challenges.length > 0
             ? challenges[selectedChallengeId]?.id || null
             : null,
       };
       const res = await createForumPost(postData);
-      if (res.reason === "USER_FLAGGED") {
+      if (res.reason === 'USER_FLAGGED') {
         console.log(res.message);
         setPendingModerator(true);
-        showModal(res.message, "moderatorPrompt");
-      } else if (res.message.includes("moderator approval")) {
-        showModal(res.message, "pending");
+        showModal(res.message, 'moderatorPrompt');
+      } else if (res.message.includes('moderator approval')) {
+        showModal(res.message, 'pending');
       } else {
-        showModal("Post created successfully!", "success");
+        showModal('Post created successfully!', 'success');
       }
     } catch (error) {
-      console.error("Error creating post:", error);
+      console.error('Error creating post:', error);
       if (error.response) {
         if (
           error.response.status === 202 &&
-          error.response.data?.message?.includes("moderator approval")
+          error.response.data?.message?.includes('moderator approval')
         ) {
           showModal(
             error.response.data.message ||
-              "Content is too long. Your post has been submitted for moderator approval.",
-            "pending"
+              'Content is too long. Your post has been submitted for moderator approval.',
+            'pending'
           );
         } else if (error.response.status === 401) {
-          showModal("Authentication failed. Please log in again.", "auth");
+          showModal('Authentication failed. Please log in again.', 'auth');
         } else {
           showModal(
             error.response.data?.error ||
               error.response.data?.message ||
               `Error: ${error.message}`,
-            "error"
+            'error'
           );
         }
       } else {
-        showModal(`An unexpected error occurred: ${error.message}`, "error");
+        showModal(`An unexpected error occurred: ${error.message}`, 'error');
       }
     } finally {
       setIsSubmitting(false);
@@ -128,7 +141,7 @@ const CreatePost = () => {
   };
   const handleModeratorDecision = async (decision) => {
     setPendingModerator(false);
-    if (decision === "yes") {
+    if (decision === 'yes') {
       try {
         const postData = {
           title,
@@ -139,23 +152,23 @@ const CreatePost = () => {
         const res = await createApprovalForumPost(postData);
 
         showModal(
-          res.message || "Your post has been submitted for moderator approval.",
-          "pending"
+          res.message || 'Your post has been submitted for moderator approval.',
+          'pending'
         );
       } catch (error) {
         showModal(
           error.response?.data?.error ||
-            "Failed to submit post for moderator approval.",
-          "error"
+            'Failed to submit post for moderator approval.',
+          'error'
         );
       }
     } else {
       discardApprovalForumPost(user.id);
-      setModal({ isOpen: false, message: "", type: "" });
+      setModal({ isOpen: false, message: '', type: '' });
     }
   };
   useEffect(() => {
-    if (topic === "daily-challenge" && challenges.length > 0) {
+    if (topic === 'daily-challenge' && challenges.length > 0) {
       setSelectedChallengeId(0);
     }
   }, [topic, challenges]);
@@ -171,7 +184,12 @@ const CreatePost = () => {
             Create a Post
           </h2>
           <button
-            onClick={() => navigate("/dashboard/forum")}
+            onClick={() => {
+              const targetUrl = fromForumSearchParams
+                ? `${fromPath}?${fromForumSearchParams}`
+                : fromPath;
+              navigate(targetUrl);
+            }}
             className="btn btn-outline btn-sm sm:btn-md gap-2 w-full sm:w-auto"
           >
             <svg
@@ -286,9 +304,9 @@ const CreatePost = () => {
                   <option value="daily-challenge">Daily Challenge</option>
                 </select>
               </div>
-              {topic === "daily-challenge" &&
+              {topic === 'daily-challenge' &&
                 challenges.length > 0 &&
-                typeof selectedChallengeId === "number" && (
+                typeof selectedChallengeId === 'number' && (
                   <div className="form-control w-full">
                     <label className="label mb-1.5">
                       <span className="label-text text-base sm:text-lg font-medium">
@@ -332,26 +350,26 @@ const CreatePost = () => {
                           <div className="flex-1 text-center px-2">
                             <h3 className="font-semibold text-base sm:text-lg text-base-content leading-tight">
                               {challenges[selectedChallengeId]?.title
-                                .split("-")
+                                .split('-')
                                 .map(
                                   (word) =>
                                     word.charAt(0).toUpperCase() + word.slice(1)
                                 )
-                                .join(" ") || "No challenge title"}
+                                .join(' ') || 'No challenge title'}
                             </h3>
                             {challenges[selectedChallengeId]?.solving_date &&
                               selectedChallengeId > 0 && (
                                 <p className="text-xs sm:text-sm text-base-content/70 mt-1">
-                                  This challenge was available on:{" "}
+                                  This challenge was available on:{' '}
                                   <span className="underline">
                                     {new Date(
                                       challenges[
                                         selectedChallengeId
                                       ].solving_date
-                                    ).toLocaleDateString("en-GB", {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
+                                    ).toLocaleDateString('en-GB', {
+                                      day: '2-digit',
+                                      month: 'short',
+                                      year: 'numeric',
                                     })}
                                   </span>
                                 </p>
@@ -452,7 +470,7 @@ const CreatePost = () => {
             <div className="card-actions justify-end mt-6 sm:mt-8 gap-3 flex-col sm:flex-row">
               <button
                 type="button"
-                onClick={() => navigate("/dashboard/forum")}
+                onClick={() => navigate('/dashboard/forum')}
                 className="btn btn-ghost btn-md sm:btn-lg w-full sm:w-auto order-2 sm:order-1"
                 disabled={isSubmitting}
               >
@@ -469,7 +487,7 @@ const CreatePost = () => {
                     Publishing...
                   </>
                 ) : (
-                  "Publish Post"
+                  'Publish Post'
                 )}
               </button>
             </div>
@@ -487,7 +505,7 @@ const CreatePost = () => {
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {modal.type === "success" && (
+              {modal.type === 'success' && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-4 h-4 sm:w-5 sm:h-5 text-success-content"
@@ -504,7 +522,7 @@ const CreatePost = () => {
                   </svg>
                 </div>
               )}
-              {modal.type === "pending" && (
+              {modal.type === 'pending' && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-warning flex items-center justify-center shrink-0">
                   <svg
                     className="w-4 h-4 sm:w-5 sm:h-5 text-warning-content"
@@ -521,7 +539,7 @@ const CreatePost = () => {
                   </svg>
                 </div>
               )}
-              {modal.type == "moderatorPrompt" && (
+              {modal.type == 'moderatorPrompt' && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-warning flex items-center justify-center shrink-0">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -538,7 +556,7 @@ const CreatePost = () => {
                   </svg>
                 </div>
               )}
-              {(modal.type === "auth" || modal.type === "error") && (
+              {(modal.type === 'auth' || modal.type === 'error') && (
                 <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-4 h-4 sm:w-5 sm:h-5 text-error-content"
@@ -546,7 +564,7 @@ const CreatePost = () => {
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    {modal.type === "auth" ? (
+                    {modal.type === 'auth' ? (
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -565,12 +583,12 @@ const CreatePost = () => {
                 </div>
               )}
               <h3 className="font-bold text-base sm:text-lg" id="modal-title">
-                {modal.type === "success" && "Success!"}
-                {modal.type === "pending" && "Pending Approval"}
-                {modal.type === "auth" && "Authentication Required"}
-                {modal.type === "error" && "Error"}
-                {modal.type === "moderatorPrompt" &&
-                  "We found your recent posts inappropriate"}
+                {modal.type === 'success' && 'Success!'}
+                {modal.type === 'pending' && 'Pending Approval'}
+                {modal.type === 'auth' && 'Authentication Required'}
+                {modal.type === 'error' && 'Error'}
+                {modal.type === 'moderatorPrompt' &&
+                  'We found your recent posts inappropriate'}
               </h3>
             </div>
             <div className="flex py-3 sm:py-4  items-center gap-3 ">
@@ -579,17 +597,17 @@ const CreatePost = () => {
               </p>
             </div>
             <div className="flex justify-end gap-2 mt-6 sm:mt-8">
-              {modal.type === "moderatorPrompt" ? (
+              {modal.type === 'moderatorPrompt' ? (
                 <>
                   <button
                     className="btn btn-success btn-sm sm:btn-md"
-                    onClick={() => handleModeratorDecision("yes")}
+                    onClick={() => handleModeratorDecision('yes')}
                   >
                     Yes
                   </button>
                   <button
                     className="btn btn-error btn-sm sm:btn-md"
-                    onClick={() => handleModeratorDecision("no")}
+                    onClick={() => handleModeratorDecision('no')}
                   >
                     No
                   </button>

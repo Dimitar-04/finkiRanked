@@ -171,16 +171,25 @@ const getPendingPosts = async (req, res) => {
   try {
     const userId = req.user.sub;
 
-    const pendingPosts = await prisma.to_be_reviewed.findMany({
-      where: {
-        author_id: userId,
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-    });
+    const [pendingPosts, pendingCount] = await Promise.all([
+      prisma.to_be_reviewed.findMany({
+        where: {
+          author_id: userId,
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+      }),
+      prisma.to_be_reviewed.count({
+        where: {
+          author_id: userId,
+        },
+      }),
+    ]);
 
-    res.status(200).json(pendingPosts);
+    res
+      .status(200)
+      .json({ pendingPosts: pendingPosts, pendingCount: pendingCount });
   } catch (err) {
     console.error("Error fetching user's pending posts:", err);
     res.status(500).json({ error: 'Failed to fetch pending posts' });

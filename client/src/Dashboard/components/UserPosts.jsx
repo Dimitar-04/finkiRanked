@@ -17,12 +17,14 @@ const UserPosts = () => {
   const location = useLocation();
   const fromPath = location.state?.from || '/dashboard/forum';
 
-  const fromForumSearchPrams = location.state?.fromForumSearch;
+  const fromForumSearchParams = location.state?.fromForumSearch;
   const [searchParams, setSearchParams] = useSearchParams();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('published');
   const navigate = useNavigate();
+  const [totalUserPosts, setTotalUserPosts] = useState(0);
+  const [totalPendingPosts, setTotalPendingPosts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(() => {
@@ -66,7 +68,8 @@ const UserPosts = () => {
         await deleteReviewPost(modal.postId, user.id);
 
         const data = await getPendingPosts();
-        setPendingPosts(data);
+        setPendingPosts(data.pendingPosts);
+        setTotalPendingPosts(data.pendingCount);
 
         const newTotalPages = Math.ceil(data.length / PENDING_PAGE_SIZE);
         if (pendingCurrentPage > newTotalPages && newTotalPages > 0) {
@@ -101,7 +104,7 @@ const UserPosts = () => {
       );
       setApprovedPosts(approvedData.posts || []);
       setTotalPages(approvedData.totalPages || 1);
-
+      setTotalUserPosts(approvedData.userPostsCount);
       closeModal();
       showModal('Post deleted successfully.', 'success');
     } catch (error) {
@@ -112,7 +115,16 @@ const UserPosts = () => {
   };
 
   const [isDeleting, setIsDeleting] = useState(false);
-  const [filters, setFilters] = useState({ ...defaultFilters });
+  const [filters, setFilters] = useState(() => {
+    const initialFilters = { ...defaultFilters };
+    const urlParams = new URLSearchParams(window.location.search);
+    for (const [key, value] of urlParams.entries()) {
+      if (key in initialFilters) {
+        initialFilters[key] = value;
+      }
+    }
+    return initialFilters;
+  });
   const [appliedFilters, setAppliedFilters] = useState(() => {
     //Useful?
     const initialFilters = { ...defaultFilters };
@@ -210,6 +222,7 @@ const UserPosts = () => {
           );
           setApprovedPosts(approvedData.posts || []);
           setTotalPages(approvedData.totalPages || 1);
+          setTotalUserPosts(approvedData.userPostsCount);
         } catch (error) {
           console.error('Error fetching user posts:', error);
           setApprovedPosts([]); // Clear posts on error
@@ -226,7 +239,8 @@ const UserPosts = () => {
   useEffect(() => {
     const fetchPendingPosts = async () => {
       const data = await getPendingPosts();
-      setPendingPosts(data);
+      setPendingPosts(data.pendingPosts);
+      setTotalPendingPosts(data.pendingCount);
     };
     fetchPendingPosts();
   }, []);
@@ -261,7 +275,7 @@ const UserPosts = () => {
                     ></path>
                   </svg>
                   <span className="text-xs sm:text-sm lg:text-base">
-                    Published ({approvedPosts.length})
+                    Published ({totalUserPosts})
                   </span>
                 </button>
                 <button
@@ -294,7 +308,14 @@ const UserPosts = () => {
               {/* Right side - Action buttons */}
               <div className="flex gap-3 absolute right-0">
                 <button
-                  onClick={() => navigate('/dashboard/create-post')}
+                  onClick={() => {
+                    navigate(`/dashboard/create-post`, {
+                      state: {
+                        from: '/dashboard/user-posts',
+                        fromUserPostsSearch: searchParams.toString(),
+                      },
+                    });
+                  }}
                   className="btn bg-[#FFB800] text-black btn-sm gap-1"
                 >
                   <svg
@@ -314,8 +335,8 @@ const UserPosts = () => {
                 </button>
                 <button
                   onClick={() => {
-                    const targetUrl = fromForumSearchPrams
-                      ? `${fromPath}?${fromForumSearchPrams}`
+                    const targetUrl = fromForumSearchParams
+                      ? `${fromPath}?${fromForumSearchParams}`
                       : fromPath;
                     navigate(targetUrl);
                   }}
@@ -475,9 +496,7 @@ const UserPosts = () => {
                             className="select select-sm select-bordered w-full text-xs h-8 min-h-8"
                           >
                             <option value="newest">Most Recent</option>
-                            <option value="past-week">Past Week</option>
-                            <option value="past-month">Past Month</option>
-                            <option value="past-year">Past Year</option>
+                            <option value="oldest-first">Oldest First</option>
                           </select>
                         </div>
                       </div>
@@ -645,7 +664,7 @@ const UserPosts = () => {
                       {filters.dateSort !== 'newest' && (
                         <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
                           <span className="font-medium text-xs">
-                            {filters.dateSort === 'oldest'
+                            {filters.dateSort === 'oldest-first'
                               ? 'Oldest First'
                               : 'Most Recent'}
                           </span>
@@ -762,7 +781,7 @@ const UserPosts = () => {
                                     </span>
                                     {post.challengeTitle && (
                                       <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-1.5 py-0.5 rounded">
-                                        {post.challengeTitle}
+                                        {formatFilterLabel(post.challengeTitle)}
                                       </span>
                                     )}
                                   </div>

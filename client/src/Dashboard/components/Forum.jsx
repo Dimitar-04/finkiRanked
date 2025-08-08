@@ -192,7 +192,14 @@ const Forum = () => {
             {/* Sticky Header Section */}
             <div className="pt-3 pr-3 flex gap-3 justify-end">
               <button
-                onClick={() => navigate('/dashboard/create-post')}
+                onClick={() => {
+                  navigate(`/dashboard/create-post`, {
+                    state: {
+                      from: '/dashboard/forum',
+                      fromForumSearch: forumSearchParams.toString(),
+                    },
+                  });
+                }}
                 className="btn bg-[#FFB800] text-black btn-sm gap-1"
               >
                 <svg
@@ -214,6 +221,7 @@ const Forum = () => {
                 onClick={() => {
                   navigate(`/dashboard/user-posts`, {
                     state: {
+                      from: '/dashboard/forum',
                       fromForumSearch: forumSearchParams.toString(),
                     },
                   });
@@ -662,7 +670,7 @@ const Forum = () => {
                           </span>
                           {post.challengeTitle && (
                             <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-medium px-1 py-0.5 rounded truncate max-w-[120px]">
-                              {post.challengeTitle}
+                              {formatFilterLabel(post.challengeTitle)}
                             </span>
                           )}
                         </div>
