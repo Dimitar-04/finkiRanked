@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
-import pp from '../../assets/images/pp.svg';
-import Navbar from './Navbar';
-import RankBadgeNav from '@/utils/RankBadgeForNavbar';
-import { useAuth } from '../../contexts/AuthContext.jsx';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import pp from "../../assets/images/pp.svg";
+import Navbar from "./Navbar";
+import RankBadgeNav from "@/utils/RankBadgeForNavbar";
+import { useAuth } from "../../contexts/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [modal, setModal] = useState({ isOpen: false, message: '', type: '' });
+  const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
 
   const handleSignOut = () =>
     setModal({
       isOpen: true,
-      message: 'Are you sure you want to log out?',
-      type: 'confirmLogout',
+      message: "Are you sure you want to log out?",
+      type: "confirmLogout",
     });
 
-  const closeModal = () => setModal({ isOpen: false, message: '', type: '' });
+  const closeModal = () => setModal({ isOpen: false, message: "", type: "" });
 
   const confirmLogout = () => {
     closeModal();
-    navigate('/logout');
+    navigate("/logout");
   };
 
   return (
@@ -34,7 +34,7 @@ const Profile = () => {
         data-theme="luxury"
         className="w-full flex flex-col items-center p-4 sm:p-5"
       >
-        <div className="card w-full max-w-md bg-base-100 shadow-2xl border border-base-300">
+        <div className="card w-full md:max-w-md 2xl:max-w-xl bg-base-100 shadow-2xl border border-base-300">
           <div className="card-body p-5">
             {loading ? (
               <div className="flex flex-col items-center py-10">
@@ -46,21 +46,23 @@ const Profile = () => {
                 {/* Header */}
                 <div className="flex flex-col items-center text-center mb-6">
                   <div className="avatar mb-3">
-                    <div className="w-20 md:w-24 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-base-100 shadow-lg">
+                    <div className="w-20 md:w-24 2xl:w-34 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-base-100 shadow-lg">
                       <img src={pp} alt="Profile" className="object-cover" />
                     </div>
                   </div>
-                  <h1 className="text-xl md:text-2xl font-bold text-base-content">
+                  <h1 className="text-xl md:text-2xl  2xl:text-3xl font-bold text-base-content">
                     {user.name}
                   </h1>
-                  <p className="text-sm text-base-content/60">{user.email}</p>
+                  <p className="text-sm 2xl:text-xl text-base-content/60">
+                    {user.email}
+                  </p>
                 </div>
 
                 {/* Rank */}
                 <div className="flex justify-center mb-6">
                   <div className="bg-gradient-to-r from-tertiary/10 to-tertiary/5 p-3 rounded-lg border border-tertiary/20 flex flex-col items-center min-w-[120px]">
-                    <RankBadgeNav rankName={user.rank} size="sm" />
-                    <p className="text-xs text-base-content/70 mt-1">
+                    <RankBadgeNav rankName={user.rank} size="md" />
+                    <p className="text-xs 2xl:text-lg text-base-content/70 mt-1">
                       Current Rank
                     </p>
                   </div>
