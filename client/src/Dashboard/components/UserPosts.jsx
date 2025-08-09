@@ -749,7 +749,7 @@ const UserPosts = () => {
                                   </button>
                                   <div className="flex">
                                     <h3
-                                      className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content line-clamp-2 hover:underline cursor-pointer flex-grow"
+                                      className="text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content break-words hover:underline cursor-pointer min-w-0"
                                       onClick={() => {
                                         navigate(
                                           `/dashboard/forum-detail/${post.id}`,
@@ -1012,7 +1012,7 @@ const UserPosts = () => {
                                   <div className="absolute top-0 left-0 w-full h-1"></div>
 
                                   <div className="card-body p-3 sm:p-4 lg:p-6 flex flex-col h-full">
-                                    <h3 className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content line-clamp-2">
+                                    <h3 className=" text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 text-base-content break-words min-w-0">
                                       {post.title}
                                     </h3>
                                     <p className="text-xs sm:text-sm text-base-content/70 mt-2 line-clamp-3 flex-grow">
@@ -1244,7 +1244,9 @@ const UserPosts = () => {
                   : 'Error'}
               </h3>
             </div>
-            <p className="py-3 sm:py-4 text-sm sm:text-base">{modal.message}</p>
+            <p className="py-3 sm:py-4 text-sm sm:text-base break-words">
+              {modal.message}
+            </p>
             <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
               {modal.type === 'confirm' ? (
                 <>

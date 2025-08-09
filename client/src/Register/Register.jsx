@@ -1,14 +1,14 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { supabase } from "../contexts/AuthContext";
-import { signInWithGoogle } from "@/services/registerLoginService";
-import { useAuth } from "../contexts/AuthContext";
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { supabase } from '../contexts/AuthContext';
+import { signInWithGoogle } from '@/services/registerLoginService';
+import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
   const { register } = useAuth();
   const [formErrors, setFormErrors] = useState({});
-  const [generalError, setGeneralError] = useState("");
+  const [generalError, setGeneralError] = useState('');
   const [googleLoading, setGoogleLoading] = useState(false);
   const nav = useNavigate();
   const [showPassword, setShowPassword] = useState({
@@ -25,14 +25,14 @@ const Register = () => {
   };
 
   const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    name: "",
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    name: '',
   });
   function validateLocalEmailFormat(email) {
-    return email.includes("@") && email.includes(".");
+    return email.includes('@') && email.includes('.');
   }
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,18 +43,18 @@ const Register = () => {
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-    setGeneralError("");
+    setGeneralError('');
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setGeneralError("");
+    setGeneralError('');
     setFormErrors({});
 
     if (!validateLocalEmailFormat(formData.email)) {
       setFormErrors((prev) => ({
         ...prev,
-        email: "Please enter a valid email format.",
+        email: 'Please enter a valid email format.',
       }));
       setLoading(false);
       return;
@@ -62,7 +62,7 @@ const Register = () => {
     if (formData.password !== formData.confirmPassword) {
       setFormErrors((prev) => ({
         ...prev,
-        passwordMatch: "Passwords do not match",
+        passwordMatch: 'Passwords do not match',
       }));
       setLoading(false);
       return;
@@ -74,7 +74,7 @@ const Register = () => {
       !formData.name ||
       !formData.confirmPassword
     ) {
-      setGeneralError("Please fill in all required fields.");
+      setGeneralError('Please fill in all required fields.');
       setLoading(false);
       return;
     }
@@ -91,18 +91,18 @@ const Register = () => {
       const result = await register(userData);
 
       if (result.success) {
-        nav("/dashboard");
+        nav('/dashboard');
       } else {
         if (result.errors) {
           setFormErrors(result.errors);
         }
         setGeneralError(
-          result.error || "Registration failed. Please try again."
+          result.error || 'Registration failed. Please try again.'
         );
       }
     } catch (error) {
-      console.error("Unexpected error in Register handleSubmit:", error);
-      setGeneralError("A client-side error occurred. Please try again.");
+      console.error('Unexpected error in Register handleSubmit:', error);
+      setGeneralError('A client-side error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -117,17 +117,17 @@ const Register = () => {
     <div className="h-screen bg-base-100">
       <div
         data-theme="luxury"
-        className="flex flex-col items-center justify-center h-screen overflow-y-auto p-4"
+        className="flex flex-col items-center justify-center h-screen overflow-y-hidden p-2 md:p-4"
       >
-        <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-center">
+        <h1 className="text-xl xl:text-2xl font-bold mb-3 md:mb-4 text-center">
           Create an account
         </h1>
         <form
           onSubmit={handleSubmit}
-          className="fieldset bg-base-200 border-base-300 rounded-box w-full max-w-sm border p-6 sm:p-8 space-y-4 sm:space-y-6"
+          className="fieldset bg-base-200 border-base-300 rounded-box w-full max-w-xs md:max-w-sm border p-3 md:p-4 space-y-2 md:space-y-3"
         >
           <div>
-            <label className="label text-lg" htmlFor="name">
+            <label className="label text-sm py-1" htmlFor="name">
               Name
             </label>
             <input
@@ -136,7 +136,7 @@ const Register = () => {
               type="text"
               value={formData.name}
               onChange={handleInputChange}
-              className="input input-md sm:input-lg w-full"
+              className="input input-sm w-full 2xl:input-lg"
               placeholder="John Doe"
               disabled={loading || googleLoading}
             />
@@ -146,7 +146,7 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="label text-lg" htmlFor="username">
+            <label className="label text-sm py-1" htmlFor="username">
               Username
             </label>
             <input
@@ -155,7 +155,7 @@ const Register = () => {
               type="text"
               value={formData.username}
               onChange={handleInputChange}
-              className="input input-md sm:input-lg w-full"
+              className="input input-sm w-full 2xl:input-lg "
               placeholder="User123"
               disabled={loading || googleLoading}
             />
@@ -165,7 +165,7 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="label text-lg" htmlFor="email">
+            <label className="label text-sm py-1" htmlFor="email">
               Email
             </label>
             <input
@@ -174,7 +174,7 @@ const Register = () => {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="input input-md sm:input-lg w-full"
+              className="input input-sm w-full 2xl:input-lg "
               placeholder="user123@students.finki.ukim.mk"
               disabled={loading || googleLoading}
             />
@@ -184,15 +184,15 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="label text-lg" htmlFor="password">
+            <label className="label text-sm py-1" htmlFor="password">
               Password
             </label>
             <div className="relative w-full">
               <input
                 id="password"
                 name="password"
-                type={showPassword.password ? "text" : "password"}
-                className="input input-md sm:input-lg w-full"
+                type={showPassword.password ? 'text' : 'password'}
+                className="input input-sm w-full pr-8 2xl:input-lg"
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleInputChange}
@@ -200,8 +200,8 @@ const Register = () => {
               />
               <button
                 type="button"
-                className="absolute top-0 right-0 h-full px-3 flex items-center z-10"
-                onClick={() => togglePasswordVisibility("password")}
+                className="absolute top-0 right-0 h-full px-2 flex items-center z-10"
+                onClick={() => togglePasswordVisibility('password')}
                 tabIndex="-1"
                 disabled={loading || googleLoading}
               >
@@ -212,7 +212,7 @@ const Register = () => {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-6 h-6"
+                    className="w-4 h-4"
                   >
                     <path
                       strokeLinecap="round"
@@ -227,7 +227,7 @@ const Register = () => {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-6 h-6"
+                    className="w-4 h-4"
                   >
                     <path
                       strokeLinecap="round"
@@ -264,25 +264,24 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="label text-lg" htmlFor="confirmPassword">
-              {" "}
+            <label className="label text-sm py-1" htmlFor="confirmPassword">
               Confirm Password
             </label>
             <div className="relative w-full">
               <input
                 id="confirmPassword"
-                type={showPassword.confirmPassword ? "text" : "password"}
+                type={showPassword.confirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="input input-md sm:input-lg w-full"
+                className="input input-sm w-full 2xl:input-lg pr-8"
                 placeholder="Confirm Password"
                 disabled={loading || googleLoading}
               />
               <button
                 type="button"
-                className="absolute top-0 right-0 h-full px-3 flex items-center z-10"
-                onClick={() => togglePasswordVisibility("confirmPassword")}
+                className="absolute top-0 right-0 h-full px-2 flex items-center z-10"
+                onClick={() => togglePasswordVisibility('confirmPassword')}
                 tabIndex="-1"
                 disabled={loading || googleLoading}
               >
@@ -293,7 +292,7 @@ const Register = () => {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-6 h-6"
+                    className="w-4 h-4"
                   >
                     <path
                       strokeLinecap="round"
@@ -308,7 +307,7 @@ const Register = () => {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-6 h-6"
+                    className="w-4 h-4"
                   >
                     <path
                       strokeLinecap="round"
@@ -338,21 +337,21 @@ const Register = () => {
 
           <button
             type="submit"
-            className="btn bg-black btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl w-full flex items-center justify-center"
+            className="btn bg-black btn-sm w-full flex 2xl:btn-xl items-center justify-center "
             disabled={loading || googleLoading}
           >
             {loading ? (
-              <span className="loading loading-spinner loading-md mr-2"></span>
+              <span className="loading loading-spinner loading-xs mr-2"></span>
             ) : null}
             Register
           </button>
 
-          <div className="text-center">
-            <p className="text-sm mb-3">or continue with Google</p>
+          <div className="text-center flex flex-col items-center">
+            <p className="text-xs mb-2">or continue with Google</p>
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="btn btn-outline  btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-x w-full flex items-center justify-center"
+              className="btn btn-outline btn-sm w-[50%] text-center "
               disabled={loading || googleLoading}
             >
               {googleLoading ? (
@@ -363,7 +362,7 @@ const Register = () => {
               ) : (
                 <>
                   <svg
-                    className="w-5 h-5 mr-2"
+                    className="w-3 h-3 mr-2"
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
@@ -391,7 +390,7 @@ const Register = () => {
           </div>
         </form>
 
-        <Link to="/login" className="underline mt-1.5">
+        <Link to="/login" className="underline mt-3 text-sm">
           Already have an account?
         </Link>
       </div>

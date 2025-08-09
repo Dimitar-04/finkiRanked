@@ -601,7 +601,7 @@ const ManagePosts = () => {
                 className="p-4 sm:p-6 border border-base-300 bg-base-200 rounded-lg shadow-sm hover:shadow-md transition relative w-full"
               >
                 <h1
-                  className="text-lg text-sm sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20 cursor-pointer"
+                  className="text-lg text-sm sm:text-xl lg:text-2xl font-bold mb-4 pr-16 sm:pr-20 cursor-pointer break-words"
                   onClick={() => openViewPostModal(post)}
                 >
                   {post.title}
@@ -619,7 +619,7 @@ const ManagePosts = () => {
                     />
                   </button>
                   <button
-                    title="Delete Post"
+                    title="Discard Post"
                     className="btn btn-xs sm:btn-sm btn-error btn-circle"
                     onClick={() => openConfirmationModal('delete', post)}
                   >
@@ -760,7 +760,7 @@ const ManagePosts = () => {
           <div className="bg-base-200 rounded-lg shadow-xl p-4 sm:p-6  w-full max-w-xl sm:max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               {(modal.type === 'approve' || modal.type === 'success') && (
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-success flex items-center justify-center shrink-0 break-words">
                   <svg
                     className="w-3 h-3 sm:w-5 sm:h-5 text-success-content"
                     fill="none"
@@ -798,7 +798,7 @@ const ManagePosts = () => {
               <h3 className="font-bold text-base sm:text-lg" id="modal-title">
                 {modal.type === 'approve' && 'Approve Post'}
                 {(modal.type === 'deleted' || modal.type === 'delete') &&
-                  'Delete Post'}
+                  'Discard Post'}
                 {(modal.type === 'success' || modal.type === 'error') &&
                   'Approve Post'}
               </h3>
@@ -806,12 +806,12 @@ const ManagePosts = () => {
             {modal.type === 'view-post' && modal.post ? (
               <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 <h3
-                  className="font-bold text-xl sm:text-2xl text-base-content"
+                  className="font-bold text-xl sm:text-2xl text-base-content break-words"
                   id="modal-title"
                 >
                   {modal.post.title}
                 </h3>
-                <p className="text-sm text-base-content/70">
+                <p className="text-sm text-base-content/70 ">
                   By {modal.post.author_name}
                   <span className="mx-1.5">·</span>
                   <span className="italic">
@@ -830,8 +830,8 @@ const ManagePosts = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex py-3 sm:py-4 items-center gap-3">
-                <p>{modal.message}</p>
+              <div className="flex py-3 sm:py-4 items-center gap-3 break-words">
+                <p className="break-words min-w-0">{modal.message}</p>
               </div>
             )}
             <div className="flex justify-end gap-2 sm:gap-3 mt-3 sm:mt-4">
@@ -856,12 +856,12 @@ const ManagePosts = () => {
                         <span className="loading loading-spinner loading-sm mr-2"></span>
                         {modal.type === 'approve'
                           ? 'Approving...'
-                          : 'Deleting...'}
+                          : 'Discarding...'}
                       </>
                     ) : modal.type === 'approve' ? (
                       'Approve'
                     ) : (
-                      'Delete'
+                      'Discard'
                     )}
                   </button>
                 </>

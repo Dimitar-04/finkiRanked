@@ -228,7 +228,7 @@ const deleteReviewPost = async (req, res) => {
       where: { id },
     });
 
-    if (author?.email) {
+    if (author?.email && isModerator) {
       sendDeletionEmail(author.email, post.title);
     }
 

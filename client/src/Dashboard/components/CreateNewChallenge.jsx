@@ -1,23 +1,26 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createNewTask } from "@/services/taskService";
-import { DatePicker } from "react-daisyui-timetools";
-import "react-datepicker/dist/react-datepicker.css";
-import "cally";
+import React, { useState } from 'react';
+import { useNavigate, useLocation, useLoaderData } from 'react-router-dom';
+import { createNewTask } from '@/services/taskService';
+import { DatePicker } from 'react-daisyui-timetools';
+import 'react-datepicker/dist/react-datepicker.css';
+import 'cally';
 const CreateNewChallenge = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState({
     isOpen: false,
-    message: "",
-    type: "",
+    message: '',
+    type: '',
     errors: [],
   });
+  const location = useLocation();
+  const manageChallengesSearchParams =
+    location.state?.manageChallengesSearchParams;
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    difficulty: "Easy",
-    output_type: "string",
+    title: '',
+    description: '',
+    difficulty: 'Easy',
+    output_type: 'string',
     solving_date: (() => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -26,10 +29,10 @@ const CreateNewChallenge = () => {
   });
 
   const [examples, setExamples] = useState([
-    { input: "", output: "" },
-    { input: "", output: "" },
+    { input: '', output: '' },
+    { input: '', output: '' },
   ]);
-  const [testCases, setTestCases] = useState([{ input: "", output: "" }]);
+  const [testCases, setTestCases] = useState([{ input: '', output: '' }]);
   const [currentTestCaseIndex, setCurrentTestCaseIndex] = useState(0);
 
   const handleChange = (e) => {
@@ -51,11 +54,11 @@ const CreateNewChallenge = () => {
     setTestCases(updatedTestCases);
   };
   const addExample = () => {
-    setExamples([...examples, { input: "", output: "" }]);
+    setExamples([...examples, { input: '', output: '' }]);
   };
 
   const addTestCase = () => {
-    setTestCases([...testCases, { input: "", output: "" }]);
+    setTestCases([...testCases, { input: '', output: '' }]);
 
     setCurrentTestCaseIndex(testCases.length - 1);
   };
@@ -87,8 +90,8 @@ const CreateNewChallenge = () => {
       );
       if (hasEmptyTestCase) {
         showModal(
-          "All test cases must have both input and output values.",
-          "error"
+          'All test cases must have both input and output values.',
+          'error'
         );
         setLoading(false);
         return;
@@ -99,8 +102,8 @@ const CreateNewChallenge = () => {
       );
       if (hasEmptyExample) {
         showModal(
-          "All examples must have both input and output values.",
-          "error"
+          'All examples must have both input and output values.',
+          'error'
         );
         setLoading(false);
         return;
@@ -113,11 +116,11 @@ const CreateNewChallenge = () => {
       };
 
       await createNewTask(challengeData);
-      showModal("Challenge created successfully!", "success");
+      showModal('Challenge created successfully!', 'success');
     } catch (error) {
-      console.error("Failed to create challenge:", error);
+      console.error('Failed to create challenge:', error);
 
-      let errorMessage = "Failed to create challenge. Please try again.";
+      let errorMessage = 'Failed to create challenge. Please try again.';
       let errorDetails = [];
 
       if (error.response && error.response.data) {
@@ -132,7 +135,7 @@ const CreateNewChallenge = () => {
         }
       }
 
-      showModal(errorMessage, "error", errorDetails);
+      showModal(errorMessage, 'error', errorDetails);
     } finally {
       setLoading(false);
     }
@@ -150,8 +153,8 @@ const CreateNewChallenge = () => {
   const closeModal = () => {
     setModal({
       isOpen: false,
-      message: "",
-      type: "",
+      message: '',
+      type: '',
       errors: [],
     });
   };
@@ -162,9 +165,27 @@ const CreateNewChallenge = () => {
         <h1 className="text-3xl font-bold">Create New Challenge</h1>
         <button
           className="btn btn-outline"
-          onClick={() => navigate("/dashboard/manage-challenges")}
+          onClick={() => {
+            const targetUrl =
+              '/dashboard/manage-challenges' +
+              (manageChallengesSearchParams
+                ? `?${manageChallengesSearchParams}`
+                : '');
+            navigate(targetUrl);
+          }}
         >
-          Back to Challenges
+          {' '}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4 sm:w-5 sm:h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back to Manage Challenges
         </button>
       </div>
 
@@ -278,7 +299,7 @@ const CreateNewChallenge = () => {
                   placeholder="Example input..."
                   value={example.input}
                   onChange={(e) =>
-                    handleExampleChange(index, "input", e.target.value)
+                    handleExampleChange(index, 'input', e.target.value)
                   }
                 ></textarea>
               </div>
@@ -290,7 +311,7 @@ const CreateNewChallenge = () => {
                   placeholder="Example output..."
                   value={example.output}
                   onChange={(e) =>
-                    handleExampleChange(index, "output", e.target.value)
+                    handleExampleChange(index, 'output', e.target.value)
                   }
                 ></textarea>
               </div>
@@ -338,7 +359,7 @@ const CreateNewChallenge = () => {
                     onChange={(e) =>
                       handleTestCaseChange(
                         currentTestCaseIndex,
-                        "input",
+                        'input',
                         e.target.value
                       )
                     }
@@ -354,7 +375,7 @@ const CreateNewChallenge = () => {
                     onChange={(e) =>
                       handleTestCaseChange(
                         currentTestCaseIndex,
-                        "output",
+                        'output',
                         e.target.value
                       )
                     }
@@ -395,8 +416,8 @@ const CreateNewChallenge = () => {
                   type="button"
                   className={`w-2 h-2 rounded-full ${
                     currentTestCaseIndex === index
-                      ? "bg-amber-400"
-                      : "bg-base-300"
+                      ? 'bg-amber-400'
+                      : 'bg-base-300'
                   }`}
                   onClick={() => setCurrentTestCaseIndex(index)}
                   aria-label={`Go to test case ${index + 1}`}
@@ -425,7 +446,7 @@ const CreateNewChallenge = () => {
             {loading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Create Challenge"
+              'Create Challenge'
             )}
           </button>
         </div>
@@ -439,7 +460,7 @@ const CreateNewChallenge = () => {
         >
           <div className="bg-base-200 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
-              {modal.type === "success" && (
+              {modal.type === 'success' && (
                 <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-success-content"
@@ -456,7 +477,7 @@ const CreateNewChallenge = () => {
                   </svg>
                 </div>
               )}
-              {modal.type === "error" && (
+              {modal.type === 'error' && (
                 <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center shrink-0">
                   <svg
                     className="w-5 h-5 text-error-content"
@@ -474,7 +495,7 @@ const CreateNewChallenge = () => {
                 </div>
               )}
               <h3 className="font-bold text-lg" id="modal-title">
-                {modal.type === "success" ? "Success!" : "Error"}
+                {modal.type === 'success' ? 'Success!' : 'Error'}
               </h3>
             </div>
             <p className="py-4">{modal.message}</p>

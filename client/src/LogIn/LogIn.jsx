@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../contexts/AuthContext";
-import { useAuth } from "../contexts/AuthContext";
-import { signInWithGoogle } from "@/services/registerLoginService";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { signInWithGoogle } from '@/services/registerLoginService';
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { login } = useAuth();
@@ -23,13 +23,13 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     const result = await login(email, password);
 
     if (result.success) {
-      navigate("/dashboard");
+      navigate('/dashboard');
     } else {
       setError(result.error);
     }
@@ -53,7 +53,7 @@ const Login = () => {
           <input
             id="email"
             type="email"
-            className="input input-md sm:input-lg w-full"
+            className="input input-md 2xl:input-lg w-full"
             placeholder="user123@students.finki.ukim.mk"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -69,8 +69,8 @@ const Login = () => {
           <div className="relative w-full">
             <input
               id="password"
-              type={showPassword ? "text" : "password"}
-              className="input input-md sm:input-lg w-full"
+              type={showPassword ? 'text' : 'password'}
+              className="input input-md 2xl:input-lg w-full"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -128,7 +128,7 @@ const Login = () => {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="btn btn-outline btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-x w-full flex items-center justify-center"
+            className="btn btn-outline btn-md sm:btn-sm md:btn-md 2xl:btn-lg xl:btn-x w-full flex items-center justify-center"
             disabled={loading || googleLoading}
           >
             {googleLoading ? (
@@ -164,11 +164,11 @@ const Login = () => {
               </>
             )}
           </button>
-        </div>{" "}
+        </div>{' '}
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         <button
           type="submit"
-          className="btn bg-black btn-md sm:btn-sm md:btn-md lg:btn-lg xl:btn-xl"
+          className="btn bg-black btn-md w-full flex 2xl:btn-xl items-center justify-center"
           disabled={loading || googleLoading}
         >
           {loading ? (
@@ -177,7 +177,7 @@ const Login = () => {
               Logging in...
             </span>
           ) : (
-            "Log in"
+            'Log in'
           )}
         </button>
       </form>

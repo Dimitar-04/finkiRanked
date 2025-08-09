@@ -20,7 +20,7 @@ const CalendarPopover = ({
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    // Cleanup the event listener
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -61,8 +61,8 @@ const CalendarPopover = ({
   }
 
   const today = new Date();
-  const timezoneOffset = today.getTimezoneOffset() * 60000; // Get timezone offset in milliseconds
-  const adjustedDate = new Date(today.getTime() - timezoneOffset); // Adjust to UTC
+  const timezoneOffset = today.getTimezoneOffset() * 60000;
+  const adjustedDate = new Date(today.getTime() - timezoneOffset);
   const maxDate = adjustedDate.toISOString().split('T')[0];
 
   return (

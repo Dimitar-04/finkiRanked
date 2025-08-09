@@ -149,7 +149,13 @@ const ManageChallenges = () => {
           <div className="hidden sm:w-full sm:flex sm:justify-end sm:pt-3 sm:pr-3 ">
             <button
               className="btn btn-outline btn-sm border-amber-400 gap-2"
-              onClick={() => navigate('/dashboard/create-new-challenge')}
+              onClick={() => {
+                navigate('/dashboard/create-new-challenge', {
+                  state: {
+                    manageChallengesSearchParams: searchParams.toString(),
+                  },
+                });
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

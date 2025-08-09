@@ -208,10 +208,19 @@ const getForumPosts = async (req, res) => {
       orderBy.push({ date_created: 'desc' });
     }
     if (search) {
+      const challengeSearchTerm = search.toLowerCase().replace(/\s+/g, '-');
       filters.push({
         OR: [
           { title: { contains: search, mode: 'insensitive' } },
           { content: { contains: search, mode: 'insensitive' } },
+          {
+            challenges: {
+              title: {
+                contains: challengeSearchTerm,
+                mode: 'insensitive',
+              },
+            },
+          },
         ],
       });
     }

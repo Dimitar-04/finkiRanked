@@ -413,8 +413,8 @@ const Forum = () => {
                         <div className="relative">
                           <input
                             type="text"
-                            readOnly // Makes the input non-editable by typing
-                            onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
+                            readOnly
+                            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
                             value={
                               filters.selectedDate
                                 ? new Date(
@@ -424,10 +424,9 @@ const Forum = () => {
                                     month: 'short',
                                     day: 'numeric',
                                   })
-                                : '' // Use empty string so placeholder is visible
+                                : ''
                             }
                             placeholder="Select date"
-                            // Style to match other inputs and add cursor-pointer
                             className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
                           />
                           <svg
@@ -643,7 +642,7 @@ const Forum = () => {
                           )}
 
                           <h1
-                            className="text-base sm:text-lg md:text-base lg:text-xl font-bold mb-2 pr-8 sm:pr-12 cursor-pointer line-clamp-2"
+                            className="text-base sm:text-lg md:text-base lg:text-xl font-bold mb-2 pr-8 sm:pr-12 cursor-pointer break-words"
                             onClick={() => {
                               navigate(`/dashboard/forum-detail/${post.id}`, {
                                 state: {
