@@ -67,12 +67,6 @@ export const AuthProvider = ({ children }) => {
 
         if (inactiveTime > INACTIVITY_TIMEOUT) {
           supabase.auth.signOut();
-          setTimeout(() => {
-            const now = Date.now();
-            const readableTime = new Date(now).toLocaleString();
-
-            alert(`Logged out due to inactivity at ${readableTime}`);
-          }, 10);
         }
       }
     };
