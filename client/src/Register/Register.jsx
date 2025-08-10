@@ -337,7 +337,7 @@ const Register = () => {
 
           <button
             type="submit"
-            className="btn bg-black btn-sm w-full flex 2xl:btn-xl items-center justify-center "
+            className="btn bg-black btn-sm w-full flex 2xl:btn-lg items-center justify-center "
             disabled={loading || googleLoading}
           >
             {loading ? (
