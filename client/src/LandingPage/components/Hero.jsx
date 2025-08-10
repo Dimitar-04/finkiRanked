@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import hero from "../../assets/images/hero-bg.jpg";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,11 +6,29 @@ import { useAuth } from "@/contexts/AuthContext";
 const Hero = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const heroRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsIntersecting(true);
+
+        observer.disconnect();
+      }
+    });
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
+    }
+    return () => observer.disconnect();
+  }, []);
   return (
     <div
+      ref={heroRef}
       className="hero min-h-[70vh] sm:min-h-[80vh] w-full"
       style={{
-        backgroundImage: `url(${hero})`,
+        backgroundImage: isIntersecting ? `url(${hero})` : "none",
+        transition: "background-image 0.5s ease-in-out",
       }}
     >
       <div className="hero-overlay"></div>

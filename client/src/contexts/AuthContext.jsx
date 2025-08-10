@@ -36,13 +36,25 @@ export const AuthProvider = ({ children }) => {
   const userRef = useRef(null);
   const navigate = useNavigate();
 
-  const logout = useCallback(async () => {
-    navigate("/");
-    clearTimeout(inactivityTimeoutRef.current);
-    clearTimeout(tokenExpiryTimeoutRef.current);
+  const logout = useCallback(
+    async (inactivity = false) => {
+      navigate("/");
 
-    await supabase.auth.signOut();
-  }, [navigate]);
+      clearTimeout(inactivityTimeoutRef.current);
+      clearTimeout(tokenExpiryTimeoutRef.current);
+
+      await supabase.auth.signOut();
+      if (inactivity) {
+        setTimeout(() => {
+          const now = Date.now();
+          const readableTime = new Date(now).toLocaleString();
+
+          alert(`Logged out due to inactivity at ${readableTime}`);
+        }, 10);
+      }
+    },
+    [navigate]
+  );
   useEffect(() => {
     const checkStaleSession = () => {
       console.log("Checking for stale session...");
@@ -55,6 +67,12 @@ export const AuthProvider = ({ children }) => {
 
         if (inactiveTime > INACTIVITY_TIMEOUT) {
           supabase.auth.signOut();
+          setTimeout(() => {
+            const now = Date.now();
+            const readableTime = new Date(now).toLocaleString();
+
+            alert(`Logged out due to inactivity at ${readableTime}`);
+          }, 10);
         }
       }
     };
@@ -67,10 +85,7 @@ export const AuthProvider = ({ children }) => {
     clearTimeout(inactivityTimeoutRef.current);
     if (userRef.current) {
       inactivityTimeoutRef.current = setTimeout(() => {
-        const now = Date.now();
-        const readableTime = new Date(now).toLocaleString();
-        console.warn("Logged out due to inactivity", readableTime);
-        logout();
+        logout(true);
       }, INACTIVITY_TIMEOUT);
     }
   }, []);

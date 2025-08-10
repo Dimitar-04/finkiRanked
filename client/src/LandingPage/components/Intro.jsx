@@ -1,5 +1,5 @@
-import React from 'react';
-import logoIcon from '../../assets/images/logoIcon.png';
+import React from "react";
+import logoIcon from "../../assets/images/logoIcon.png";
 
 const Intro = () => {
   return (
@@ -7,7 +7,7 @@ const Intro = () => {
       <div className="hero-content flex-col lg:flex-row-reverse gap-6 lg:gap-8 px-4 sm:px-6 lg:px-8 max-w-6xl">
         <img
           src={logoIcon}
-          className="w-40 sm:w-48 md:w-56 lg:w-64 xl:max-w-sm rounded-lg shadow-lg"
+          className="w-40 sm:w-48 md:w-56 lg:w-64 xl:max-w-sm rounded-lg "
           alt="FINKI Ranked Logo"
         />
         <div className="text-center lg:text-left">

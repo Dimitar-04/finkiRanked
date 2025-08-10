@@ -15,6 +15,7 @@ const {
   sendCommentedNotificationEmail,
 } = require("../services/emailService");
 const createForumPost = async (req, res) => {
+  console.log(req.user);
   const { title, content, authorId, authorName, topic, challengeId } = req.body;
   if (!title || !content || !authorId || !authorName || !topic) {
     return res.status(400).json({

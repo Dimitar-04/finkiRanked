@@ -1,7 +1,7 @@
-import React from 'react';
-import lista from '../../assets/images/listaNoBg.png';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import React from "react";
+import lista from "../../assets/images/listaNoBg.png";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const VisionSection = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const VisionSection = () => {
           <button
             className="btn btn-sm sm:btn-md lg:btn-lg w-full sm:w-48 lg:w-60 bg-black text-white hover:bg-gray-800 mx-auto lg:mx-0"
             onClick={() => {
-              user ? navigate('/dashboard') : navigate('/register');
+              user ? navigate("/dashboard") : navigate("/register");
             }}
           >
             Join now
@@ -35,6 +35,7 @@ const VisionSection = () => {
           src={lista}
           className="w-40 sm:w-48 md:w-56 lg:w-72 h-auto max-w-full"
           alt="Leaderboard illustration"
+          loading="lay"
         />
       </div>
     </div>
