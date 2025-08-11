@@ -16,45 +16,43 @@ class User {
     const errors = {};
 
     if (!this.username) {
-      errors.username = "Username is required";
+      errors.username = 'Username is required';
     }
     if (!this.name) {
-      errors.name = "Name is required";
+      errors.name = 'Name is required';
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const multipleAtOrDotComRegex = /@.*@|(\.com).*\.com/;
 
     if (!this.email) {
-      errors.email = "Email is required";
-    } else if (!this.email.endsWith("@students.finki.ukim.mk")) {
-      errors.email = "Email must be a valid FINKI student email";
+      errors.email = 'Email is required';
+    } else if (!this.email.endsWith('@students.finki.ukim.mk')) {
+      errors.email = 'Email must be a valid FINKI student email';
     } else if (!emailRegex.test(this.email)) {
-      errors.email = "Email format is invalid";
+      errors.email = 'Email format is invalid';
     } else if (multipleAtOrDotComRegex.test(this.email)) {
       errors.email = "Email cannot contain multiple '@' or '.com'";
     }
 
     // Password validations
     if (!password) {
-      errors.password = "Password is required";
+      errors.password = 'Password is required';
     } else {
-      if (password.length < 8) {
-        errors.passwordLength = "Password must be at least 8 characters long";
-      }
-      if (!/[A-Z]/.test(password)) {
-        errors.passwordUppercase =
-          "Password must contain at least one uppercase letter";
-      }
-      if (!/[0-9]/.test(password)) {
-        errors.passwordNumber = "Password must contain at least one number";
+      if (
+        password.length < 8 ||
+        !/[A-Z]/.test(password) ||
+        !/[0-9]/.test(password)
+      ) {
+        errors.passwordLength =
+          'Password must be at least 8 characters long, contain one uppercase letter and one number';
       }
     }
 
     if (!confirmPassword) {
-      errors.confirmPassword = "Please confirm your password";
+      errors.confirmPassword = 'Please confirm your password';
     } else if (password && password !== confirmPassword) {
-      errors.passwordMatch = "Passwords do not match";
+      errors.passwordMatch = 'Passwords do not match';
     }
 
     return Object.keys(errors).length > 0 ? errors : null;
