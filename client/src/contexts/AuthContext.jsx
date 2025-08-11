@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       clearTimeout(tokenExpiryTimeoutRef.current);
 
       await supabase.auth.signOut();
+      localStorage.clear();
       if (inactivity) {
         setTimeout(() => {
           const now = Date.now();
