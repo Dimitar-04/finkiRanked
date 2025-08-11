@@ -1,14 +1,14 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { supabase } from '../contexts/AuthContext';
-import { signInWithGoogle } from '@/services/registerLoginService';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { supabase } from "../contexts/AuthContext";
+import { signInWithGoogle } from "@/services/registerLoginService";
+import { useAuth } from "../contexts/AuthContext";
 
 const Register = () => {
   const { register } = useAuth();
   const [formErrors, setFormErrors] = useState({});
-  const [generalError, setGeneralError] = useState('');
+  const [generalError, setGeneralError] = useState("");
   const [googleLoading, setGoogleLoading] = useState(false);
   const nav = useNavigate();
   const [showPassword, setShowPassword] = useState({
@@ -25,14 +25,14 @@ const Register = () => {
   };
 
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    name: "",
   });
   function validateLocalEmailFormat(email) {
-    return email.includes('@') && email.includes('.');
+    return email.includes("@") && email.includes(".");
   }
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,18 +43,18 @@ const Register = () => {
     if (formErrors[name]) {
       setFormErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-    setGeneralError('');
+    setGeneralError("");
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setGeneralError('');
+    setGeneralError("");
     setFormErrors({});
 
     if (!validateLocalEmailFormat(formData.email)) {
       setFormErrors((prev) => ({
         ...prev,
-        email: 'Please enter a valid email format.',
+        email: "Please enter a valid email format.",
       }));
       setLoading(false);
       return;
@@ -62,7 +62,7 @@ const Register = () => {
     if (formData.password !== formData.confirmPassword) {
       setFormErrors((prev) => ({
         ...prev,
-        passwordMatch: 'Passwords do not match',
+        passwordMatch: "Passwords do not match",
       }));
       setLoading(false);
       return;
@@ -74,7 +74,7 @@ const Register = () => {
       !formData.name ||
       !formData.confirmPassword
     ) {
-      setGeneralError('Please fill in all required fields.');
+      setGeneralError("Please fill in all required fields.");
       setLoading(false);
       return;
     }
@@ -91,18 +91,18 @@ const Register = () => {
       const result = await register(userData);
 
       if (result.success) {
-        nav('/dashboard');
+        nav("/dashboard");
       } else {
         if (result.errors) {
           setFormErrors(result.errors);
         }
         setGeneralError(
-          result.error || 'Registration failed. Please try again.'
+          result.error || "Registration failed. Please try again."
         );
       }
     } catch (error) {
-      console.error('Unexpected error in Register handleSubmit:', error);
-      setGeneralError('A client-side error occurred. Please try again.');
+      console.error("Unexpected error in Register handleSubmit:", error);
+      setGeneralError("A client-side error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -120,10 +120,10 @@ const Register = () => {
         className="flex flex-col items-center justify-center h-screen  overflow-y-hidden  p-2 md:p-4 "
       >
         <div className="w-full max-w-xs md:max-w-sm my-auto">
-          <h1 className="text-xl 2xl:text-3xl font-bold mb-2 mt-2 text-center">
+          <h1 className="text-xl 2xl:text-3xl font-bold mb-2 mt-2 2xl:mb-5 text-center">
             Create an account
           </h1>
-          <div className="fieldset bg-base-200 border-base-300 rounded-box w-full border p-3 md:p-4 space-y-1.5 md:space-y-2">
+          <div className="fieldset bg-base-200 border-base-300 rounded-box w-full border p-3 md:p-4 space-y-1.5 md:space-y-2 2xl:space-y-4">
             <div>
               <label className="label text-sm py-0.5" htmlFor="name">
                 Name
@@ -196,7 +196,7 @@ const Register = () => {
                 <input
                   id="password"
                   name="password"
-                  type={showPassword.password ? 'text' : 'password'}
+                  type={showPassword.password ? "text" : "password"}
                   className="input input-sm w-full pr-8 2xl:input-lg"
                   placeholder="Password"
                   value={formData.password}
@@ -206,7 +206,7 @@ const Register = () => {
                 <button
                   type="button"
                   className="absolute top-0 right-0 h-full px-2 flex items-center z-10"
-                  onClick={() => togglePasswordVisibility('password')}
+                  onClick={() => togglePasswordVisibility("password")}
                   tabIndex="-1"
                   disabled={loading || googleLoading}
                 >
@@ -285,7 +285,7 @@ const Register = () => {
               <div className="relative w-full">
                 <input
                   id="confirmPassword"
-                  type={showPassword.confirmPassword ? 'text' : 'password'}
+                  type={showPassword.confirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
@@ -296,7 +296,7 @@ const Register = () => {
                 <button
                   type="button"
                   className="absolute top-0 right-0 h-full px-2 flex items-center z-10"
-                  onClick={() => togglePasswordVisibility('confirmPassword')}
+                  onClick={() => togglePasswordVisibility("confirmPassword")}
                   tabIndex="-1"
                   disabled={loading || googleLoading}
                 >
@@ -361,8 +361,8 @@ const Register = () => {
                 !formData.email ||
                 !formData.password ||
                 !formData.confirmPassword
-                  ? 'Please fill in all fields'
-                  : ''
+                  ? "Please fill in all fields"
+                  : ""
               }
             >
               <button
@@ -432,7 +432,7 @@ const Register = () => {
 
           <a
             href="/login"
-            className="underline mt-1 mb-3 text-sm text-center block"
+            className="underline mt-1 mb-3 2xl:mt-3 text-sm text-center block"
           >
             Already have an account?
           </a>

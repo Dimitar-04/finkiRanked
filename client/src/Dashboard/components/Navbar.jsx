@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import logoIcon from '../../assets/images/logoIcon.png';
-import logoText from '../../assets/images/logoText.png';
-import pp from '../../assets/images/pp.svg';
-import RankBadgeNav from '@/utils/RankBadgeForNavbar';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import logoIcon from "../../assets/images/logoIcon.png";
+import logoText from "../../assets/images/logoText.png";
+import pp from "../../assets/images/pp.svg";
+import RankBadgeNav from "@/utils/RankBadgeForNavbar";
+import { useAuth } from "@/contexts/AuthContext";
 const useIsDesktop = () => {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
@@ -13,8 +13,8 @@ const useIsDesktop = () => {
       setIsDesktop(window.innerWidth >= 1024);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return isDesktop;
@@ -26,54 +26,54 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isDesktop = useIsDesktop();
   const isActive = (path) => {
-    if (path === '/dashboard' && location.pathname === '/dashboard') {
+    if (path === "/dashboard" && location.pathname === "/dashboard") {
       return true;
     }
     if (
-      path === '/dashboard/forum' &&
-      (location.pathname === '/dashboard/forum' ||
-        location.pathname === '/dashboard/forum/create-post' ||
-        location.pathname === '/dashboard/create-post' ||
-        (location.pathname === '/dashboard/user-posts' && isDesktop) ||
-        location.pathname.startsWith('/dashboard/forum-detail/'))
+      path === "/dashboard/forum" &&
+      (location.pathname === "/dashboard/forum" ||
+        location.pathname === "/dashboard/forum/create-post" ||
+        location.pathname === "/dashboard/create-post" ||
+        (location.pathname === "/dashboard/user-posts" && isDesktop) ||
+        location.pathname.startsWith("/dashboard/forum-detail/"))
     ) {
       return true;
     }
     if (
-      path == '/dashboard/user-posts' &&
-      location.pathname === '/dashboard/user-posts'
-    ) {
-      return true;
-    }
-
-    if (
-      path === '/dashboard/manage-posts' &&
-      location.pathname === '/dashboard/manage-posts'
-    ) {
-      return true;
-    }
-    if (
-      path === '/dashboard/leaderboard' &&
-      location.pathname === '/dashboard/leaderboard'
+      path == "/dashboard/user-posts" &&
+      location.pathname === "/dashboard/user-posts"
     ) {
       return true;
     }
 
     if (
-      path === '/dashboard/profile' &&
-      location.pathname === '/dashboard/profile'
+      path === "/dashboard/manage-posts" &&
+      location.pathname === "/dashboard/manage-posts"
+    ) {
+      return true;
+    }
+    if (
+      path === "/dashboard/leaderboard" &&
+      location.pathname === "/dashboard/leaderboard"
     ) {
       return true;
     }
 
     if (
-      path === '/dashboard/manage-challenges' &&
-      (location.pathname === '/dashboard/manage-challenges' ||
-        location.pathname === '/dashboard/create-new-challenge')
+      path === "/dashboard/profile" &&
+      location.pathname === "/dashboard/profile"
     ) {
       return true;
     }
-    if (path !== '/dashboard' && location.pathname.startsWith(path + '/')) {
+
+    if (
+      path === "/dashboard/manage-challenges" &&
+      (location.pathname === "/dashboard/manage-challenges" ||
+        location.pathname === "/dashboard/create-new-challenge")
+    ) {
+      return true;
+    }
+    if (path !== "/dashboard" && location.pathname.startsWith(path + "/")) {
       return true;
     }
     return false;
@@ -81,12 +81,10 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Desktop Sidebar - hidden on tablet and below */}
-      {/* Desktop Sidebar - responsive width based on screen size */}
       <nav className="dashboard__navbar hidden lg:flex min-h-screen bg-base-200 text-base-content border-r border-base-content/10 flex-col flex-shrink-0 w-64 xl:w-72 2xl:w-80">
         <div className="p-3 xl:p-4 border-b border-base-content/10">
           <p
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 cursor-pointer"
           >
             <img
@@ -103,15 +101,15 @@ export default function Navbar() {
         </div>
 
         <div className="flex-1 py-6 xl:py-8">
-          <ul className="menu menu-sm xl:menu-md gap-1 xl:gap-2">
+          <ul className="menu menu-sm xl:menu-md 2xl:menu-lg gap-1 xl:gap-2 2xl:gap-4">
             <li>
               <button
-                className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
-                  isActive('/dashboard')
-                    ? 'bg-[#FFB800] text-black'
-                    : 'hover:bg-[#FFB800] hover:text-black'
+                className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base 2xl:p-3 ${
+                  isActive("/dashboard")
+                    ? "bg-[#FFB800] text-black"
+                    : "hover:bg-[#FFB800] hover:text-black"
                 }`}
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -128,12 +126,12 @@ export default function Navbar() {
             </li>
             <li>
               <button
-                className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
-                  isActive('/dashboard/leaderboard')
-                    ? 'bg-[#FFB800] text-black'
-                    : 'hover:bg-[#FFB800] hover:text-black'
+                className={`flex items-center gap-3 xl:gap-4 px-3 2xl:p-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
+                  isActive("/dashboard/leaderboard")
+                    ? "bg-[#FFB800] text-black"
+                    : "hover:bg-[#FFB800] hover:text-black"
                 }`}
-                onClick={() => navigate('/dashboard/leaderboard')}
+                onClick={() => navigate("/dashboard/leaderboard")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -150,12 +148,12 @@ export default function Navbar() {
             </li>
             <li>
               <button
-                className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
-                  isActive('/dashboard/forum')
-                    ? 'bg-[#FFB800] text-black'
-                    : 'hover:bg-[#FFB800] hover:text-black'
+                className={`flex items-center gap-3 xl:gap-4 2xl:p-3 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
+                  isActive("/dashboard/forum")
+                    ? "bg-[#FFB800] text-black"
+                    : "hover:bg-[#FFB800] hover:text-black"
                 }`}
-                onClick={() => navigate('/dashboard/forum')}
+                onClick={() => navigate("/dashboard/forum")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -179,12 +177,12 @@ export default function Navbar() {
                 <hr className="my-2 xl:my-3" />
                 <li>
                   <button
-                    className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
-                      isActive('/dashboard/manage-posts')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                    className={`flex items-center gap-3 xl:gap-4 2xl:p-3 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
+                      isActive("/dashboard/manage-posts")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
-                    onClick={() => navigate('/dashboard/manage-posts')}
+                    onClick={() => navigate("/dashboard/manage-posts")}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -212,12 +210,12 @@ export default function Navbar() {
                 </li>
                 <li>
                   <button
-                    className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
-                      isActive('/dashboard/manage-challenges')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                    className={`flex items-center gap-3 xl:gap-4 px-3 2xl:p-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors text-sm xl:text-base ${
+                      isActive("/dashboard/manage-challenges")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
-                    onClick={() => navigate('/dashboard/manage-challenges')}
+                    onClick={() => navigate("/dashboard/manage-challenges")}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -250,23 +248,23 @@ export default function Navbar() {
 
         <div className="p-3 xl:p-4 border-t border-base-content/10">
           <button
-            className={`w-full flex items-center gap-2 xl:gap-3 px-3 xl:px-4 py-2 xl:py-3 rounded-lg transition-colors ${
-              isActive('/dashboard/profile')
-                ? 'bg-[#FFB800] text-black'
-                : 'hover:bg-[#FFB800] hover:text-black'
+            className={`w-full flex items-center gap-2 xl:gap-3 px-3 xl:px-4 2xl:p-3 py-2 xl:py-3 rounded-lg transition-colors ${
+              isActive("/dashboard/profile")
+                ? "bg-[#FFB800] text-black"
+                : "hover:bg-[#FFB800] hover:text-black"
             }`}
-            onClick={() => navigate('/dashboard/profile')}
+            onClick={() => navigate("/dashboard/profile")}
           >
             <img
               src={pp}
               alt="Profile"
               className={`w-8 xl:w-10 h-8 xl:h-10 rounded-full border-2 flex-shrink-0
     ${
-      isActive('/dashboard/profile') ? 'border-black' : 'border-base-content/10'
+      isActive("/dashboard/profile") ? "border-black" : "border-base-content/10"
     }`}
               style={
-                isActive('/dashboard/profile')
-                  ? { filter: 'brightness(0) invert(0)' }
+                isActive("/dashboard/profile")
+                  ? { filter: "brightness(0) invert(0)" }
                   : {}
               }
             />
@@ -287,7 +285,7 @@ export default function Navbar() {
         {/* ...existing mobile menu code... */}
         <div className="flex items-center justify-between p-4">
           <div
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 cursor-pointer"
           >
             <img src={logoIcon} alt="Logo" className="w-10 h-auto" />
@@ -332,12 +330,12 @@ export default function Navbar() {
                 <li>
                   <button
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors text-left ${
-                      isActive('/dashboard')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                      isActive("/dashboard")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
                     onClick={() => {
-                      navigate('/dashboard');
+                      navigate("/dashboard");
                       setIsMobileMenuOpen(false);
                     }}
                   >
@@ -357,12 +355,12 @@ export default function Navbar() {
                 <li>
                   <button
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors text-left ${
-                      isActive('/dashboard/leaderboard')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                      isActive("/dashboard/leaderboard")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
                     onClick={() => {
-                      navigate('/dashboard/leaderboard');
+                      navigate("/dashboard/leaderboard");
                       setIsMobileMenuOpen(false);
                     }}
                   >
@@ -382,12 +380,12 @@ export default function Navbar() {
                 <li>
                   <button
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors text-left ${
-                      isActive('/dashboard/forum')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                      isActive("/dashboard/forum")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
                     onClick={() => {
-                      navigate('/dashboard/forum');
+                      navigate("/dashboard/forum");
                       setIsMobileMenuOpen(false);
                     }}
                   >
@@ -410,12 +408,12 @@ export default function Navbar() {
                 <li>
                   <button
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors text-left ${
-                      isActive('/dashboard/user-posts')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                      isActive("/dashboard/user-posts")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
                     onClick={() => {
-                      navigate('/dashboard/user-posts');
+                      navigate("/dashboard/user-posts");
                       setIsMobileMenuOpen(false);
                     }}
                   >
@@ -442,12 +440,12 @@ export default function Navbar() {
                     <li>
                       <button
                         className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors text-left ${
-                          isActive('/dashboard/manage-posts')
-                            ? 'bg-[#FFB800] text-black'
-                            : 'hover:bg-[#FFB800] hover:text-black'
+                          isActive("/dashboard/manage-posts")
+                            ? "bg-[#FFB800] text-black"
+                            : "hover:bg-[#FFB800] hover:text-black"
                         }`}
                         onClick={() => {
-                          navigate('/dashboard/manage-posts');
+                          navigate("/dashboard/manage-posts");
                           setIsMobileMenuOpen(false);
                         }}
                       >
@@ -478,12 +476,12 @@ export default function Navbar() {
                     <li>
                       <button
                         className={`w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-colors text-left ${
-                          isActive('/dashboard/manage-challenges')
-                            ? 'bg-[#FFB800] text-black'
-                            : 'hover:bg-[#FFB800] hover:text-black'
+                          isActive("/dashboard/manage-challenges")
+                            ? "bg-[#FFB800] text-black"
+                            : "hover:bg-[#FFB800] hover:text-black"
                         }`}
                         onClick={() => {
-                          navigate('/dashboard/manage-challenges');
+                          navigate("/dashboard/manage-challenges");
                           setIsMobileMenuOpen(false);
                         }}
                       >
@@ -519,12 +517,12 @@ export default function Navbar() {
                 <li>
                   <button
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left ${
-                      isActive('/dashboard/profile')
-                        ? 'bg-[#FFB800] text-black'
-                        : 'hover:bg-[#FFB800] hover:text-black'
+                      isActive("/dashboard/profile")
+                        ? "bg-[#FFB800] text-black"
+                        : "hover:bg-[#FFB800] hover:text-black"
                     }`}
                     onClick={() => {
-                      navigate('/dashboard/profile');
+                      navigate("/dashboard/profile");
                       setIsMobileMenuOpen(false);
                     }}
                   >
