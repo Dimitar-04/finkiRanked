@@ -1,30 +1,23 @@
 import apiClient from './apiClient';
 
 export const getForumPosts = async (page, limit, filters = null) => {
-  // Force clean parameters
   page = Number(page) || 0;
   limit = Number(limit) || 20;
 
-  // Add timestamp to prevent caching
   const timestamp = new Date().getTime();
   let url = `/forum/posts?page=${page}&limit=${limit}&_t=${timestamp}`;
 
-  // Add filters to the URL if they exist
   if (filters) {
-    // Add topic filter - make sure it's really topic=daily-challenge, not topic=daily%2Dchallenge
     if (filters.topic && filters.topic !== 'all') {
       url += `&topic=${filters.topic}`;
     }
 
-    // Add sort filter - always include date sort preference
     if (filters.dateSort) {
       url += `&sort=${filters.dateSort}`;
     }
 
-    // Add specific date filter
     if (filters.selectedDate) {
       try {
-        // Ensure we have a proper Date object
         const dateObj =
           filters.selectedDate instanceof Date
             ? filters.selectedDate
@@ -32,8 +25,6 @@ export const getForumPosts = async (page, limit, filters = null) => {
 
         if (!isNaN(dateObj.getTime())) {
           url += `&date=${dateObj}`;
-
-          // Log combined filter details when using specific date with other filters
         } else {
           console.error('Invalid date object:', filters.selectedDate);
         }
@@ -42,12 +33,10 @@ export const getForumPosts = async (page, limit, filters = null) => {
       }
     }
 
-    // Add comment sort filter
     if (filters.commentSort && filters.commentSort !== 'none') {
       url += `&commentSort=${filters.commentSort}`;
     }
 
-    // Add text search filter
     if (filters.searchText && filters.searchText.trim()) {
       const searchTerm = encodeURIComponent(filters.searchText.trim());
 
@@ -56,7 +45,6 @@ export const getForumPosts = async (page, limit, filters = null) => {
   }
 
   try {
-    // Use apiClient to ensure authentication works properly
     const apiResponse = await apiClient.get(url);
 
     return apiResponse;

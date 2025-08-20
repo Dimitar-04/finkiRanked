@@ -96,7 +96,6 @@ async function checkForNewReviews() {
   }
 }
 
-// Schedule the job to run at the start of every hour ('0 * * * *')
 const job = schedule.scheduleJob('0 * * * *', function () {
   console.log(
     `[${new Date().toISOString()}] Running scheduled hourly review check`

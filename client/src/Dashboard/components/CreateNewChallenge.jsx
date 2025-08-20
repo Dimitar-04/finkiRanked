@@ -77,14 +77,14 @@ const CreateNewChallenge = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // if (testCases.length < 10) {
-      //   showModal(
-      //     "Please add at least 10 test cases for your challenge.",
-      //     "error"
-      //   );
-      //   setLoading(false);
-      //   return;
-      // }
+      if (testCases.length < 10) {
+        showModal(
+          'Please add at least 10 test cases for your challenge.',
+          'error'
+        );
+        setLoading(false);
+        return;
+      }
       const hasEmptyTestCase = testCases.some(
         (tc) => !tc.input.trim() || !tc.output.trim()
       );

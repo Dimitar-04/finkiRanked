@@ -102,7 +102,6 @@ const CreatePost = () => {
       };
       const res = await createForumPost(postData);
       if (res.reason === 'USER_FLAGGED') {
-        console.log(res.message);
         setPendingModerator(true);
         showModal(res.message, 'moderatorPrompt');
       } else if (res.message.includes('moderator approval')) {

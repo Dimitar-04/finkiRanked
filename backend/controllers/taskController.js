@@ -1,7 +1,7 @@
 const { get } = require('http');
 const prisma = require('../lib/prisma');
 const verifyModeratorStatus = require('../services/checkModeratorStatus');
-const Challenge = require('../models/challenge');
+const Challenge = require('../models/Challenge');
 
 //Helper functions
 const safeSerialize = (data) => {
