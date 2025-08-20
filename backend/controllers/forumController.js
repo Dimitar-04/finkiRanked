@@ -376,7 +376,6 @@ const getAllPostsByUser = async (req, res) => {
       }),
     ]);
 
-    // Map posts to include challengeTitle
     const processedPosts = posts.map((post) => ({
       ...post,
       challengeTitle: post.challenges?.title || null,

@@ -145,7 +145,6 @@ const ManageChallenges = () => {
     <div>
       <div className="sticky top-0 z-20 bg-base-100 ">
         <div className="flex flex-col">
-          {/* Add New Challenge Button */}
           <div className="hidden sm:w-full sm:flex sm:justify-end sm:pt-3 sm:pr-3 ">
             <button
               className="btn btn-outline btn-sm border-amber-400 gap-2"
@@ -172,11 +171,10 @@ const ManageChallenges = () => {
           </div>
           <div className="border-b border-base-300 shadow-sm">
             <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
-              {/* Mobile Filter Toggle */}
+              {/* Mobile  */}
               <div className="flex items-center justify-between mb-3 lg:hidden">
                 <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                   Filters
-                  {/* Active filter count indicator */}
                   {(filters.dateSort !== 'newest' ||
                     filters.selectedDate ||
                     (filters.searchText && filters.searchText.trim())) && (
@@ -213,15 +211,12 @@ const ManageChallenges = () => {
                 </button>
               </div>
 
-              {/* Filter Controls */}
               <div
                 className={`transition-all duration-300 ${
                   showFilters ? 'block opacity-100' : 'hidden opacity-0'
                 } lg:block lg:opacity-100`}
               >
-                {/* Filter Layout */}
                 <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
-                  {/* Search Filter - Wider */}
                   <div className="flex flex-col gap-1 lg:col-span-2">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       Search Challenges
@@ -260,7 +255,6 @@ const ManageChallenges = () => {
                     </div>
                   </div>
 
-                  {/* Date Sort - Wider */}
                   <div className="flex flex-col gap-1 lg:col-span-2 xl:col-span-2">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       Date Order
@@ -280,7 +274,6 @@ const ManageChallenges = () => {
                     </select>
                   </div>
 
-                  {/* Specific Date Filter - Wider */}
                   <div className="relative flex flex-col gap-1 lg:col-span-2 xl:col-span-2">
                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                       Specific Date
@@ -362,7 +355,6 @@ const ManageChallenges = () => {
                   </div>
                 </div>
 
-                {/* Active Filters Display */}
                 <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {filters.searchText && filters.searchText.trim() && (
                     <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1 max-w-[200px]">
@@ -425,7 +417,6 @@ const ManageChallenges = () => {
         </div>
       </div>
 
-      {/* Main content area */}
       <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -547,7 +538,6 @@ const ManageChallenges = () => {
         )}
         {!loading && totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-8">
-            {/* Previous Arrow */}
             <button
               className="btn btn-sm btn-ghost"
               onClick={() => setCurrentPage(currentPage - 1)}
@@ -557,7 +547,6 @@ const ManageChallenges = () => {
               ←
             </button>
 
-            {/* First 3 page numbers */}
             {Array.from({ length: Math.min(3, totalPages) }, (_, idx) => (
               <button
                 key={idx}
@@ -571,10 +560,8 @@ const ManageChallenges = () => {
               </button>
             ))}
 
-            {/* Dots if more than 4 pages */}
             {totalPages > 4 && <span className="px-2 text-gray-500">...</span>}
 
-            {/* Show current page if it's not in the first 3 or last */}
             {currentPage > 2 && currentPage < totalPages - 1 && (
               <button
                 className="btn btn-sm border-amber-400"
@@ -585,7 +572,6 @@ const ManageChallenges = () => {
               </button>
             )}
 
-            {/* Last page button if more than 3 pages */}
             {totalPages > 3 && (
               <button
                 className={`btn btn-sm ${
@@ -600,7 +586,6 @@ const ManageChallenges = () => {
               </button>
             )}
 
-            {/* Next Arrow */}
             <button
               className="btn btn-sm btn-ghost"
               onClick={() => setCurrentPage(currentPage + 1)}
@@ -613,7 +598,6 @@ const ManageChallenges = () => {
         )}
       </div>
 
-      {/* Modal*/}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"

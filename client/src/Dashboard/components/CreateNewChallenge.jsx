@@ -190,7 +190,6 @@ const CreateNewChallenge = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Information */}
         <div className="card bg-base-200 shadow-md p-6">
           <h2 className="text-xl font-semibold mb-10 text-amber-400">
             Basic Information
@@ -331,7 +330,7 @@ const CreateNewChallenge = () => {
           </button>
         </div>
 
-        {/* Test Cases - Carousel Style */}
+        {/* Test Cases */}
         <div className="card bg-base-200 shadow-md p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-amber-400">Test Cases</h2>
@@ -340,7 +339,6 @@ const CreateNewChallenge = () => {
             </div>
           </div>
 
-          {/* Test Case Carousel */}
           <div className="relative">
             {testCases.length > 0 && (
               <div className="mb-8">
@@ -384,7 +382,6 @@ const CreateNewChallenge = () => {
               </div>
             )}
 
-            {/* Navigation buttons */}
             {testCases.length > 1 && (
               <div className="flex justify-between mt-4 mb-2 font-bold">
                 <button
@@ -407,7 +404,6 @@ const CreateNewChallenge = () => {
             )}
           </div>
 
-          {/* Carousel indicators */}
           {testCases.length > 1 && (
             <div className="flex justify-center gap-2 mt-4 mb-6">
               {testCases.map((_, index) => (

@@ -31,7 +31,6 @@ const ManagePosts = () => {
   });
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  // Filter states
   const defaultFilters = {
     topic: 'all',
     dateSort: 'oldest',
@@ -230,19 +229,15 @@ const ManagePosts = () => {
       className="dashboard min-h-screen flex bg-base-100"
     >
       <div className="flex flex-col w-full  ">
-        {/* Filter System */}
         <div className="sticky top-0 z-20 bg-base-100">
           <div className="flex flex-col">
-            {/* Sticky Header Section */}
-
-            {/* Filter Navbar */}
+            {/* Filters */}
             <div className="border-b border-base-300 shadow-sm">
               <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
-                {/* Mobile Filter Toggle */}
+                {/* Mobile  */}
                 <div className="flex items-center justify-between mb-3 lg:hidden ">
                   <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     Filters
-                    {/* Active filter count indicator */}
                     {(filters.topic !== 'all' ||
                       filters.dateSort !== 'newest' ||
                       filters.selectedDate ||
@@ -288,9 +283,7 @@ const ManagePosts = () => {
                     showFilters ? 'block opacity-100' : 'hidden opacity-0'
                   } lg:block lg:opacity-100`}
                 >
-                  {/* Mobile-First Filter Layout - Compact Version */}
                   <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
-                    {/* Search Filter - Full width on mobile, 2 cols on desktop */}
                     <div className="flex flex-col gap-1 lg:col-span-2">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                         Search Posts
@@ -329,9 +322,7 @@ const ManagePosts = () => {
                       </div>
                     </div>
 
-                    {/* Mobile: 2-column grid for selects */}
                     <div className="grid grid-cols-2 gap-2 lg:contents">
-                      {/* Topic Filter */}
                       <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Topic
@@ -351,7 +342,6 @@ const ManagePosts = () => {
                         </select>
                       </div>
 
-                      {/* Date Sort */}
                       <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Date Order
@@ -372,9 +362,7 @@ const ManagePosts = () => {
                       </div>
                     </div>
 
-                    {/* Mobile: Single column for date picker and popularity */}
                     <div className="space-y-2 lg:space-y-0 lg:contents">
-                      {/* Specific Date Filter */}
                       <div className="relative flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Specific Date
@@ -383,8 +371,8 @@ const ManagePosts = () => {
                         <div className="relative">
                           <input
                             type="text"
-                            readOnly // Makes the input non-editable by typing
-                            onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
+                            readOnly
+                            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
                             value={
                               filters.selectedDate
                                 ? new Date(
@@ -394,15 +382,13 @@ const ManagePosts = () => {
                                     month: 'short',
                                     day: 'numeric',
                                   })
-                                : '' // Use empty string so placeholder is visible
+                                : ''
                             }
                             placeholder="Select date"
-                            // Style to match other inputs and add cursor-pointer
                             className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
                           />
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            // Position the icon inside the input field
                             className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -416,7 +402,6 @@ const ManagePosts = () => {
                             />
                           </svg>
                         </div>
-                        {/* Render the popover here */}
                         <CalendarPopover
                           isOpen={isCalendarOpen}
                           onClose={() => setIsCalendarOpen(false)}
@@ -429,7 +414,6 @@ const ManagePosts = () => {
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex flex-col gap-1 lg:col-span-1">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                         Actions
@@ -463,7 +447,6 @@ const ManagePosts = () => {
                     </div>
                   </div>
 
-                  {/* Active Filters Display - Improved Mobile Layout */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {filters.topic !== 'all' && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
@@ -631,7 +614,6 @@ const ManagePosts = () => {
                   </button>
                 </div>
 
-                {/* Topic Badge */}
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                   <span
                     className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${
@@ -749,7 +731,7 @@ const ManagePosts = () => {
         )}
       </div>
 
-      {/* Modal element */}
+      {/* Modal  */}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-xs p-4"

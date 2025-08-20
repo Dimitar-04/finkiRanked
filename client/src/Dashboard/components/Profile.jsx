@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import pp from "../../assets/images/pp.svg";
-import Navbar from "./Navbar";
-import RankBadgeNav from "@/utils/RankBadgeForNavbar";
-import { useAuth } from "../../contexts/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import pp from '../../assets/images/pp.svg';
+import Navbar from './Navbar';
+import RankBadgeNav from '@/utils/RankBadgeForNavbar';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [modal, setModal] = useState({ isOpen: false, message: "", type: "" });
+  const [modal, setModal] = useState({ isOpen: false, message: '', type: '' });
 
   const handleSignOut = () =>
     setModal({
       isOpen: true,
-      message: "Are you sure you want to log out?",
-      type: "confirmLogout",
+      message: 'Are you sure you want to log out?',
+      type: 'confirmLogout',
     });
 
-  const closeModal = () => setModal({ isOpen: false, message: "", type: "" });
+  const closeModal = () => setModal({ isOpen: false, message: '', type: '' });
 
   const confirmLogout = () => {
     closeModal();
-    navigate("/logout");
+    navigate('/logout');
   };
 
   return (
@@ -43,7 +43,6 @@ const Profile = () => {
               </div>
             ) : (
               <>
-                {/* Header */}
                 <div className="flex flex-col items-center text-center mb-6">
                   <div className="avatar mb-3">
                     <div className="w-20 md:w-24 2xl:w-34 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-base-100 shadow-lg">
@@ -58,7 +57,6 @@ const Profile = () => {
                   </p>
                 </div>
 
-                {/* Rank */}
                 <div className="flex justify-center mb-6">
                   <div className="bg-gradient-to-r from-tertiary/10 to-tertiary/5 p-3 rounded-lg border border-tertiary/20 flex flex-col items-center min-w-[120px]">
                     <RankBadgeNav rankName={user.rank} size="md" />
@@ -68,7 +66,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Stats */}
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <div className="bg-gradient-to-r from-secondary/10 to-secondary/5 p-3 rounded-lg border border-secondary/20 text-center">
                     <span className="text-lg font-bold text-secondary block">
@@ -86,7 +83,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Sign Out */}
                 <div className="flex justify-center">
                   <button
                     onClick={handleSignOut}

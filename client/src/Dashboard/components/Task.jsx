@@ -288,14 +288,12 @@ const Task = () => {
             <div className="w-full max-w-5xl mx-auto px-2 sm:px-4 lg:px-6">
               <div className="card bg-base-200 shadow-xl">
                 <div className="card-body p-2 sm:p-4 lg:p-6">
-                  {/* Header Section */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3 sm:mb-4 lg:mb-6">
                     <h1 className="card-title text-lg sm:text-xl lg:text-2xl text-left flex-1 break-words">
                       Challenge for {today}
                     </h1>
                   </div>
 
-                  {/* Already Completed Alert */}
                   {user.solvedDailyChallenge && (
                     <div className="alert alert-info mb-2 sm:mb-3 text-sm sm:text-base">
                       <svg
@@ -320,7 +318,6 @@ const Task = () => {
 
                   {task ? (
                     <>
-                      {/* Problem Section */}
                       <div className="card bg-base-300 mb-2 sm:mb-3 lg:mb-4">
                         <div className="card-body p-2 sm:p-3 lg:p-4">
                           <h2 className="card-title text-base sm:text-lg lg:text-xl mb-1 sm:mb-2 underline break-words">
@@ -332,9 +329,7 @@ const Task = () => {
                         </div>
                       </div>
 
-                      {/* Input and Examples Section */}
                       <div className="space-y-2 sm:space-y-3 lg:space-y-4 mb-3 sm:mb-4 lg:mb-6">
-                        {/* Your Input Card */}
                         <div className="card bg-primary/5">
                           <div className="card-body p-2 sm:p-3 lg:p-4">
                             <h3 className="card-title text-sm sm:text-base lg:text-lg underline mb-1 sm:mb-2">
@@ -356,7 +351,6 @@ const Task = () => {
                           </div>
                         </div>
 
-                        {/* Examples Card */}
                         <div className="card bg-base-300">
                           <div className="card-body p-2 sm:p-3 lg:p-4">
                             <h3 className="card-title text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">
@@ -395,7 +389,6 @@ const Task = () => {
                     </div>
                   )}
 
-                  {/* Submit Solution Section */}
                   <div className="card bg-base-300">
                     <div className="card-body p-2 sm:p-3 lg:p-4">
                       <h3 className="card-title text-sm sm:text-base lg:text-lg mb-2 sm:mb-3">
@@ -453,7 +446,6 @@ const Task = () => {
                         {evalResult}
                       </p>
 
-                      {/* Action Buttons */}
                       <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                         <button
                           onClick={() => {

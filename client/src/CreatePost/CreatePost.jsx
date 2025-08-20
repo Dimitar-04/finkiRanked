@@ -498,7 +498,7 @@ const CreatePost = () => {
         </form>
       </div>
 
-      {/* Modal element */}
+      {/* Modal  */}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-xs p-4"

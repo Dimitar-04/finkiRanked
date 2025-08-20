@@ -32,7 +32,6 @@ const UserPosts = () => {
   });
   const PENDING_PAGE_SIZE = 10;
 
-  // Filter states
   const defaultFilters = {
     topic: 'all',
     dateSort: 'newest',
@@ -216,7 +215,7 @@ const UserPosts = () => {
           setTotalUserPosts(approvedData.userPostsCount);
         } catch (error) {
           console.error('Error fetching user posts:', error);
-          setApprovedPosts([]); // Clear posts on error
+          setApprovedPosts([]);
           setTotalPages(1);
         } finally {
           setLoading(false);
@@ -242,7 +241,6 @@ const UserPosts = () => {
         <div className="sticky top-0 z-20 bg-base-100">
           <div className="p-3 sm:p-3 sm:pl-12 w-full max-w-full mx-auto">
             <div className="flex justify-between items-center gap-2 sm:gap-4 sm:relative">
-              {/* Mobile: Left - Tab buttons, Desktop: Center */}
               <div className="rounded-lg bg-base-300 p-1 flex gap-2 flex-shrink min-w-0 sm:absolute sm:left-1/2 sm:transform sm:-translate-x-1/2">
                 <button
                   className={`tab tab-sm sm:tab-md lg:tab-lg rounded-lg ${
@@ -296,7 +294,6 @@ const UserPosts = () => {
                 </button>
               </div>
 
-              {/* Right - Action buttons */}
               <div className="flex gap-2 sm:gap-3 flex-shrink-0 ml-auto">
                 <button
                   onClick={() => {
@@ -352,17 +349,12 @@ const UserPosts = () => {
             </div>
           </div>
           <div className="flex flex-col">
-            {/* Sticky Header Section */}
-
-            {/* Filter Navbar */}
             {activeTab == 'published' && (
               <div className="border-b border-base-300 shadow-sm">
                 <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
-                  {/* Mobile Filter Toggle */}
                   <div className="flex items-center justify-between mb-3 lg:hidden ">
                     <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                       Filters
-                      {/* Active filter count indicator */}
                       {(filters.topic !== 'all' ||
                         filters.dateSort !== 'newest' ||
                         filters.selectedDate ||
@@ -402,15 +394,12 @@ const UserPosts = () => {
                     </button>
                   </div>
 
-                  {/* Filter Controls */}
                   <div
                     className={`transition-all duration-300 ${
                       showFilters ? 'block opacity-100' : 'hidden opacity-0'
                     } lg:block lg:opacity-100`}
                   >
-                    {/* Mobile-First Filter Layout - Compact Version */}
                     <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
-                      {/* Search Filter - Full width on mobile, 2 cols on desktop */}
                       <div className="flex flex-col gap-1 lg:col-span-2">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                           Search Posts
@@ -450,9 +439,7 @@ const UserPosts = () => {
                         </div>
                       </div>
 
-                      {/* Mobile: 2-column grid for selects */}
                       <div className="grid grid-cols-2 gap-2 lg:contents">
-                        {/* Topic Filter */}
                         <div className="flex flex-col gap-1 lg:col-span-1">
                           <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Topic
@@ -472,7 +459,6 @@ const UserPosts = () => {
                           </select>
                         </div>
 
-                        {/* Date Sort */}
                         <div className="flex flex-col gap-1 lg:col-span-1">
                           <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Date Order
@@ -493,7 +479,6 @@ const UserPosts = () => {
                         </div>
                       </div>
 
-                      {/* Mobile: Single column for date picker and popularity */}
                       <div className="space-y-2 lg:space-y-0 lg:contents">
                         <div className="flex flex-col gap-1 lg:col-span-1">
                           <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -514,7 +499,6 @@ const UserPosts = () => {
                             <option value="least-popular">Least Popular</option>
                           </select>
                         </div>
-                        {/* Specific Date Filter */}
                         <div className="relative flex flex-col gap-1 lg:col-span-1">
                           <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                             Specific Date
@@ -523,8 +507,8 @@ const UserPosts = () => {
                           <div className="relative">
                             <input
                               type="text"
-                              readOnly // Makes the input non-editable by typing
-                              onClick={() => setIsCalendarOpen(!isCalendarOpen)} // Opens popover on click
+                              readOnly
+                              onClick={() => setIsCalendarOpen(!isCalendarOpen)}
                               value={
                                 filters.selectedDate
                                   ? new Date(
@@ -534,15 +518,13 @@ const UserPosts = () => {
                                       month: 'short',
                                       day: 'numeric',
                                     })
-                                  : '' // Use empty string so placeholder is visible
+                                  : ''
                               }
                               placeholder="Select date"
-                              // Style to match other inputs and add cursor-pointer
                               className="input input-sm input-bordered w-full text-xs pl-8 pr-2 cursor-pointer h-8"
                             />
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              // Position the icon inside the input field
                               className="z-10 w-3.5 h-3.5 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400"
                               fill="none"
                               viewBox="0 0 24 24"
@@ -556,7 +538,6 @@ const UserPosts = () => {
                               />
                             </svg>
                           </div>
-                          {/* Render the popover here */}
                           <CalendarPopover
                             isOpen={isCalendarOpen}
                             onClose={() => setIsCalendarOpen(false)}
@@ -569,7 +550,6 @@ const UserPosts = () => {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
                       <div className="flex flex-col gap-1 lg:col-span-1">
                         <label className="text-xs font-medium text-gray-500 uppercase tracking-wide opacity-0">
                           Actions
@@ -603,7 +583,6 @@ const UserPosts = () => {
                       </div>
                     </div>
 
-                    {/* Active Filters Display - Improved Mobile Layout */}
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {filters.topic !== 'all' && (
                         <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
@@ -700,8 +679,6 @@ const UserPosts = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
-
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex justify-center items-center h-full">
@@ -711,7 +688,6 @@ const UserPosts = () => {
             <div className="h-full">
               <div className="flex items-center">
                 <div className="p-4 sm:p-6 sm:pl-12 w-full">
-                  {/* Tab Content */}
                   <div className="animate-fadeIn">
                     {activeTab === 'published' && (
                       <div>
@@ -759,7 +735,6 @@ const UserPosts = () => {
                                     </h3>
                                   </div>
 
-                                  {/* Topic Badge */}
                                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
                                     <span
                                       className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded ${

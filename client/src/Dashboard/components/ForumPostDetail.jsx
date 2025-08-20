@@ -105,7 +105,6 @@ const ForumPostDetail = () => {
       setCommentText('');
       fetchComments();
     } catch (err) {
-      // Check for inappropriate language error from backend
       const message =
         err?.response?.data?.error || err?.message || 'Failed to post comment';
       if (
@@ -254,7 +253,7 @@ const ForumPostDetail = () => {
         </div>
       </div>
 
-      {/* Modal element */}
+      {/* Modal  */}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-50 backdrop-blur-sm"

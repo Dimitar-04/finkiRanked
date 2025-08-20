@@ -235,10 +235,8 @@ const Forum = () => {
                 <span className="hidden sm:inline">Your Posts</span>
               </button>
             </div>
-            {/* Filter Navbar */}
             <div className="border-b border-base-300 shadow-sm">
               <div className="p-3 sm:p-4 md:pl-12 w-full max-w-full mx-auto">
-                {/* Mobile Filter Toggle */}
                 <div className="flex items-center justify-between mb-3 lg:hidden ">
                   <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
                     Filters
@@ -287,7 +285,6 @@ const Forum = () => {
                     showFilters ? 'block opacity-100' : 'hidden opacity-0'
                   } lg:block lg:opacity-100`}
                 >
-                  {/* Mobile Filter  Version */}
                   <div className="space-y-2 lg:space-y-0 lg:grid lg:grid-cols-6 xl:grid-cols-8 lg:gap-2 mb-2 max-w-full">
                     <div className="flex flex-col gap-1 lg:col-span-2">
                       <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -477,7 +474,6 @@ const Forum = () => {
                     </div>
                   </div>
 
-                  {/* Active Filters  */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {filters.topic !== 'all' && (
                       <span className="badge badge-outline badge-sm flex items-center gap-1 px-2 py-1">
@@ -572,7 +568,7 @@ const Forum = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Content  */}
         <div className="overflow-y-auto">
           <div className="p-3 sm:p-4 md:p-6 md:pl-12 w-full">
             {loading ? (
@@ -803,7 +799,7 @@ const Forum = () => {
         </div>
       </div>
 
-      {/* Modal element */}
+      {/* Modal  */}
       {modal.isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm p-4"

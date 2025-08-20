@@ -48,7 +48,7 @@ export const OurRankSystem = () => {
               </thead>
               <tbody>
                 {rankData.map((rank) => {
-                  const isGlowing = rank.id >= 4; // Developer rank is ID 4
+                  const isGlowing = rank.id >= 4;
 
                   return (
                     <tr key={rank.id} className="hover">

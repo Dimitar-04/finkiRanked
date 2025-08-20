@@ -1,7 +1,7 @@
-import React, { useMemo } from "react";
-import { getRankBadgeProps } from "./rankUtils";
+import React, { useMemo } from 'react';
+import { getRankBadgeProps } from './rankUtils';
 
-const RankBadgeNav = ({ rankName, size = "md", className = "" }) => {
+const RankBadgeNav = ({ rankName, size = 'md', className = '' }) => {
   const {
     rankInfo,
     className: badgeClassName,
@@ -10,7 +10,6 @@ const RankBadgeNav = ({ rankName, size = "md", className = "" }) => {
 
   const isGlowing = rankInfo?.id >= 4;
 
-  // Add a static box-shadow for the glow effect if the rank is high enough
   const finalStyle = isGlowing
     ? { ...style, boxShadow: `0 0 8px  ${rankInfo.color}` }
     : style;

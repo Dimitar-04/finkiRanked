@@ -108,16 +108,15 @@ const getReviewPosts = async (req, res) => {
         });
       }
       if (date) {
-        // Create a start date (e.g., 2025-08-07T00:00:00.000Z)
         const startDate = new Date(date);
-        // Create an end date for the next day
+
         const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 1);
 
         whereClause.AND.push({
           created_at: {
-            gte: startDate, // Greater than or equal to the start of the day
-            lt: endDate, // Less than the start of the next day
+            gte: startDate,
+            lt: endDate,
           },
         });
       }
