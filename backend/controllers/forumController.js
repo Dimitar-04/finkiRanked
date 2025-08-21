@@ -259,7 +259,7 @@ const getForumPosts = async (req, res) => {
       (sort === 'past-week' ||
         sort === 'past-month' ||
         sort == 'past-year' ||
-        topic == 'daily-challenge' ||
+        topic ||
         search) &&
       !commentSort
     ) {

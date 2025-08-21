@@ -420,7 +420,7 @@ const ManagePosts = () => {
                       </label>
                       <div className="flex gap-1.5">
                         {(filters.topic !== 'all' ||
-                          filters.dateSort !== 'newest' ||
+                          filters.dateSort !== 'oldest' ||
                           filters.selectedDate ||
                           (filters.searchText &&
                             filters.searchText.trim())) && (

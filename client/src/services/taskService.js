@@ -1,7 +1,8 @@
 import apiClient from './apiClient';
 
 export const getTaskForDate = async () => {
-  return await apiClient.get(`/task/today`);
+  const today = new Date().toISOString().split('T')[0];
+  return await apiClient.get(`/task/today?date=${today}`);
 };
 export const getTasksForForumPost = async () => {
   return await apiClient.get('/task/forum-post');

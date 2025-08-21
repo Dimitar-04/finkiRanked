@@ -101,36 +101,18 @@ const getChallenges = async (req, res) => {
 
 const getTaskByDate = async (req, res) => {
   try {
-    const now = new Date();
-
-    const year = now.getUTCFullYear();
-    const month = now.getUTCMonth();
-    const day = now.getUTCDate();
-
-    let effectiveDay = day;
-    if (now.getUTCHours() < 7) {
-      effectiveDay = day - 1;
-    }
-
-    const startOfEffectiveDay = new Date(
-      Date.UTC(year, month, effectiveDay, 0, 0, 0, 0)
-    );
-
-    const startOfNextDay = new Date(startOfEffectiveDay);
-    startOfNextDay.setUTCDate(startOfEffectiveDay.getUTCDate() + 1);
-
+    const { date } = req.query;
+    const searchDate = new Date(date).toISOString();
     let tasks = await prisma.challenges.findMany({
       where: {
-        solving_date: {
-          gte: startOfEffectiveDay,
-          lt: startOfNextDay,
-        },
+        solving_date: searchDate,
         expired: false,
       },
       include: {
         test_cases: true,
       },
     });
+
     if (tasks.length === 0) {
       return res.status(404).json({ message: 'No tasks found for this date' });
     }
