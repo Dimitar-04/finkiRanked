@@ -1,9 +1,9 @@
-require('dotenv').config({
-  path: require('path').resolve(__dirname, '../.env'),
+require("dotenv").config({
+  path: require("path").resolve(__dirname, "../.env"),
 });
-const { sendModeratorEmail } = require('../services/emailService');
-const schedule = require('node-schedule');
-const prisma = require('../lib/prisma');
+const { sendModeratorEmail } = require("../services/emailService");
+const schedule = require("node-schedule");
+const prisma = require("../lib/prisma");
 
 async function sendmailToModerators() {
   const scriptExecutionTime = new Date();
@@ -13,12 +13,12 @@ async function sendmailToModerators() {
 
   try {
     const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate());
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
     const posts = await prisma.to_be_reviewed.findMany({
       where: {
         created_at: {
-          lt: oneDayAgo,
+          lte: oneDayAgo,
         },
       },
       select: {
@@ -26,7 +26,7 @@ async function sendmailToModerators() {
         created_at: true,
       },
       orderBy: {
-        created_at: 'asc',
+        created_at: "asc",
       },
     });
 
@@ -37,7 +37,7 @@ async function sendmailToModerators() {
     );
 
     if (posts.length === 0) {
-      console.log('No old posts to review. No emails sent.');
+      console.log("No old posts to review. No emails sent.");
       return;
     }
 
@@ -95,7 +95,7 @@ async function sendmailToModerators() {
   }
 }
 
-const job = schedule.scheduleJob('0 7 * * *', function () {
+const job = schedule.scheduleJob("0 7 * * *", function () {
   console.log(
     `[${new Date().toISOString()}] Running scheduled moderator email check`
   );
@@ -106,7 +106,7 @@ console.log(
   `[${new Date().toISOString()}] Next scheduled run: ${job.nextInvocation()}`
 );
 
-process.on('SIGINT', function () {
+process.on("SIGINT", function () {
   job.cancel();
   console.log(
     `[${new Date().toISOString()}] Moderator email scheduler stopped`
